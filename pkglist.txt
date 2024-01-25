@@ -1,0 +1,17 @@
+archivers/zstd
+devel/ccache
+devel/git
+editors/kakoune
+ftp/curl
+ftp/wget
+ports-mgmt/pkg
+ports-mgmt/poudriere
+security/doas
+shells/fish
+sysutils/duf
+sysutils/fd
+sysutils/htop
+sysutils/tmux
+textproc/bat
+textproc/fzf
+textproc/ripgrep
