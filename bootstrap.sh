@@ -9,6 +9,8 @@
 # REQUIRED PKGS BEFORE BOOTSTRAP:
 # * doas (configured with 'permit nopass :wheel')
 
+set -ex
+
 # TODO query as much variable information from the running system as possible
 FREEBSD_BRANCH=stable/14
 PKGBASE_JAILNAME=pkgbase_stable14_beastie
@@ -16,10 +18,10 @@ BUILDER_HOSTNAME=poudriere.home.arpa
 KERNCONF=GENERIC
 ABI=FreeBSD:14:amd64
 CPUTYPE=$(cc -v -x c -E -march=native /dev/null 2>&1 | sed -n 's/.*-target-cpu *\([^ ]*\).*/\1/p')
-PKGBASE_REPO="/usr/local/poudriere/data/images/$ABI/latest"
+PKGBASE_REPO="/usr/local/poudriere/data/images/${PKGBASE_JAILNAME}-repo/$ABI/latest"
 PORTS_REPO="/usr/local/poudriere/data/packages/$PKGBASE_JAILNAME"
-
-set -ex
+PKGBASE_REPO_NAME=PoudrierePkgbase
+PORTS_REPO_NAME=PoudrierePorts
 
 step1() {
     # 1) install required packages from upstream mirror
@@ -29,15 +31,15 @@ step1() {
     # 2) setup poudriere
 
     sed \
-    	-e "/BUILDER_HOSTNAME=/c\BUILDER_HOSTNAME=$BUILDER_HOSTNAME" \
-    	-e '/ALLOW_MAKE_JOBS_PACKAGES=/c\ALLOW_MAKE_JOBS_PACKAGES="pkg ccache py* gcc* ghc* llvm* rust*"' \
-    	-e '/BAD_PKGNAME_DEPS_ARE_FATAL=/c\BAD_PKGNAME_DEPS_ARE_FATAL=yes' \
-    	-e '/CCACHE_DIR=/c\CCACHE_DIR=/var/cache/ccache' \
-    	-e '/NOLINUX=/c\NOLINUX=yes' \
-    	-e '/PRIORITY_BOOST=/c\PRIORITY_BOOST="py* gcc* ghc* llvm* rust*"' \
-    	-e '/TMPFS_BLACKLIST=/c\TMPFS_BLACKLIST="gcc* ghc* llvm* rust*"' \
-    	-e '/WRKDIR_ARCHIVE_FORMAT=/c\WRKDIR_ARCHIVE_FORMAT=tzst' \
-    	-e '/ZPOOL=/c\ZPOOL=zroot' \
+    	-e "s/.*BUILDER_HOSTNAME=.*/BUILDER_HOSTNAME=${BUILDER_HOSTNAME}/" \
+    	-e 's/.*ALLOW_MAKE_JOBS_PACKAGES=.*/ALLOW_MAKE_JOBS_PACKAGES="pkg ccache rust* llvm* gcc* py* cmake* ghc*"/' \
+    	-e 's/.*BAD_PKGNAME_DEPS_ARE_FATAL=.*/BAD_PKGNAME_DEPS_ARE_FATAL=yes/' \
+    	-e 's%.*CCACHE_DIR=.*%CCACHE_DIR=/var/cache/ccache%' \
+    	-e 's/.*NOLINUX=.*/NOLINUX=yes/' \
+    	-e 's/.*PRIORITY_BOOST=.*/PRIORITY_BOOST="rust* llvm* gcc* py* cmake* ghc*"/' \
+    	-e 's/.*TMPFS_BLACKLIST=.*/TMPFS_BLACKLIST="ghc* llvm* rust*"/' \
+    	-e 's/.*WRKDIR_ARCHIVE_FORMAT=.*/WRKDIR_ARCHIVE_FORMAT=tzst/' \
+    	-e 's/.*ZPOOL=.*/ZPOOL=zroot/' \
     	/usr/local/etc/poudriere.conf.sample > /usr/local/etc/poudriere.conf
 
     git clone --depth 1 --branch "$FREEBSD_BRANCH" https://git.freebsd.org/src.git /usr/src
@@ -60,13 +62,13 @@ EOF
 
     # TODO handle signatures
     cat <<EOF > /usr/local/etc/pkg/repos/poudriere_pkgbase.conf
-PoudrierePkgbase: {
-  url: "file://$PKGBASE_REPO"
+${PKGBASE_REPO_NAME}: {
+  url: "file://${PKGBASE_REPO}"
   enabled: yes
 }
 EOF
 
-    pkg install -y -r pkgbase -g 'FreeBSD-*'
+    pkg install -y -r "$PKGBASE_REPO_NAME" -g 'FreeBSD-*'
 
     # TODO find a cleaner way to do this
     # Instructions from https://wiki.freebsd.org/PkgBase
@@ -80,11 +82,14 @@ EOF
 }
 
 step2() {
-    # 5) setup ports collection
-    git clone --depth 1 https://git.freebsd.org/ports.git /usr/ports
+    if test ! -d /usr/ports/.git; then
+        # 5) setup ports collection
+        git clone --depth 1 https://git.freebsd.org/ports.git /usr/ports
 
-    # 6) create poudriere ports pointer to the local ports collection
-    poudriere ports -c -m null -M /usr/ports
+        # 6) create poudriere ports pointer to the local ports collection
+        poudriere ports -c -m null -M /usr/ports
+        mkdir -p /usr/ports/distfiles
+    fi
 
     poudriere options -j "$PKGBASE_JAILNAME" -f "pkglist.txt"
     poudriere bulk -j "$PKGBASE_JAILNAME" -f "pkglist.txt"
@@ -99,3 +104,9 @@ EOF
 
     pkg upgrade -f -y
 }
+
+case $1 in
+    step1) step1;;
+    step2) step2;;
+    *) echo "unknown step $1" >&2; exit 1;
+esac
