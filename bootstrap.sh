@@ -19,7 +19,7 @@ KERNCONF=GENERIC
 ABI=FreeBSD:14:amd64
 CPUTYPE=$(cc -v -x c -E -march=native /dev/null 2>&1 | sed -n 's/.*-target-cpu *\([^ ]*\).*/\1/p')
 PKGBASE_REPO="/usr/local/poudriere/data/images/${PKGBASE_JAILNAME}-repo/$ABI/latest"
-PORTS_REPO="/usr/local/poudriere/data/packages/$PKGBASE_JAILNAME"
+PORTS_REPO="/usr/local/poudriere/data/packages/${PKGBASE_JAILNAME}-default"
 PKGBASE_REPO_NAME=PoudrierePkgbase
 PORTS_REPO_NAME=PoudrierePorts
 
@@ -38,6 +38,7 @@ step1() {
     	-e 's/.*NOLINUX=.*/NOLINUX=yes/' \
     	-e 's/.*PRIORITY_BOOST=.*/PRIORITY_BOOST="rust* llvm* gcc* py* cmake* ghc*"/' \
     	-e 's/.*TMPFS_BLACKLIST=.*/TMPFS_BLACKLIST="ghc* llvm* rust*"/' \
+    	-e 's%.*TMPFS_BLACKLIST_TMPDIR=.*%TMPFS_BLACKLIST_TMPDIR="${BASEFS}/data/cache/tmp"%' \
     	-e 's/.*WRKDIR_ARCHIVE_FORMAT=.*/WRKDIR_ARCHIVE_FORMAT=tzst/' \
     	-e 's/.*ZPOOL=.*/ZPOOL=zroot/' \
     	/usr/local/etc/poudriere.conf.sample > /usr/local/etc/poudriere.conf
@@ -52,6 +53,8 @@ WITH_REPRODUCIBLE_BUILD=1
 WITH_CCACHE_BUILD=1
 WITHOUT_LLVM_TARGET_ALL=1
 EOF
+
+    sysrc kld_list+=filemon
 
     # 3) build system pkgbase
     poudriere jail -c -j "$PKGBASE_JAILNAME" -B -b -m src=/usr/src -K "$KERNCONF"
@@ -102,7 +105,7 @@ PoudrierePorts: {
 }
 EOF
 
-    pkg upgrade -f -y
+    pkg upgrade -y
 }
 
 case $1 in
