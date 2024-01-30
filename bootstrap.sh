@@ -46,7 +46,11 @@ step1() {
     	-e 's/.*ZPOOL=.*/ZPOOL=zroot/' \
     	/usr/local/etc/poudriere.conf.sample > /usr/local/etc/poudriere.conf
 
-    git clone --depth 1 --branch "stable/${FREEBSD_VERSION}" https://git.freebsd.org/src.git /usr/src
+    if test ! -d /usr/src/.git; then
+        git clone --depth 1 --branch "stable/${FREEBSD_VERSION}" https://git.freebsd.org/src.git /usr/src
+    fi
+    git -C /usr/src pull
+
     echo "CPUTYPE?=$CPUTYPE" > "/usr/local/etc/poudriere.d/$(hostname)-make.conf"
     echo "WITH_DIRDEPS_BUILD=1" > "/usr/local/etc/poudriere.d/$(hostname)-src-env.conf"
     # TODO trim all src.conf tunables for a more minimal system
