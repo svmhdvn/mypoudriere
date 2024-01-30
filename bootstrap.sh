@@ -46,7 +46,6 @@ step1() {
     echo "WITH_DIRDEPS_BUILD=1" > /etc/src-env.conf
     # TODO trim all src.conf tunables for a more minimal system
     cat <<EOF > /etc/src.conf
-WITHOUT_CLEAN=1
 WITH_REPRODUCIBLE_BUILD=1
 WITH_CCACHE_BUILD=1
 WITHOUT_LLVM_TARGET_ALL=1
