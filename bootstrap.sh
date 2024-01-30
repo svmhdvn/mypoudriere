@@ -13,15 +13,14 @@ set -ex
 
 FREEBSD_VERSION=14
 
-ABI="FreeBSD:${FREEBSD_VERSION}:amd64"
 HOSTNAME="$(hostname)"
-JAILNAME="${ABI}_${HOSTNAME}"
+JAILNAME="stable${FREEBSD_VERSION}_${HOSTNAME}"
 BUILDER_HOSTNAME=poudriere.home.arpa
 # TODO change for custom kernel config
 KERNCONF=GENERIC
 CPUTYPE=$(cc -v -x c -E -march=native /dev/null 2>&1 | sed -n 's/.*-target-cpu *\([^ ]*\).*/\1/p')
 
-PKGBASE_REPO="/usr/local/poudriere/data/images/${JAILNAME}-repo/$ABI/latest"
+PKGBASE_REPO="/usr/local/poudriere/data/images/${JAILNAME}-repo/FreeBSD:${FREEBSD_VERSION}:amd64/latest"
 PKGBASE_REPO_NAME=PoudrierePkgbase
 
 PORTS_REPO="/usr/local/poudriere/data/packages/${JAILNAME}-default"
@@ -54,7 +53,7 @@ step1() {
     echo "CPUTYPE?=$CPUTYPE" > "/usr/local/etc/poudriere.d/${HOSTNAME}-make.conf"
     echo "WITH_DIRDEPS_BUILD=1" > "/usr/local/etc/poudriere.d/${HOSTNAME}-src-env.conf"
     # TODO trim all src.conf tunables for a more minimal system
-    cat > "/usr/local/etc/poudriere.d/$(hostname)-src.conf" <<EOF
+    cat > "/usr/local/etc/poudriere.d/${HOSTNAME}-src.conf" <<EOF
 WITHOUT_CLEAN=1
 WITH_REPRODUCIBLE_BUILD=1
 WITH_CCACHE_BUILD=1
@@ -62,13 +61,12 @@ WITHOUT_LLVM_TARGET_ALL=1
 EOF
 
     sysrc kld_list+=filemon
-    kldload filemon
+    kldload -n filemon
 
     # 3) build system pkgbase
-    poudriere jail -c -j "$JAILNAME" -B -b -m src=/usr/src -K "$KERNCONF" -z "$(hostname)"
+    poudriere jail -c -j "$JAILNAME" -b -m src=/usr/src -B -K "$KERNCONF" -z "$HOSTNAME"
 
     # 4) convert system into a pkgbase installation
-
     mkdir -p /usr/local/etc/pkg/repos
 
     # TODO handle signatures
