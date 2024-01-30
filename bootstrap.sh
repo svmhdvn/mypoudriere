@@ -51,7 +51,11 @@ step1() {
     git -C /usr/src pull
 
     echo "CPUTYPE?=$CPUTYPE" > "/usr/local/etc/poudriere.d/${HOSTNAME}-make.conf"
-    echo "WITH_DIRDEPS_BUILD=1" > "/usr/local/etc/poudriere.d/${HOSTNAME}-src-env.conf"
+
+    # TODO investigate if WITH_DIRDEPS_BUILD=1 is possible in poudriere (or even necessary?)
+    # For now, WITH_META_MODE is good enough
+    echo "WITH_META_MODE=1" > "/usr/local/etc/poudriere.d/${HOSTNAME}-src-env.conf"
+
     # TODO trim all src.conf tunables for a more minimal system
     cat > "/usr/local/etc/poudriere.d/${HOSTNAME}-src.conf" <<EOF
 WITHOUT_CLEAN=1
@@ -99,9 +103,10 @@ step2() {
         poudriere ports -c -m null -M /usr/ports
         mkdir -p /usr/ports/distfiles
     fi
+    git -C /usr/ports pull
 
-    poudriere options -j "$JAILNAME" -f "pkglist.txt"
-    poudriere bulk -j "$JAILNAME" -f "pkglist.txt"
+    poudriere options -j "$JAILNAME" -z "$HOSTNAME" -f "pkglist.txt"
+    poudriere bulk -j "$JAILNAME" -z "$HOSTNAME" -f "pkglist.txt"
 
     # 7) reinstall all system pkgs with the new poudriere repo
     cat <<EOF > /usr/local/etc/pkg/repos/poudriere_ports.conf
