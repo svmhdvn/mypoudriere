@@ -25,11 +25,9 @@ PORTS_REPO_NAME=PoudrierePorts
 
 step1() {
     # 1) install required packages from upstream mirror
-
     pkg install -y git poudriere ccache
 
     # 2) setup poudriere
-
     sed \
     	-e "s/.*BUILDER_HOSTNAME=.*/BUILDER_HOSTNAME=${BUILDER_HOSTNAME}/" \
     	-e 's/.*ALLOW_MAKE_JOBS_PACKAGES=.*/ALLOW_MAKE_JOBS_PACKAGES="pkg ccache rust* llvm* gcc* py* cmake* ghc*"/' \
@@ -55,6 +53,7 @@ WITHOUT_LLVM_TARGET_ALL=1
 EOF
 
     sysrc kld_list+=filemon
+    kldload filemon
 
     # 3) build system pkgbase
     poudriere jail -c -j "$PKGBASE_JAILNAME" -B -b -m src=/usr/src -K "$KERNCONF"
