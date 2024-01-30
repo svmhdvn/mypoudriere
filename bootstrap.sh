@@ -12,10 +12,10 @@
 set -ex
 
 FREEBSD_VERSION=14
-ARCH=amd64
 
-ABI="FreeBSD:${FREEBSD_VERSION}:${ARCH}"
-JAILNAME="${ABI}_$(hostname)"
+ABI="FreeBSD:${FREEBSD_VERSION}:amd64"
+HOSTNAME="$(hostname)"
+JAILNAME="${ABI}_${HOSTNAME}"
 BUILDER_HOSTNAME=poudriere.home.arpa
 # TODO change for custom kernel config
 KERNCONF=GENERIC
@@ -51,8 +51,8 @@ step1() {
     fi
     git -C /usr/src pull
 
-    echo "CPUTYPE?=$CPUTYPE" > "/usr/local/etc/poudriere.d/$(hostname)-make.conf"
-    echo "WITH_DIRDEPS_BUILD=1" > "/usr/local/etc/poudriere.d/$(hostname)-src-env.conf"
+    echo "CPUTYPE?=$CPUTYPE" > "/usr/local/etc/poudriere.d/${HOSTNAME}-make.conf"
+    echo "WITH_DIRDEPS_BUILD=1" > "/usr/local/etc/poudriere.d/${HOSTNAME}-src-env.conf"
     # TODO trim all src.conf tunables for a more minimal system
     cat > "/usr/local/etc/poudriere.d/$(hostname)-src.conf" <<EOF
 WITHOUT_CLEAN=1
