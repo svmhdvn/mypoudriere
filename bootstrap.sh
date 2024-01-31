@@ -14,7 +14,7 @@ set -ex
 FREEBSD_VERSION=14
 
 HOSTNAME="$(hostname)"
-JAILNAME="stable${FREEBSD_VERSION}_${HOSTNAME}"
+JAILNAME="poudriere_stable${FREEBSD_VERSION}"
 BUILDER_HOSTNAME=poudriere.home.arpa
 # TODO change for custom kernel config
 KERNCONF=GENERIC
@@ -23,7 +23,7 @@ CPUTYPE=$(cc -v -x c -E -march=native /dev/null 2>&1 | sed -n 's/.*-target-cpu *
 PKGBASE_REPO="/usr/local/poudriere/data/images/${JAILNAME}-repo/FreeBSD:${FREEBSD_VERSION}:amd64/latest"
 PKGBASE_REPO_NAME=PoudrierePkgbase
 
-PORTS_REPO="/usr/local/poudriere/data/packages/${JAILNAME}-default"
+PORTS_REPO="/usr/local/poudriere/data/packages/${JAILNAME}-default-${HOSTNAME}"
 PORTS_REPO_NAME=PoudrierePorts
 
 step1() {
@@ -105,7 +105,7 @@ step2() {
     fi
     git -C /usr/ports pull
 
-    poudriere options -j "$JAILNAME" -z "$HOSTNAME" -f "pkglist.txt"
+#    poudriere options -j "$JAILNAME" -z "$HOSTNAME" -f "pkglist.txt"
     poudriere bulk -j "$JAILNAME" -z "$HOSTNAME" -f "pkglist.txt"
 
     # 7) reinstall all system pkgs with the new poudriere repo
@@ -116,6 +116,15 @@ ${PORTS_REPO_NAME}: {
 }
 EOF
 
+    cat <<EOF > /usr/local/etc/pkg/repos/FreeBSD.conf
+FreeBSD: {
+  url: "pkg+https://pkg.freebsd.org/$${ABI}/latest",
+  mirror_type: "srv",
+  signature_type: "fingerprints",
+  fingerprints: "/usr/share/keys/pkg",
+  enabled: "no"
+}
+EOF
     pkg upgrade -y
 }
 
