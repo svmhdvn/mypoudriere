@@ -31,6 +31,7 @@ step1() {
     pkg install -y git poudriere ccache
 
     # 2) setup poudriere
+    # TODO change ccache directory to a better global location, possibly /var/cache/ccache
     # NOTE add back if needed to the sed command:
 #    	-e 's/.*TMPFS_BLACKLIST=.*/TMPFS_BLACKLIST="ghc* llvm* rust*"/' \
 #    	-e 's%.*TMPFS_BLACKLIST_TMPDIR=.*%TMPFS_BLACKLIST_TMPDIR="${BASEFS}/data/cache/tmp"%' \
@@ -38,7 +39,7 @@ step1() {
     	-e "s/.*BUILDER_HOSTNAME=.*/BUILDER_HOSTNAME=${BUILDER_HOSTNAME}/" \
     	-e 's/.*ALLOW_MAKE_JOBS_PACKAGES=.*/ALLOW_MAKE_JOBS_PACKAGES="pkg ccache rust* llvm* gcc* python* cmake*"/' \
     	-e 's/.*BAD_PKGNAME_DEPS_ARE_FATAL=.*/BAD_PKGNAME_DEPS_ARE_FATAL=yes/' \
-    	-e 's%.*CCACHE_DIR=.*%CCACHE_DIR=/var/cache/ccache%' \
+    	-e 's%.*CCACHE_DIR=.*%CCACHE_DIR=/root/.ccache%' \
     	-e 's/.*NOLINUX=.*/NOLINUX=yes/' \
     	-e 's/.*WRKDIR_ARCHIVE_FORMAT=.*/WRKDIR_ARCHIVE_FORMAT=tzst/' \
     	-e 's/.*ZPOOL=.*/ZPOOL=zroot/' \
