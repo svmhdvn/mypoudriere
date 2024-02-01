@@ -14,11 +14,11 @@ set -ex
 FREEBSD_VERSION=14
 
 HOSTNAME="$(hostname)"
-JAILNAME="poudriere_stable${FREEBSD_VERSION}"
+JAILNAME="poudriere_stable${FREEBSD_VERSION}_upstream"
 BUILDER_HOSTNAME=poudriere.home.arpa
 # TODO change for custom kernel config
 KERNCONF=GENERIC
-CPUTYPE=$(cc -v -x c -E -march=native /dev/null 2>&1 | sed -n 's/.*-target-cpu *\([^ ]*\).*/\1/p')
+#CPUTYPE=$(cc -v -x c -E -march=native /dev/null 2>&1 | sed -n 's/.*-target-cpu *\([^ ]*\).*/\1/p')
 
 PKGBASE_REPO="/usr/local/poudriere/data/images/${JAILNAME}-repo/FreeBSD:${FREEBSD_VERSION}:amd64/latest"
 PKGBASE_REPO_NAME=PoudrierePkgbase
@@ -36,39 +36,34 @@ step1() {
 #    	-e 's%.*TMPFS_BLACKLIST_TMPDIR=.*%TMPFS_BLACKLIST_TMPDIR="${BASEFS}/data/cache/tmp"%' \
     sed \
     	-e "s/.*BUILDER_HOSTNAME=.*/BUILDER_HOSTNAME=${BUILDER_HOSTNAME}/" \
-    	-e 's/.*ALLOW_MAKE_JOBS_PACKAGES=.*/ALLOW_MAKE_JOBS_PACKAGES="pkg ccache rust* llvm* gcc* py* cmake* ghc*"/' \
+    	-e 's/.*ALLOW_MAKE_JOBS_PACKAGES=.*/ALLOW_MAKE_JOBS_PACKAGES="pkg ccache rust* llvm* gcc* python* cmake*"/' \
     	-e 's/.*BAD_PKGNAME_DEPS_ARE_FATAL=.*/BAD_PKGNAME_DEPS_ARE_FATAL=yes/' \
     	-e 's%.*CCACHE_DIR=.*%CCACHE_DIR=/var/cache/ccache%' \
     	-e 's/.*NOLINUX=.*/NOLINUX=yes/' \
-    	-e 's/.*PRIORITY_BOOST=.*/PRIORITY_BOOST="pkg ccache cmake* rust* llvm* gcc* py* ghc*"/' \
     	-e 's/.*WRKDIR_ARCHIVE_FORMAT=.*/WRKDIR_ARCHIVE_FORMAT=tzst/' \
     	-e 's/.*ZPOOL=.*/ZPOOL=zroot/' \
     	/usr/local/etc/poudriere.conf.sample > /usr/local/etc/poudriere.conf
 
-    if test ! -d /usr/src/.git; then
-        git clone --depth 1 --branch "stable/${FREEBSD_VERSION}" https://git.freebsd.org/src.git /usr/src
-    fi
-    git -C /usr/src pull
-
-    echo "CPUTYPE?=$CPUTYPE" > "/usr/local/etc/poudriere.d/${HOSTNAME}-make.conf"
-
-    # TODO investigate if WITH_DIRDEPS_BUILD=1 is possible in poudriere (or even necessary?)
-    # For now, WITH_META_MODE is good enough
-    echo "WITH_META_MODE=1" > "/usr/local/etc/poudriere.d/${HOSTNAME}-src-env.conf"
-
-    # TODO trim all src.conf tunables for a more minimal system
-    cat > "/usr/local/etc/poudriere.d/${HOSTNAME}-src.conf" <<EOF
-WITHOUT_CLEAN=1
-WITH_REPRODUCIBLE_BUILD=1
-WITH_CCACHE_BUILD=1
-WITHOUT_LLVM_TARGET_ALL=1
-EOF
+    cp \
+    	"${HOSTNAME}-make.conf" \
+    	"${HOSTNAME}-src.conf" \
+    	"${HOSTNAME}-src-env.conf" \
+    	"/usr/local/etc/poudriere.d/"
 
     sysrc kld_list+=filemon
     kldload -n filemon
 
     # 3) build system pkgbase
-    poudriere jail -c -j "$JAILNAME" -b -m src=/usr/src -B -K "$KERNCONF" -z "$HOSTNAME"
+
+    # TODO move to -m src=/usr/src once upstream Poudriere maintains file modification times
+    # for better incremental builds using WITH_META_MODE
+    #if test ! -d /usr/src/.git; then
+        #git clone --depth 1 --branch "stable/${FREEBSD_VERSION}" https://git.freebsd.org/src.git /usr/src
+    #fi
+    #git -C /usr/src pull
+    #poudriere jail -c -j "$JAILNAME" -b -m src=/usr/src -B -K "$KERNCONF" -z "$HOSTNAME"
+
+    poudriere jail -c -j "$JAILNAME" -b -m git+https -v "stable/$FREEBSD_VERSION" -B -K "$KERNCONF" -z "$HOSTNAME"
 
     # 4) convert system into a pkgbase installation
     mkdir -p /usr/local/etc/pkg/repos
@@ -98,11 +93,11 @@ step2() {
     if test ! -d /usr/ports/.git; then
         # 5) setup ports collection
         git clone --depth 1 https://git.freebsd.org/ports.git /usr/ports
-
-        # 6) create poudriere ports pointer to the local ports collection
-        poudriere ports -c -m null -M /usr/ports
-        mkdir -p /usr/ports/distfiles
     fi
+
+    # 6) create poudriere ports pointer to the local ports collection
+    poudriere ports -c -m null -M /usr/ports
+    mkdir -p /usr/ports/distfiles
     git -C /usr/ports pull
 
 #    poudriere options -j "$JAILNAME" -z "$HOSTNAME" -f "pkglist.txt"
