@@ -94,14 +94,15 @@ step2() {
     if test ! -d /usr/ports/.git; then
         # 5) setup ports collection
         git clone --depth 1 https://git.freebsd.org/ports.git /usr/ports
+
+        # 6) create poudriere ports pointer to the local ports collection
+        poudriere ports -c -m null -M /usr/ports
     fi
 
-    # 6) create poudriere ports pointer to the local ports collection
-    poudriere ports -c -m null -M /usr/ports
     mkdir -p /usr/ports/distfiles
     git -C /usr/ports pull
 
-#    poudriere options -j "$JAILNAME" -z "$HOSTNAME" -f "pkglist.txt"
+    poudriere options -j "$JAILNAME" -z "$HOSTNAME" -f "pkglist.txt"
     poudriere bulk -j "$JAILNAME" -z "$HOSTNAME" -f "pkglist.txt"
 
     # 7) reinstall all system pkgs with the new poudriere repo

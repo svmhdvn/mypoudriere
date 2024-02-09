@@ -12,6 +12,7 @@ sysutils/duf
 sysutils/fd
 sysutils/htop
 sysutils/tmux
+sysutils/tree
 textproc/bat
 textproc/fzf
 textproc/ripgrep
