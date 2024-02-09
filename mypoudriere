@@ -1,24 +1,23 @@
 #!/bin/sh
-
-# NOTES:
-# Must run with the following conditions:
-# * as root
-# * on a freshly-installed FreeBSD 14.0-RELEASE system
-# * inside the git repo
-#
-# REQUIRED PKGS BEFORE BOOTSTRAP:
-# * doas (configured with 'permit nopass :wheel')
-
 set -ex
 
-FREEBSD_VERSION=14
+HOSTNAME="$2"
 
-HOSTNAME="$(hostname)"
-JAILNAME="poudriere_stable${FREEBSD_VERSION}_upstream"
-BUILDER_HOSTNAME=poudriere.home.arpa
-# TODO change for custom kernel config
-KERNCONF=GENERIC
-#CPUTYPE=$(cc -v -x c -E -march=native /dev/null 2>&1 | sed -n 's/.*-target-cpu *\([^ ]*\).*/\1/p')
+case "$HOSTNAME" in
+  beastie)
+    PKGLIST="pkglist-builder.txt"
+    ;;
+  cl100*|wyse*)
+    PKGLIST="pkglist-empt.txt"
+    ;;
+  *)
+    echo "unsupported host: $HOSTNAME" >&2
+    echo "usage: $0 <command> <hostname>" >&2
+    exit 1
+esac
+
+FREEBSD_VERSION=14
+JAILNAME="poudriere_stable${FREEBSD_VERSION}_pkgbase"
 
 PKGBASE_REPO="/usr/local/poudriere/data/images/${JAILNAME}-repo/FreeBSD:${FREEBSD_VERSION}:amd64/latest"
 PKGBASE_REPO_NAME=PoudrierePkgbase
@@ -26,15 +25,37 @@ PKGBASE_REPO_NAME=PoudrierePkgbase
 PORTS_REPO="/usr/local/poudriere/data/packages/${JAILNAME}-default-${HOSTNAME}"
 PORTS_REPO_NAME=PoudrierePorts
 
-step1() {
+OPTIONS_DIR="$JAILNAME-local-$HOSTNAME-options"
+BACKUP_DIR="hosts/$HOSTNAME/$OPTIONS_DIR"
+
+bootstrap_builder() {
+    # NOTES:
+    # Must run with the following conditions:
+    # * as root (with doas is fine)
+    # * on a freshly-installed FreeBSD 14.0-RELEASE system
+    # * inside the git repo
+    #
+    # REQUIRED PKGS BEFORE BOOTSTRAP:
+    # * doas (configured with 'permit nopass :wheel')
+
+    BUILDER_HOSTNAME=poudriere.home.arpa
+
+    # TODO change for custom kernel config
+    KERNCONF=GENERIC
+
+    # NOTE use this to determine a system's CPUTYPE, then add it to a make.conf
+    # inside the hosts/ directory
+    #CPUTYPE=$(cc -v -x c -E -march=native /dev/null 2>&1 | sed -n 's/.*-target-cpu *\([^ ]*\).*/\1/p')
+
+
     # 1) install required packages from upstream mirror
     pkg install -y git poudriere ccache
 
     # 2) setup poudriere
     # TODO change ccache directory to a better global location, possibly /var/cache/ccache
     # NOTE add back if needed to the sed command:
-#    	-e 's/.*TMPFS_BLACKLIST=.*/TMPFS_BLACKLIST="ghc* llvm* rust*"/' \
-#    	-e 's%.*TMPFS_BLACKLIST_TMPDIR=.*%TMPFS_BLACKLIST_TMPDIR="${BASEFS}/data/cache/tmp"%' \
+    #   -e 's/.*TMPFS_BLACKLIST=.*/TMPFS_BLACKLIST="ghc* llvm* rust*"/' \
+    #   -e 's%.*TMPFS_BLACKLIST_TMPDIR=.*%TMPFS_BLACKLIST_TMPDIR="${BASEFS}/data/cache/tmp"%' \
     sed \
     	-e "s/.*BUILDER_HOSTNAME=.*/BUILDER_HOSTNAME=${BUILDER_HOSTNAME}/" \
     	-e 's/.*ALLOW_MAKE_JOBS_PACKAGES=.*/ALLOW_MAKE_JOBS_PACKAGES="pkg ccache rust* llvm* gcc* python* cmake*"/' \
@@ -45,11 +66,7 @@ step1() {
     	-e 's/.*ZPOOL=.*/ZPOOL=zroot/' \
     	/usr/local/etc/poudriere.conf.sample > /usr/local/etc/poudriere.conf
 
-    cp \
-    	"${HOSTNAME}-make.conf" \
-    	"${HOSTNAME}-src.conf" \
-    	"${HOSTNAME}-src-env.conf" \
-    	"/usr/local/etc/poudriere.d/"
+    cp "hosts/$HOSTNAME/$HOSTNAME"-*.conf /usr/local/etc/poudriere.d/
 
     sysrc kld_list+=filemon
     kldload -n filemon
@@ -87,10 +104,7 @@ EOF
     cp /etc/sysctl.conf.pkgsave /etc/sysctl.conf
     find / -name '*.pkgsave' -delete
     rm /boot/kernel/linker.hints
-    reboot
-}
 
-step2() {
     if test ! -d /usr/ports/.git; then
         # 5) setup ports collection
         git clone --depth 1 https://git.freebsd.org/ports.git /usr/ports
@@ -102,8 +116,8 @@ step2() {
     mkdir -p /usr/ports/distfiles
     git -C /usr/ports pull
 
-    poudriere options -j "$JAILNAME" -z "$HOSTNAME" -f "pkglist.txt"
-    poudriere bulk -j "$JAILNAME" -z "$HOSTNAME" -f "pkglist.txt"
+    cp -R "$BACKUP_DIR" "$OPTIONS_DIR"
+    poudriere bulk -j "$JAILNAME" -z "$HOSTNAME" -f "pkglist-builder.txt"
 
     # 7) reinstall all system pkgs with the new poudriere repo
     cat <<EOF > /usr/local/etc/pkg/repos/poudriere_ports.conf
@@ -125,8 +139,24 @@ EOF
     pkg upgrade -y
 }
 
-case $1 in
-    step1) step1;;
-    step2) step2;;
-    *) echo "unknown step $1" >&2; exit 1;
+COMMAND="$1"
+case "$COMMAND" in
+  bootstrap)
+    bootstrap_builder
+    ;;
+  bulk|options)
+    doas poudriere "$COMMAND" -j "$JAILNAME" -p local -f "$PKGLIST" -z "$HOSTNAME"
+    ;;
+  backup)
+    rm -rf "$BACKUP_DIR"
+    cp -R /usr/local/etc/poudriere.d/"$OPTIONS_DIR" "$BACKUP_DIR"
+    cp /usr/local/etc/poudriere.d/"$HOSTNAME"-*.conf "hosts/$HOSTNAME/"
+    ;;
+  tarballs)
+    tar --zstd --strip-components 7 -cvf "tarballs/$HOSTNAME-$PKGBASE_REPO_NAME.tar.zst" "$PKGBASE_REPO"
+    tar --zstd --strip-components 7 -cvf "tarballs/$HOSTNAME-$PORTS_REPO_NAME.tar.zst" "$PORTS_REPO"
+    ;;
+  *)
+    echo "unsupported command: $COMMAND" >&2
+    exit 1
 esac
