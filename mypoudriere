@@ -28,6 +28,17 @@ PORTS_REPO_NAME=PoudrierePorts
 OPTIONS_DIR="$JAILNAME-local-$HOSTNAME-options"
 BACKUP_DIR="hosts/$HOSTNAME/$OPTIONS_DIR"
 
+# TODO find a cleaner way to do this
+# Instructions from https://wiki.freebsd.org/PkgBase
+post_pkgbase_upgrade() {
+    cp /etc/master.passwd.pkgsave /etc/master.passwd
+    cp /etc/group.pkgsave /etc/group
+    pwd_mkdb -p /etc/master.passwd
+    cp /etc/sysctl.conf.pkgsave /etc/sysctl.conf
+    find / -name '*.pkgsave' -delete
+    rm /boot/kernel/linker.hints
+}
+
 bootstrap_builder() {
     # NOTES:
     # Must run with the following conditions:
@@ -95,15 +106,7 @@ ${PKGBASE_REPO_NAME}: {
 EOF
 
     pkg install -y -r "$PKGBASE_REPO_NAME" -g 'FreeBSD-*'
-
-    # TODO find a cleaner way to do this
-    # Instructions from https://wiki.freebsd.org/PkgBase
-    cp /etc/master.passwd.pkgsave /etc/master.passwd
-    cp /etc/group.pkgsave /etc/group
-    pwd_mkdb -p /etc/master.passwd
-    cp /etc/sysctl.conf.pkgsave /etc/sysctl.conf
-    find / -name '*.pkgsave' -delete
-    rm /boot/kernel/linker.hints
+    post_pkgbase_upgrade
 
     if test ! -d /usr/ports/.git; then
         # 5) setup ports collection
@@ -155,6 +158,13 @@ case "$COMMAND" in
   tarballs)
     tar --zstd --strip-components 7 -cvf "tarballs/$HOSTNAME-$PKGBASE_REPO_NAME.tar.zst" "$PKGBASE_REPO"
     tar --zstd --strip-components 7 -cvf "tarballs/$HOSTNAME-$PORTS_REPO_NAME.tar.zst" "$PORTS_REPO"
+    ;;
+  upgrade)
+    poudriere jail -u -j "$JAILNAME" -b -B -K "$KERNCONF" -z "$HOSTNAME"
+    poudriere options -j "$JAILNAME" -p local -f "$PKGLIST" -z "$HOSTNAME"
+    poudriere bulk -j "$JAILNAME" -p local -f "$PKGLIST" -z "$HOSTNAME"
+    pkg upgrade -y
+    post_pkgbase_upgrade
     ;;
   *)
     echo "unsupported command: $COMMAND" >&2

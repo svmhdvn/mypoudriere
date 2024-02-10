@@ -1,0 +1,37 @@
+security/heimdal-devel
+dns/nsd
+irc/unreal
+irc/anope
+mail/dovecot
+mail/mlmmj
+mail/postfix
+#net/samba416
+net/samba419
+net/openntpd
+security/openssh-portable
+security/py-cryptography
+
+# debug, testing, and ansible stuff
+ports-mgmt/pkg
+security/doas
+sysutils/htop
+sysutils/tmux
+sysutils/tree
+ftp/wget
+archivers/gtar
+archivers/unzip
+net/rsync
+lang/python
+
+# prometheus, grafana, and exporters
+net-mgmt/prometheus2
+sysutils/node_exporter
+net-mgmt/nsd_exporter
+net-mgmt/grok_exporter
+net-mgmt/ping_exporter
+#www/grafana9
+
+# TODO write a C version of freebsd-nfs-exporter
+# to avoid the massive rust and LLVM dependencies
+#net-mgmt/nfs-exporter
+#sysutils/jail_exporter
