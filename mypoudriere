@@ -17,7 +17,7 @@ case "$HOSTNAME" in
 esac
 
 FREEBSD_VERSION=14
-JAILNAME="poudriere_stable${FREEBSD_VERSION}_pkgbase"
+JAILNAME="poudriere_stable${FREEBSD_VERSION}_upstream"
 
 PKGBASE_REPO="/usr/local/poudriere/data/images/${JAILNAME}-repo/FreeBSD:${FREEBSD_VERSION}:amd64/latest"
 PKGBASE_REPO_NAME=PoudrierePkgbase
@@ -25,18 +25,23 @@ PKGBASE_REPO_NAME=PoudrierePkgbase
 PORTS_REPO="/usr/local/poudriere/data/packages/${JAILNAME}-default-${HOSTNAME}"
 PORTS_REPO_NAME=PoudrierePorts
 
-OPTIONS_DIR="$JAILNAME-local-$HOSTNAME-options"
+OPTIONS_DIR="$JAILNAME-default-$HOSTNAME-options"
 BACKUP_DIR="hosts/$HOSTNAME/$OPTIONS_DIR"
+
+# TODO change for custom kernel config
+KERNCONF=GENERIC
 
 # TODO find a cleaner way to do this
 # Instructions from https://wiki.freebsd.org/PkgBase
 post_pkgbase_upgrade() {
-    cp /etc/master.passwd.pkgsave /etc/master.passwd
-    cp /etc/group.pkgsave /etc/group
-    pwd_mkdb -p /etc/master.passwd
-    cp /etc/sysctl.conf.pkgsave /etc/sysctl.conf
+    if test -r /etc/master.passwd.pkgsave || test -r /etc/group.pkgsave ; then
+        cp /etc/master.passwd.pkgsave /etc/master.passwd || true
+        cp /etc/group.pkgsave /etc/group || true
+        pwd_mkdb -p /etc/master.passwd
+    fi
+    cp /etc/sysctl.conf.pkgsave /etc/sysctl.conf || true
     find / -name '*.pkgsave' -delete
-    rm /boot/kernel/linker.hints
+    rm -f /boot/kernel/linker.hints
 }
 
 bootstrap_builder() {
@@ -50,9 +55,6 @@ bootstrap_builder() {
     # * doas (configured with 'permit nopass :wheel')
 
     BUILDER_HOSTNAME=poudriere.home.arpa
-
-    # TODO change for custom kernel config
-    KERNCONF=GENERIC
 
     # NOTE use this to determine a system's CPUTYPE, then add it to a make.conf
     # inside the hosts/ directory
@@ -148,7 +150,7 @@ case "$COMMAND" in
     bootstrap_builder
     ;;
   bulk|options)
-    doas poudriere "$COMMAND" -j "$JAILNAME" -p local -f "$PKGLIST" -z "$HOSTNAME"
+    doas poudriere "$COMMAND" -j "$JAILNAME" -f "$PKGLIST" -z "$HOSTNAME"
     ;;
   backup)
     rm -rf "$BACKUP_DIR"
@@ -161,8 +163,9 @@ case "$COMMAND" in
     ;;
   upgrade)
     poudriere jail -u -j "$JAILNAME" -b -B -K "$KERNCONF" -z "$HOSTNAME"
-    poudriere options -j "$JAILNAME" -p local -f "$PKGLIST" -z "$HOSTNAME"
-    poudriere bulk -j "$JAILNAME" -p local -f "$PKGLIST" -z "$HOSTNAME"
+    git -C /usr/ports pull
+    poudriere options -j "$JAILNAME" -f "$PKGLIST" -z "$HOSTNAME"
+    poudriere bulk -j "$JAILNAME" -f "$PKGLIST" -z "$HOSTNAME"
     pkg upgrade -y
     post_pkgbase_upgrade
     ;;
