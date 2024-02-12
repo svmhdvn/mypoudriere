@@ -12,8 +12,6 @@ device		ata
 device		atkbd
 device		atkbdc
 device		bpf
-device		ccd		#Concatenated disk driver
-device		ch		#SCSI media changers
 device		cpuctl
 device		cpufreq
 device		crypto		# core crypto support
@@ -25,7 +23,6 @@ device		ehci
 device		ether
 device		evdev		# input event device support
 device		firmware	#firmware(9) support
-device		hcons		# Consumer controls
 device		hid		# Generic HID support
 device		hidbus		# HID bus
 device		hidmap		# HID to evdev mapping
@@ -46,7 +43,6 @@ device		netmap
 device		nvram		# Access to rtc cmos via /dev/nvram
 device		ohci
 device		ossl		# OpenSSL OpenCrypto module
-device		padlock_rng	# VIA Padlock RNG
 device		pass		#CAM passthrough driver
 device		pci
 device		ppbus
@@ -60,7 +56,6 @@ device		rl		# RealTek 8129/8139
 device		rndtest		# FIPS 140-2 entropy tester
 device		sc
 device		scbus		#base SCSI code
-device		ses		#Enclosure Services (SES and SAF-TE)
 device		smb
 device		smbios
 device		smbus		# Bus support, required for smb below.
@@ -81,20 +76,12 @@ device		usb
 device		usbhid
 device		usfs
 device		vga
-device		virtio		# Generic VirtIO bus (required)
-device		virtio_balloon	# VirtIO Memory Balloon device
-device		virtio_blk	# VirtIO Block device
-device		virtio_console	# VirtIO Console device
-device		virtio_pci	# VirtIO PCI Interface
-device		virtio_random	# VirtIO Entropy device
-device		virtio_scsi	# VirtIO SCSI device
 device		vlan
 device		vpd
 device		vt
 device		vt_efifb	# EFI framebuffer
 device		vt_vbefb	# VBE framebuffer
 device		vt_vga		# VGA
-device		vtnet		# VirtIO Ethernet device
 device		wg
 device		xhci
 device		xz		# xz_embedded LZMA de-compression library
@@ -123,28 +110,16 @@ options 	FDESCFS			#File descriptor filesystem
 options 	FFS			#Fast filesystem
 options 	FUSEFS			#FUSEFS support module
 options 	GEOM_CACHE		# Disk cache.
-options 	GEOM_CONCAT		# Disk concatenation.
 options 	GEOM_GATE		# Userland services.
 options 	GEOM_JOURNAL		# Journaling.
 options 	GEOM_LABEL		# Providers labelization.
 options 	GEOM_MAP		# Map based partitioning
-options 	GEOM_MIRROR		# Disk mirroring.
-options 	GEOM_MULTIPATH		# Disk multipath
-options 	GEOM_NOP		# Test class.
 options 	GEOM_PART_BSD		# BSD disklabel
 options 	GEOM_PART_BSD64		# BSD disklabel64
 options 	GEOM_PART_EBR		# Extended Boot Records
 options 	GEOM_PART_GPT		# GPT partitioning
-options 	GEOM_PART_LDM		# Logical Disk Manager
 options 	GEOM_PART_MBR		# MBR partitioning
-options 	GEOM_RAID		# Soft RAID functionality.
-options 	GEOM_RAID3		# RAID3 functionality.
-options 	GEOM_SHSEC		# Shared secret.
 options 	GEOM_STRIPE		# Disk striping.
-options 	GEOM_UZIP		# Read-only compressed disks
-options 	GEOM_VINUM		# Vinum logical volume manager
-options 	GEOM_VIRSTOR		# Virtual storage.
-options 	GEOM_ZERO		# Performance testing helper.
 options 	GZIO
 options 	HZ=100
 options 	INCLUDE_CONFIG_FILE     # Include this file in kernel
