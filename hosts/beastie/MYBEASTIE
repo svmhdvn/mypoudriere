@@ -1,5 +1,6 @@
 cpu		HAMMER			# aka K8, aka Opteron & Athlon64
 device		acpi
+device		acpi_wmi
 device		aesni		# AES-NI OpenCrypto module
 device		agp
 device		ahci
@@ -22,6 +23,7 @@ device		dpms		# DPMS suspend & resume via VESA BIOS
 device		ehci
 device		ether
 device		evdev		# input event device support
+device		filemon
 device		firmware	#firmware(9) support
 device		hid		# Generic HID support
 device		hidbus		# HID bus
@@ -86,7 +88,6 @@ device  	mii_bitbang	# Common module for bit-bang'ing the MII
 device         nvd     # expose NVMe namespaces as disks, depends on nvme
 device         nvme    # base NVMe driver
 ident		MYBEASTIE
-maxusers	10
 options 	BPF_JITTER
 options 	CAPABILITIES	# fine-grained rights on file descriptors
 options 	CAPABILITY_MODE	# sandboxes with no global namespace access
