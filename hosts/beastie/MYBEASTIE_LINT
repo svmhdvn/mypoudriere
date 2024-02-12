@@ -156,14 +156,14 @@ options 	INCLUDE_CONFIG_FILE     # Include this file in kernel
 #options 	BOOT_TAG_SZ=32
 
 #options 	GEOM_BDE		# Disk encryption.
-options 	GEOM_CACHE		# Disk cache.
+#options 	GEOM_CACHE		# Disk cache.
 #options 	GEOM_CONCAT		# Disk concatenation.
 #options 	GEOM_ELI		# Disk encryption.
-options 	GEOM_GATE		# Userland services.
-options 	GEOM_JOURNAL		# Journaling.
+#options 	GEOM_GATE		# Userland services.
+#options 	GEOM_JOURNAL		# Journaling.
 options 	GEOM_LABEL		# Providers labelization.
 #options 	GEOM_LINUX_LVM		# Linux LVM2 volumes
-options 	GEOM_MAP		# Map based partitioning
+#options 	GEOM_MAP		# Map based partitioning
 #options 	GEOM_MIRROR		# Disk mirroring.
 #options 	GEOM_MULTIPATH		# Disk multipath
 #options 	GEOM_NOP		# Test class.
@@ -177,7 +177,7 @@ options 	GEOM_PART_MBR		# MBR partitioning
 #options 	GEOM_RAID		# Soft RAID functionality.
 #options 	GEOM_RAID3		# RAID3 functionality.
 #options 	GEOM_SHSEC		# Shared secret.
-options 	GEOM_STRIPE		# Disk striping.
+#options 	GEOM_STRIPE		# Disk striping.
 #options 	GEOM_UZIP		# Read-only compressed disks
 #options 	GEOM_VINUM		# Vinum logical volume manager
 #options 	GEOM_VIRSTOR		# Virtual storage.
@@ -867,7 +867,7 @@ device		vlan
 
 # The `vxlan' device implements the VXLAN encapsulation of Ethernet
 # frames in UDP packets according to RFC7348.
-#device		vxlan
+device		vxlan
 
 #  The `wlan' device provides generic code to support 802.11
 #  drivers, including host AP mode; it is MANDATORY for the wi,
@@ -922,7 +922,7 @@ device		netmap
 
 #  The `tuntap' device implements (user-)ppp, nos-tun(8) and a pty-like virtual
 #  Ethernet interface
-device		tuntap
+#device		tuntap
 
 #  The `gif' device implements IPv6 over IP4 tunneling,
 #  IPv4 over IPv6 tunneling, IPv4 over IPv4 tunneling and
@@ -1101,7 +1101,7 @@ options 	FFS			#Fast filesystem
 #options 	AUTOFS			#Automounter filesystem
 options 	CD9660			#ISO 9660 filesystem
 options 	FDESCFS			#File descriptor filesystem
-options 	FUSEFS			#FUSEFS support module
+#options 	FUSEFS			#FUSEFS support module
 options 	MSDOSFS			#MS DOS File System (FAT, FAT32)
 #options 	NFSLOCKD		#Network Lock Manager
 # TODO find a way to compile ZFS without NFSD
@@ -1114,8 +1114,8 @@ options 	PSEUDOFS		#Pseudo-filesystem framework
 #options 	PSEUDOFS_TRACE		#Debugging support for PSEUDOFS
 #options 	SMBFS			#SMB/CIFS filesystem
 options 	TMPFS			#Efficient memory filesystem
-options 	UDF			#Universal Disk Format
-options 	UNIONFS			#Union filesystem
+#options 	UDF			#Universal Disk Format
+#options 	UNIONFS			#Union filesystem
 # The xFS_ROOT options REQUIRE the associated ``options xFS''
 #options 	NFS_ROOT		#NFS usable as root device
 
@@ -1138,10 +1138,10 @@ options 	SOFTUPDATES
 
 # Directory hashing improves the speed of operations on very large
 # directories at the expense of some memory.
-options 	UFS_DIRHASH
+#options 	UFS_DIRHASH
 
 # Gjournal-based UFS journaling support.
-options 	UFS_GJOURNAL
+#options 	UFS_GJOURNAL
 
 # Make space in the kernel for a root filesystem on a md device.
 # Define to the number of kilobytes to reserve for the filesystem.
@@ -1166,7 +1166,7 @@ options 	UFS_GJOURNAL
 #options 	MD_ROOT_MEM
 
 # Disk quotas are supported when this option is enabled.
-options 	QUOTA			#enable disk quotas
+#options 	QUOTA			#enable disk quotas
 
 # If you are running a machine just as a fileserver for PC and MAC
 # users, using SAMBA, you may consider setting this option
@@ -1368,8 +1368,8 @@ device		da		#SCSI direct access devices (aka disks)
 #device		cd		#SCSI CD-ROMs
 #device		ses		#Enclosure Services (SES and SAF-TE)
 device		pt		#SCSI processor
-device		targ		#SCSI Target Mode Code
-device		targbh		#SCSI Target Mode Blackhole Device
+#device		targ		#SCSI Target Mode Code
+#device		targbh		#SCSI Target Mode Blackhole Device
 device		pass		#CAM passthrough driver
 #device		sg		#Linux SCSI passthrough
 device		ctl		#CAM Target Layer
@@ -1469,8 +1469,8 @@ options 	LIBICONV
 # PCI bus & PCI options:
 #
 device		pci
-options 	PCI_HP			# PCI-Express native HotPlug
-options 	PCI_IOV			# PCI SR-IOV support
+#options 	PCI_HP			# PCI-Express native HotPlug
+#options 	PCI_IOV			# PCI SR-IOV support
 
 #####################################################################
 # HARDWARE DEVICE CONFIGURATION
@@ -1776,9 +1776,9 @@ device		puc
 # specifically handled by an individual driver.  Support for specific
 # PHYs may be built by adding "device mii", "device mii_bitbang" if
 # needed by the NIC driver and then adding the appropriate PHY driver.
-device  	mii		# Minimal MII support
-device  	mii_bitbang	# Common module for bit-bang'ing the MII
-device  	miibus		# MII support w/ bit-bang'ing and all PHYs
+#device  	mii		# Minimal MII support
+#device  	mii_bitbang	# Common module for bit-bang'ing the MII
+#device  	miibus		# MII support w/ bit-bang'ing and all PHYs
 
 #device  	acphy		# Altima Communications AC101
 #device  	amphy		# AMD AM79c873 / Davicom DM910{1,2}
@@ -2262,22 +2262,22 @@ device		jedec_dimm
 # ppc	ISA-bus parallel port interfaces.
 #
 
-options 	PPC_PROBE_CHIPSET # Enable chipset specific detection
+#options 	PPC_PROBE_CHIPSET # Enable chipset specific detection
 				  # (see flags in ppc(4))
 #options 	DEBUG_1284	# IEEE1284 signaling protocol debug
-options 	PERIPH_1284	# Makes your computer act as an IEEE1284
+#options 	PERIPH_1284	# Makes your computer act as an IEEE1284
 				# compliant peripheral
-options 	DONTPROBE_1284	# Avoid boot detection of PnP parallel devices
+#options 	DONTPROBE_1284	# Avoid boot detection of PnP parallel devices
 #options 	LPT_DEBUG	# Printer driver debug
 #options 	PPC_DEBUG	# Parallel chipset level debug
 #options 	PLIP_DEBUG	# Parallel network IP interface debug
 #options 	PCFCLOCK_VERBOSE         # Verbose pcfclock driver
 #options 	PCFCLOCK_MAX_RETRIES=5   # Maximum read tries (default 10)
 
-device		ppc
+#device		ppc
 #envvar		hint.ppc.0.at="isa"
 #envvar		hint.ppc.0.irq="7"
-device		ppbus
+#device		ppbus
 #device		lpt
 #device		plip
 #device		ppi
@@ -2307,7 +2307,7 @@ device		ppbus
 #
 # etherswitch	The etherswitch(4) framework
 # miiproxy	Proxy device for miibus(4) functionality
-# 
+#
 # Switch hardware support:
 # arswitch	Atheros switches
 # ip17x 	IC+ 17x family switches
@@ -2406,7 +2406,7 @@ device		usb
 # USB Double Bulk Pipe devices
 #device		udbp
 # USB temperature meter
-#device		ugold
+device		ugold
 # USB LED
 device		uled
 # Human Interface Device (anything with buttons and dials)
@@ -2414,7 +2414,7 @@ device		uhid
 # USB keyboard
 device		ukbd
 # USB printer
-device		ulpt
+#device		ulpt
 # USB mass storage driver (Requires scbus and da)
 device		umass
 # USB mass storage driver for device-side mode
@@ -3513,7 +3513,7 @@ options 	EFIRT
 #
 # HID-over-I2C support
 #
-device		iichid		# HID-over-I2C support
+#device		iichid		# HID-over-I2C support
 #options 	IICHID_DEBUG	# Enable HID-over-I2C debug messages
 #options 	IICHID_SAMPLING	# Workaround missing GPIO INTR support
 

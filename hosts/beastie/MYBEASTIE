@@ -30,7 +30,6 @@ device		hidraw		# Raw access driver
 device		hkbd		# HID keyboard
 device		hms		# HID mouse
 device		hsctrl		# System controls
-device		iichid		# HID-over-I2C support
 device		intpm
 device		ioat		# Intel I/OAT DMA engine
 device		ipmi
@@ -45,8 +44,6 @@ device		ohci
 device		ossl		# OpenSSL OpenCrypto module
 device		pass		#CAM passthrough driver
 device		pci
-device		ppbus
-device		ppc
 device		psm
 device		pt		#SCSI processor
 device		puc
@@ -59,17 +56,14 @@ device		scbus		#base SCSI code
 device		smb
 device		smbios
 device		smbus		# Bus support, required for smb below.
-device		targ		#SCSI Target Mode Code
-device		targbh		#SCSI Target Mode Blackhole Device
 device		tpm
-device		tuntap
 device		uart
+device		ugold
 device		uhci
 device		uhid
 device		uinput		# install /dev/uinput cdev
 device		ukbd
 device		uled
-device		ulpt
 device		umass
 device		ums
 device		usb
@@ -82,13 +76,11 @@ device		vt
 device		vt_efifb	# EFI framebuffer
 device		vt_vbefb	# VBE framebuffer
 device		vt_vga		# VGA
+device		vxlan
 device		wg
 device		xhci
 device		xz		# xz_embedded LZMA de-compression library
 device		zlib		# gzip/zlib compression/decompression library
-device  	mii		# Minimal MII support
-device  	mii_bitbang	# Common module for bit-bang'ing the MII
-device  	miibus		# MII support w/ bit-bang'ing and all PHYs
 device  	rgephy		# RealTek 8169S/8110S/8211B/8211C
 device  	rlphy		# RealTek 8139
 device  	rlswitch	# RealTek 8305
@@ -104,22 +96,15 @@ options 	CD9660_ICONV
 options 	COMPAT_FREEBSD11
 options 	COMPAT_FREEBSD12
 options 	COMPAT_FREEBSD13
-options 	DONTPROBE_1284	# Avoid boot detection of PnP parallel devices
 options 	EFIRT
 options 	FDESCFS			#File descriptor filesystem
 options 	FFS			#Fast filesystem
-options 	FUSEFS			#FUSEFS support module
-options 	GEOM_CACHE		# Disk cache.
-options 	GEOM_GATE		# Userland services.
-options 	GEOM_JOURNAL		# Journaling.
 options 	GEOM_LABEL		# Providers labelization.
-options 	GEOM_MAP		# Map based partitioning
 options 	GEOM_PART_BSD		# BSD disklabel
 options 	GEOM_PART_BSD64		# BSD disklabel64
 options 	GEOM_PART_EBR		# Extended Boot Records
 options 	GEOM_PART_GPT		# GPT partitioning
 options 	GEOM_PART_MBR		# MBR partitioning
-options 	GEOM_STRIPE		# Disk striping.
 options 	GZIO
 options 	HZ=100
 options 	INCLUDE_CONFIG_FILE     # Include this file in kernel
@@ -136,16 +121,11 @@ options 	MSDOSFS			#MS DOS File System (FAT, FAT32)
 options 	MSDOSFS_ICONV
 options 	NFSD			#Network Filesystem Server
 options 	NULLFS			#NULL filesystem
-options 	PCI_HP			# PCI-Express native HotPlug
-options 	PCI_IOV			# PCI SR-IOV support
-options 	PERIPH_1284	# Makes your computer act as an IEEE1284
-options 	PPC_PROBE_CHIPSET # Enable chipset specific detection
 options 	PPS_SYNC
 options 	PROCFS			#Process filesystem (requires PSEUDOFS)
 options 	PSEUDOFS		#Pseudo-filesystem framework
 options 	PSM_HOOKRESUME		#hook the system resume event, useful
 options 	PSM_RESETAFTERSUSPEND	#reset the device at the resume event
-options 	QUOTA			#enable disk quotas
 options 	RACCT
 options 	RCTL
 options 	SCHED_ULE
@@ -159,11 +139,7 @@ options 	SYSVSEM
 options 	SYSVSHM
 options 	TCP_OFFLOAD		# TCP offload support.
 options 	TMPFS			#Efficient memory filesystem
-options 	UDF			#Universal Disk Format
 options 	UDF_ICONV
-options 	UFS_DIRHASH
-options 	UFS_GJOURNAL
-options 	UNIONFS			#Union filesystem
 options 	VESA
 options 	X86BIOS
 options 	ZFS
