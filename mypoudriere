@@ -86,15 +86,11 @@ bootstrap_builder() {
 
     # 3) build system pkgbase
 
-    # TODO move to -m src=/usr/src once upstream Poudriere maintains file modification times
-    # for better incremental builds using WITH_META_MODE
-    #if test ! -d /usr/src/.git; then
-        #git clone --depth 1 --branch "stable/${FREEBSD_VERSION}" https://git.freebsd.org/src.git /usr/src
-    #fi
-    #git -C /usr/src pull
-    #poudriere jail -c -j "$JAILNAME" -b -m src=/usr/src -B -K "$KERNCONF" -z "$HOSTNAME"
-
-    poudriere jail -c -j "$JAILNAME" -b -m git+https -v "stable/$FREEBSD_VERSION" -B -K "$KERNCONF" -z "$HOSTNAME"
+    if test ! -d /usr/src/.git; then
+        git clone --depth 1 --branch "stable/${FREEBSD_VERSION}" https://git.freebsd.org/src.git /usr/src
+    fi
+    git -C /usr/src pull
+    poudriere jail -c -j "$JAILNAME" -b -m src=/usr/src -B -K "$KERNCONF" -z "$HOSTNAME"
 
     # 4) convert system into a pkgbase installation
     mkdir -p /usr/local/etc/pkg/repos
@@ -162,7 +158,8 @@ case "$COMMAND" in
     tar --zstd --strip-components 7 -cvf "tarballs/$HOSTNAME-$PORTS_REPO_NAME.tar.zst" "$PORTS_REPO"
     ;;
   upgrade)
-    poudriere jail -u -j "$JAILNAME" -b -B -K "$KERNCONF" -z "$HOSTNAME"
+    git -C /usr/src pull
+    poudriere jail -u -j "$JAILNAME" -b -z "$HOSTNAME"
     git -C /usr/ports pull
     poudriere options -j "$JAILNAME" -f "$PKGLIST" -z "$HOSTNAME"
     poudriere bulk -j "$JAILNAME" -f "$PKGLIST" -z "$HOSTNAME"

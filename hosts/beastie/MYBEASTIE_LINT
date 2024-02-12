@@ -355,11 +355,15 @@ options 	MAXMEMDOM=1
 # Enable FreeBSD10 compatibility syscalls
 #options 	COMPAT_FREEBSD10
 
+# TODO SIVA waiting on https://github.com/rust-lang/rust/issues/89058
+# to remove COMPAT_FREEBSD11
+# EOL as of 2021-09-30
 # Enable FreeBSD11 compatibility syscalls
-#options 	COMPAT_FREEBSD11
+options 	COMPAT_FREEBSD11
 
+# TODO SIVA FreeBSD 12 is EOL as of 2023-12-31
 # Enable FreeBSD12 compatibility syscalls
-#options 	COMPAT_FREEBSD12
+options 	COMPAT_FREEBSD12
 
 # Enable FreeBSD13 compatibility syscalls
 options 	COMPAT_FREEBSD13
@@ -703,7 +707,7 @@ options 	KERN_TLS		# TLS transmit and receive offload
 # SMB/CIFS requester
 # NETSMB enables support for SMB protocol, it requires LIBMCHAIN and LIBICONV
 # options.
-options 	NETSMB			#SMB/CIFS requester
+#options 	NETSMB			#SMB/CIFS requester
 
 # mchain library. It can be either loaded as KLD or compiled into kernel
 options 	LIBMCHAIN
@@ -1100,7 +1104,8 @@ options 	FDESCFS			#File descriptor filesystem
 options 	FUSEFS			#FUSEFS support module
 options 	MSDOSFS			#MS DOS File System (FAT, FAT32)
 #options 	NFSLOCKD		#Network Lock Manager
-#options 	NFSD			#Network Filesystem Server
+# TODO find a way to compile ZFS without NFSD
+options 	NFSD			#Network Filesystem Server
 #options 	KGSSAPI			#Kernel GSSAPI implementation
 
 options 	NULLFS			#NULL filesystem
@@ -1344,12 +1349,12 @@ options 	PPS_SYNC
 # source level API compatibility for porting apps to FreeBSD.
 #
 # Target Mode support is provided here but also requires that a SIM
-# (SCSI Host Adapter Driver) provide support as well.
-#
+# (SCSI Host Adapter Driver) provide support as welt out
 # The targ driver provides target mode support as a Processor type device.
 # It exists to give the minimal context necessary to respond to Inquiry
 # commands. There is a sample user application that shows how the rest
-# of the command support might be done in /usr/share/examples/scsi_target.
+# TODO siva this is needed for VESA for some reason, figure i tou
+ of the command support might be done in /usr/share/examples/scsi_target.
 #
 # The targbh driver provides target mode support and exists to respond
 # to incoming commands that do not otherwise have a logical unit assigned
@@ -2181,13 +2186,13 @@ device		smbus		# Bus support, required for smb below.
 
 device		intpm
 #device		alpm
-device		ichsmb
+#device		ichsmb
 #device		viapm
 device		amdpm
 device		amdsmb
 #device		nfpm
 #device		nfsmb
-device		ismt
+#device		ismt
 
 device		smb
 
@@ -2210,18 +2215,18 @@ device		jedec_dimm
 # Other:
 # iicbb	generic I2C bit-banging code (needed by lpbb)
 #
-device		iicbus		# Bus support, required for ic/iic/iicsmb below.
-device		iicbb		# bitbang driver; implements i2c on a pair of gpio pins
+#device		iicbus		# Bus support, required for ic/iic/iicsmb below.
+#device		iicbb		# bitbang driver; implements i2c on a pair of gpio pins
 
-device		ic
-device		iic		# userland access to i2c slave devices via ioctl(8)
-device		iicsmb		# smb over i2c bridge
+#device		ic
+#device		iic		# userland access to i2c slave devices via ioctl(8)
+#device		iicsmb		# smb over i2c bridge
 #device		iicoc		# OpenCores I2C controller support
 
 # I2C bus multiplexer (mux) devices
-device		iicmux		# i2c mux core driver
-device		iic_gpiomux	# i2c mux hardware controlled via gpio pins
-device		ltc430x		# LTC4305 and LTC4306 i2c mux chips
+#device		iicmux		# i2c mux core driver
+#device		iic_gpiomux	# i2c mux hardware controlled via gpio pins
+#device		ltc430x		# LTC4305 and LTC4306 i2c mux chips
 
 # I2C peripheral devices
 #
@@ -2400,9 +2405,9 @@ device		xhci
 device		usb
 #
 # USB Double Bulk Pipe devices
-device		udbp
+#device		udbp
 # USB temperature meter
-device		ugold
+#device		ugold
 # USB LED
 device		uled
 # Human Interface Device (anything with buttons and dials)
@@ -2416,117 +2421,117 @@ device		umass
 # USB mass storage driver for device-side mode
 device		usfs
 # USB support for Belkin F5U109 and Magic Control Technology serial adapters
-device		umct
+#device		umct
 # USB modem support
-device		umodem
+#device		umodem
 # USB mouse
 device		ums
 # USB touchpad(s)
-device		atp
-device		wsp
+#device		atp
+#device		wsp
 # eGalax USB touch screen
-device		uep
+#device		uep
 # Diamond Rio 500 MP3 player
-device		urio
+#device		urio
 # HID-over-USB driver
 device		usbhid
 
 #
 # USB serial support
-device		ucom
+#device		ucom
 # USB support for 3G modem cards by Option, Novatel, Huawei and Sierra
-device		u3g
+#device		u3g
 # USB support for Technologies ARK3116 based serial adapters
-device		uark
+#device		uark
 # USB support for Belkin F5U103 and compatible serial adapters
-device		ubsa
+#device		ubsa
 # USB support for serial adapters based on the FT8U100AX and FT8U232AM
-device		uftdi
+#device		uftdi
 # USB support for some Windows CE based serial communication.
-device		uipaq
+#device		uipaq
 # USB support for Prolific PL-2303 serial adapters
-device		uplcom
+#device		uplcom
 # USB support for Silicon Laboratories CP2101/CP2102 based USB serial adapters
-device		uslcom
+#device		uslcom
 # USB Visor and Palm devices
-device		uvisor
+#device		uvisor
 # USB serial support for DDI pocket's PHS
-device		uvscom
+#device		uvscom
 #
 # USB ethernet support
-device		uether
+#device		uether
 # ADMtek USB ethernet. Supports the LinkSys USB100TX,
 # the Billionton USB100, the Melco LU-ATX, the D-Link DSB-650TX
 # and the SMC 2202USB. Also works with the ADMtek AN986 Pegasus
 # eval board.
-device		aue
+#device		aue
 
 # ASIX Electronics AX88172 USB 2.0 ethernet driver. Used in the
 # LinkSys USB200M and various other adapters.
-device		axe
+#device		axe
 # ASIX Electronics AX88178A/AX88179 USB 2.0/3.0 gigabit ethernet driver.
-device		axge
+#device		axge
 
 #
 # Devices which communicate using Ethernet over USB, particularly
 # Communication Device Class (CDC) Ethernet specification. Supports
 # Sharp Zaurus PDAs, some DOCSIS cable modems and so on.
-device		cdce
+#device		cdce
 #
 # CATC USB-EL1201A USB ethernet. Supports the CATC Netmate
 # and Netmate II, and the Belkin F5U111.
-device		cue
+#device		cue
 #
 # Kawasaki LSI ethernet. Supports the LinkSys USB10T,
 # Entrega USB-NET-E45, Peracom Ethernet Adapter, the
 # 3Com 3c19250, the ADS Technologies USB-10BT, the ATen UC10T,
 # the Netgear EA101, the D-Link DSB-650, the SMC 2102USB
 # and 2104USB, and the Corega USB-T.
-device		kue
+#device		kue
 #
 # RealTek RTL8150 USB to fast ethernet. Supports the Melco LUA-KTX
 # and the GREEN HOUSE GH-USB100B.
-device		rue
+#device		rue
 #
 # Davicom DM9601E USB to fast ethernet. Supports the Corega FEther USB-TXC.
-device		udav
+#device		udav
 #
 # RealTek RTL8152/RTL8153 USB Ethernet driver
-device		ure
+#device		ure
 #
 # Moschip MCS7730/MCS7840 USB to fast ethernet. Supports the Sitecom LN030.
-device		mos
+#device		mos
 #
 # HSxPA devices from Option N.V
-device		uhso
+#device		uhso
 
 # Realtek RTL8188SU/RTL8191SU/RTL8192SU wireless driver
-device		rsu
+#device		rsu
 #
 # Ralink Technology RT2501USB/RT2601USB wireless driver
-device		rum
+#device		rum
 # Ralink Technology RT2700U/RT2800U/RT3000U wireless driver
-device		run
+#device		run
 #
 # Atheros AR5523 wireless driver
-device		uath
+#device		uath
 #
 # Conexant/Intersil PrismGT wireless driver
-device		upgt
+#device		upgt
 #
 # Ralink Technology RT2500USB wireless driver
-device		ural
+#device		ural
 #
 # RNDIS USB ethernet driver
-device		urndis
+#device		urndis
 # Realtek RTL8187B/L wireless driver
-device		urtw
+#device		urtw
 #
 # ZyDas ZD1211/ZD1211B wireless driver
-device		zyd
+#device		zyd
 #
 # Sierra USB wireless driver
-device		usie
+#device		usie
 
 # 
 # debugging options for the USB subsystem
@@ -2585,9 +2590,9 @@ device		cryptodev	# /dev/crypto for access to h/w
 
 device		rndtest		# FIPS 140-2 entropy tester
 
-device		ccr		# Chelsio T6
+#device		ccr		# Chelsio T6
 
-device		hifn		# Hifn 7951, 7781, etc.
+#device		hifn		# Hifn 7951, 7781, etc.
 #options 	HIFN_DEBUG	# enable debugging support: hw.hifn.debug
 #options 	HIFN_RNDTEST	# enable rndtest support
 
@@ -2813,7 +2818,8 @@ device		xz		# xz_embedded LZMA de-compression library
 # HARDWARE DEVICE CONFIGURATION
 
 # The syscons console driver (SCO color console compatible).
-#device		sc
+# TODO siva this is needed for VESA for some reason, figure it out
+device		sc
 #envvar		hint.sc.0.at="isa"
 #options 	MAXCONS=16		# number of virtual consoles
 #options 	SC_ALT_MOUSE_IMAGE	# simplified mouse cursor in text mode

@@ -11,21 +11,14 @@ device		amdtemp
 device		ata
 device		atkbd
 device		atkbdc
-device		atp
-device		aue
-device		axe
-device		axge
 device		bpf
 device		ccd		#Concatenated disk driver
-device		ccr		# Chelsio T6
-device		cdce
 device		ch		#SCSI media changers
 device		cpuctl
 device		cpufreq
 device		crypto		# core crypto support
 device		cryptodev	# /dev/crypto for access to h/w
 device		ctl		#CAM Target Layer
-device		cue
 device		da		#SCSI direct access devices (aka disks)
 device		dpms		# DPMS suspend & resume via VESA BIOS
 device		ehci
@@ -37,31 +30,18 @@ device		hid		# Generic HID support
 device		hidbus		# HID bus
 device		hidmap		# HID to evdev mapping
 device		hidraw		# Raw access driver
-device		hifn		# Hifn 7951, 7781, etc.
 device		hkbd		# HID keyboard
 device		hms		# HID mouse
 device		hsctrl		# System controls
-device		ic
-device		ichsmb
-device		iic		# userland access to i2c slave devices via ioctl(8)
-device		iic_gpiomux	# i2c mux hardware controlled via gpio pins
-device		iicbb		# bitbang driver; implements i2c on a pair of gpio pins
-device		iicbus		# Bus support, required for ic/iic/iicsmb below.
 device		iichid		# HID-over-I2C support
-device		iicmux		# i2c mux core driver
-device		iicsmb		# smb over i2c bridge
 device		intpm
 device		ioat		# Intel I/OAT DMA engine
 device		ipmi
 device		isa
-device		ismt
 device		jedec_dimm
 device		kbdmux			# keyboard multiplexer
-device		kue
 device		loop
-device		ltc430x		# LTC4305 and LTC4306 i2c mux chips
 device		md		#Memory/malloc disk
-device		mos
 device		netmap
 device		nvram		# Access to rtc cmos via /dev/nvram
 device		ohci
@@ -78,10 +58,7 @@ device		rdrand_rng	# Intel Bull Mountain RNG
 device		re		# RealTek 8139C+/8169/8169S/8110S
 device		rl		# RealTek 8129/8139
 device		rndtest		# FIPS 140-2 entropy tester
-device		rsu
-device		rue
-device		rum
-device		run
+device		sc
 device		scbus		#base SCSI code
 device		ses		#Enclosure Services (SES and SAF-TE)
 device		smb
@@ -91,44 +68,18 @@ device		targ		#SCSI Target Mode Code
 device		targbh		#SCSI Target Mode Blackhole Device
 device		tpm
 device		tuntap
-device		u3g
-device		uark
 device		uart
-device		uath
-device		ubsa
-device		ucom
-device		udav
-device		udbp
-device		uep
-device		uether
-device		uftdi
-device		ugold
 device		uhci
 device		uhid
-device		uhso
 device		uinput		# install /dev/uinput cdev
-device		uipaq
 device		ukbd
 device		uled
 device		ulpt
 device		umass
-device		umct
-device		umodem
 device		ums
-device		upgt
-device		uplcom
-device		ural
-device		ure
-device		urio
-device		urndis
-device		urtw
 device		usb
 device		usbhid
 device		usfs
-device		usie
-device		uslcom
-device		uvisor
-device		uvscom
 device		vga
 device		virtio		# Generic VirtIO bus (required)
 device		virtio_balloon	# VirtIO Memory Balloon device
@@ -145,11 +96,9 @@ device		vt_vbefb	# VBE framebuffer
 device		vt_vga		# VGA
 device		vtnet		# VirtIO Ethernet device
 device		wg
-device		wsp
 device		xhci
 device		xz		# xz_embedded LZMA de-compression library
 device		zlib		# gzip/zlib compression/decompression library
-device		zyd
 device  	mii		# Minimal MII support
 device  	mii_bitbang	# Common module for bit-bang'ing the MII
 device  	miibus		# MII support w/ bit-bang'ing and all PHYs
@@ -165,6 +114,8 @@ options 	CAPABILITIES	# fine-grained rights on file descriptors
 options 	CAPABILITY_MODE	# sandboxes with no global namespace access
 options 	CD9660			#ISO 9660 filesystem
 options 	CD9660_ICONV
+options 	COMPAT_FREEBSD11
+options 	COMPAT_FREEBSD12
 options 	COMPAT_FREEBSD13
 options 	DONTPROBE_1284	# Avoid boot detection of PnP parallel devices
 options 	EFIRT
@@ -208,7 +159,7 @@ options 	MAXCPU=12
 options 	MAXMEMDOM=1
 options 	MSDOSFS			#MS DOS File System (FAT, FAT32)
 options 	MSDOSFS_ICONV
-options 	NETSMB			#SMB/CIFS requester
+options 	NFSD			#Network Filesystem Server
 options 	NULLFS			#NULL filesystem
 options 	PCI_HP			# PCI-Express native HotPlug
 options 	PCI_IOV			# PCI SR-IOV support
