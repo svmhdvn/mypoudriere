@@ -81,9 +81,8 @@ device		wg
 device		xhci
 device		xz		# xz_embedded LZMA de-compression library
 device		zlib		# gzip/zlib compression/decompression library
-device  	rgephy		# RealTek 8169S/8110S/8211B/8211C
-device  	rlphy		# RealTek 8139
-device  	rlswitch	# RealTek 8305
+device  	mii		# Minimal MII support
+device  	mii_bitbang	# Common module for bit-bang'ing the MII
 device         nvd     # expose NVMe namespaces as disks, depends on nvme
 device         nvme    # base NVMe driver
 ident		MYBEASTIE
@@ -91,8 +90,6 @@ maxusers	10
 options 	BPF_JITTER
 options 	CAPABILITIES	# fine-grained rights on file descriptors
 options 	CAPABILITY_MODE	# sandboxes with no global namespace access
-options 	CD9660			#ISO 9660 filesystem
-options 	CD9660_ICONV
 options 	COMPAT_FREEBSD11
 options 	COMPAT_FREEBSD12
 options 	COMPAT_FREEBSD13
@@ -139,7 +136,6 @@ options 	SYSVSEM
 options 	SYSVSHM
 options 	TCP_OFFLOAD		# TCP offload support.
 options 	TMPFS			#Efficient memory filesystem
-options 	UDF_ICONV
 options 	VESA
 options 	X86BIOS
 options 	ZFS

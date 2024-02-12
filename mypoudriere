@@ -16,8 +16,12 @@ case "$HOSTNAME" in
     exit 1
 esac
 
+# TODO change for using a GENERIC kernconf temporarily for recovery or testing
+#KERNCONF=GENERIC
+KERNCONF="MY$(echo "$HOSTNAME" | tr '[a-z]' '[A-Z]')"
+
 FREEBSD_VERSION=14
-JAILNAME="poudriere_stable${FREEBSD_VERSION}_upstream"
+JAILNAME="poudriere_stable${FREEBSD_VERSION}_${KERNCONF}"
 
 PKGBASE_REPO="/usr/local/poudriere/data/images/${JAILNAME}-repo/FreeBSD:${FREEBSD_VERSION}:amd64/latest"
 PKGBASE_REPO_NAME=PoudrierePkgbase
@@ -28,8 +32,11 @@ PORTS_REPO_NAME=PoudrierePorts
 OPTIONS_DIR="$JAILNAME-default-$HOSTNAME-options"
 BACKUP_DIR="hosts/$HOSTNAME/$OPTIONS_DIR"
 
-# TODO change for custom kernel config
-KERNCONF=GENERIC
+refresh_kernconf() {
+    grep '^[a-z]' hosts/"$HOSTNAME"/"${KERNCONF}_LINT" \
+    	| sort -u \
+    	| tee hosts/"$HOSTNAME"/"$KERNCONF" /usr/src/sys/"$(uname -p)"/conf/"$KERNCONF" > /dev/null
+}
 
 # TODO find a cleaner way to do this
 # Instructions from https://wiki.freebsd.org/PkgBase
@@ -60,7 +67,6 @@ bootstrap_builder() {
     # inside the hosts/ directory
     #CPUTYPE=$(cc -v -x c -E -march=native /dev/null 2>&1 | sed -n 's/.*-target-cpu *\([^ ]*\).*/\1/p')
 
-
     # 1) install required packages from upstream mirror
     pkg install -y git poudriere ccache
 
@@ -90,6 +96,7 @@ bootstrap_builder() {
         git clone --depth 1 --branch "stable/${FREEBSD_VERSION}" https://git.freebsd.org/src.git /usr/src
     fi
     git -C /usr/src pull
+    refresh_kernconf
     poudriere jail -c -j "$JAILNAME" -b -m src=/usr/src -B -K "$KERNCONF" -z "$HOSTNAME"
 
     # 4) convert system into a pkgbase installation
@@ -157,7 +164,11 @@ case "$COMMAND" in
     tar --zstd --strip-components 7 -cvf "tarballs/$HOSTNAME-$PKGBASE_REPO_NAME.tar.zst" "$PKGBASE_REPO"
     tar --zstd --strip-components 7 -cvf "tarballs/$HOSTNAME-$PORTS_REPO_NAME.tar.zst" "$PORTS_REPO"
     ;;
+  kernconf)
+    refresh_kernconf
+    ;;
   upgrade)
+    refresh_kernconf
     git -C /usr/src pull
     poudriere jail -u -j "$JAILNAME" -b -z "$HOSTNAME"
     git -C /usr/ports pull

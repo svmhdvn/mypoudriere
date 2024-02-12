@@ -1099,7 +1099,7 @@ options 	FFS			#Fast filesystem
 
 # The rest are optional:
 #options 	AUTOFS			#Automounter filesystem
-options 	CD9660			#ISO 9660 filesystem
+#options 	CD9660			#ISO 9660 filesystem
 options 	FDESCFS			#File descriptor filesystem
 #options 	FUSEFS			#FUSEFS support module
 options 	MSDOSFS			#MS DOS File System (FAT, FAT32)
@@ -1206,9 +1206,9 @@ options 	SOFTUPDATES
 
 # Optional character code conversion support with LIBICONV.
 # Each option requires their base file system and LIBICONV.
-options 	CD9660_ICONV
+#options 	CD9660_ICONV
 options 	MSDOSFS_ICONV
-options 	UDF_ICONV
+#options 	UDF_ICONV
 
 #####################################################################
 # POSIX P1003.1B
@@ -1776,8 +1776,8 @@ device		puc
 # specifically handled by an individual driver.  Support for specific
 # PHYs may be built by adding "device mii", "device mii_bitbang" if
 # needed by the NIC driver and then adding the appropriate PHY driver.
-#device  	mii		# Minimal MII support
-#device  	mii_bitbang	# Common module for bit-bang'ing the MII
+device  	mii		# Minimal MII support
+device  	mii_bitbang	# Common module for bit-bang'ing the MII
 #device  	miibus		# MII support w/ bit-bang'ing and all PHYs
 
 #device  	acphy		# Altima Communications AC101
@@ -1801,9 +1801,9 @@ device		puc
 #device  	pnaphy		# HomePNA
 #device  	qsphy		# Quality Semiconductor QS6612
 #device  	rdcphy		# RDC Semiconductor R6040
-device  	rgephy		# RealTek 8169S/8110S/8211B/8211C
-device  	rlphy		# RealTek 8139
-device  	rlswitch	# RealTek 8305
+#device  	rgephy		# RealTek 8169S/8110S/8211B/8211C
+#device  	rlphy		# RealTek 8139
+#device  	rlswitch	# RealTek 8305
 #device  	smcphy		# SMSC LAN91C111
 #device  	tdkphy		# TDK 89Q2120
 #device  	truephy		# LSI TruePHY
