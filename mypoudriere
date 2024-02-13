@@ -17,8 +17,8 @@ case "$TARGET_HOSTNAME" in
 esac
 
 # NOTE set either of these to GENERIC for recovery or hardware testing
-BUILDER_KERNCONF="MY$(hostname | tr '[a-z]' '[A-Z]')"
-TARGET_KERNCONF="MY$(echo "$HOSTNAME" | tr '[a-z]' '[A-Z]')"
+BUILDER_KERNCONF="MY$(hostname | tr '[:lower:]' '[:upper:]')"
+TARGET_KERNCONF="MY$(echo "$TARGET_HOSTNAME" | tr '[:lower:]' '[:upper:]')"
 
 FREEBSD_VERSION=14
 BUILDER_JAIL="poudriere_stable${FREEBSD_VERSION}_${BUILDER_KERNCONF}"
@@ -129,7 +129,7 @@ EOF
     git -C /usr/ports pull
 
     cp -R "$BACKUP_DIR" "$OPTIONS_DIR"
-    poudriere bulk -j "$JAILNAME" -z "$HOSTNAME" -f "pkglist-builder.txt"
+    poudriere bulk -j "$BUILDER_JAIL" -f pkglist-builder.txt -z "$BUILDER_HOSTNAME"
 
     # 7) reinstall all system pkgs with the new poudriere repo
     cat <<EOF > /usr/local/etc/pkg/repos/poudriere_ports.conf
@@ -157,12 +157,12 @@ case "$COMMAND" in
     bootstrap_builder
     ;;
   bulk|options)
-    doas poudriere "$COMMAND" -j "$JAILNAME" -f "$PKGLIST" -z "$HOSTNAME"
+    doas poudriere "$COMMAND" -j "$BUILDER_JAIL" -f "$PKGLIST" -z "$TARGET_HOSTNAME"
     ;;
   backup)
     rm -rf "$BACKUP_DIR"
     cp -R /usr/local/etc/poudriere.d/"$OPTIONS_DIR" "$BACKUP_DIR"
-    cp /usr/local/etc/poudriere.d/"$HOSTNAME"-*.conf "hosts/$HOSTNAME/"
+    cp /usr/local/etc/poudriere.d/"${TARGET_HOSTNAME}"-*.conf hosts/"$TARGET_HOSTNAME"/
     ;;
   tarballs)
     tar --zstd --strip-components 7 -cvf "tarballs/${TARGET_HOSTNAME}-${PKGBASE_REPO_NAME}.tar.zst" "$PKGBASE_REPO"
