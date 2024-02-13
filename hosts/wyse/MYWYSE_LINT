@@ -673,7 +673,7 @@ options 	INET6			#IPv6 communications protocols
 #options 	CC_NEWRENO
 #options 	CC_VEGAS
 #options 	CC_DEFAULT=\"cubic\"
-#options 	RATELIMIT		# TX rate limiting support
+options 	RATELIMIT		# TX rate limiting support
 
 #options 	ROUTETABLES=2		# allocated fibs up to 65536. default is 1.
 					# but that would be a bad idea as they are large.
@@ -848,7 +848,7 @@ options 	SCTP_SUPPORT
 #options 	NETGRAPH_VLAN
 
 # Network stack virtualization.
-#options 	VIMAGE
+options 	VIMAGE
 #options 	VNET_DEBUG	# debug for VIMAGE
 
 #
@@ -1103,10 +1103,10 @@ options 	FFS			#Fast filesystem
 options 	FDESCFS			#File descriptor filesystem
 #options 	FUSEFS			#FUSEFS support module
 options 	MSDOSFS			#MS DOS File System (FAT, FAT32)
-#options 	NFSLOCKD		#Network Lock Manager
+options 	NFSLOCKD		#Network Lock Manager
 # TODO find a way to compile ZFS without NFSD
 options 	NFSD			#Network Filesystem Server
-#options 	KGSSAPI			#Kernel GSSAPI implementation
+options 	KGSSAPI			#Kernel GSSAPI implementation
 
 options 	NULLFS			#NULL filesystem
 options 	PROCFS			#Process filesystem (requires PSEUDOFS)
@@ -2587,7 +2587,7 @@ device		crypto		# core crypto support
 # will make things slower.
 device		cryptodev	# /dev/crypto for access to h/w
 
-device		rndtest		# FIPS 140-2 entropy tester
+#device		rndtest		# FIPS 140-2 entropy tester
 
 #device		ccr		# Chelsio T6
 
@@ -3076,7 +3076,7 @@ options 	VESA
 # Turn on extra debugging checks and output for VESA support.
 #options 	VESA_DEBUG
 
-device		dpms		# DPMS suspend & resume via VESA BIOS
+#device		dpms		# DPMS suspend & resume via VESA BIOS
 
 # x86 real mode BIOS emulator, required by atkbdc/dpms/vesa
 options 	X86BIOS
@@ -3086,14 +3086,14 @@ options 	X86BIOS
 #
 
 # PS/2 mouse
-device		psm
+#device		psm
 #envvar		hint.psm.0.at="atkbdc"
 #envvar		hint.psm.0.irq="12"
 
 # Options for psm:
-options 	PSM_HOOKRESUME		#hook the system resume event, useful
+#options 	PSM_HOOKRESUME		#hook the system resume event, useful
 					#for some laptops
-options 	PSM_RESETAFTERSUSPEND	#reset the device at the resume event
+#options 	PSM_RESETAFTERSUSPEND	#reset the device at the resume event
 
 # The keyboard controller; it controls the keyboard and the PS/2 mouse.
 device		atkbdc
@@ -3437,12 +3437,13 @@ device		ipmi
 device		smbios
 device		vpd
 #device		asmc
-device		tpm
+#device		tpm
 #device		padlock_rng	# VIA Padlock RNG
-device		rdrand_rng	# Intel Bull Mountain RNG
-device		aesni		# AES-NI OpenCrypto module
+#device		rdrand_rng	# Intel Bull Mountain RNG
+# NOTE SIVA isn't supported by the wyse AMD G-T56N CPU
+#device		aesni		# AES-NI OpenCrypto module
 device		ossl		# OpenSSL OpenCrypto module
-device		ioat		# Intel I/OAT DMA engine
+#device		ioat		# Intel I/OAT DMA engine
 
 #
 # Laptop/Notebook options:
@@ -3569,10 +3570,3 @@ options 	ZFS
 
 #options 	LINDEBUGFS
 #options 	GCOV
-
-#####################################################################
-# SIVA'S ADDITIONAL CONFIG
-#####################################################################
-
-device		filemon
-device		acpi_wmi

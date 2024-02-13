@@ -1,7 +1,5 @@
 cpu		HAMMER			# aka K8, aka Opteron & Athlon64
 device		acpi
-device		acpi_wmi
-device		aesni		# AES-NI OpenCrypto module
 device		agp
 device		ahci
 device		amdpm
@@ -19,11 +17,9 @@ device		crypto		# core crypto support
 device		cryptodev	# /dev/crypto for access to h/w
 device		ctl		#CAM Target Layer
 device		da		#SCSI direct access devices (aka disks)
-device		dpms		# DPMS suspend & resume via VESA BIOS
 device		ehci
 device		ether
 device		evdev		# input event device support
-device		filemon
 device		firmware	#firmware(9) support
 device		hid		# Generic HID support
 device		hidbus		# HID bus
@@ -33,7 +29,6 @@ device		hkbd		# HID keyboard
 device		hms		# HID mouse
 device		hsctrl		# System controls
 device		intpm
-device		ioat		# Intel I/OAT DMA engine
 device		ipmi
 device		isa
 device		jedec_dimm
@@ -46,18 +41,14 @@ device		ohci
 device		ossl		# OpenSSL OpenCrypto module
 device		pass		#CAM passthrough driver
 device		pci
-device		psm
 device		pt		#SCSI processor
 device		puc
-device		rdrand_rng	# Intel Bull Mountain RNG
 device		re		# RealTek 8139C+/8169/8169S/8110S
-device		rndtest		# FIPS 140-2 entropy tester
 device		sc
 device		scbus		#base SCSI code
 device		smb
 device		smbios
 device		smbus		# Bus support, required for smb below.
-device		tpm
 device		uart
 device		ugold
 device		uhci
@@ -109,6 +100,7 @@ options 	INET			#Internet communications protocols
 options 	INET6			#IPv6 communications protocols
 options 	KBD_INSTALL_CDEV	# install a CDEV entry in /dev
 options 	KERN_TLS		# TLS transmit and receive offload
+options 	KGSSAPI			#Kernel GSSAPI implementation
 options 	LIBICONV
 options 	LIBMCHAIN
 options 	MAXCPU=12
@@ -116,12 +108,12 @@ options 	MAXMEMDOM=1
 options 	MSDOSFS			#MS DOS File System (FAT, FAT32)
 options 	MSDOSFS_ICONV
 options 	NFSD			#Network Filesystem Server
+options 	NFSLOCKD		#Network Lock Manager
 options 	NULLFS			#NULL filesystem
 options 	PROCFS			#Process filesystem (requires PSEUDOFS)
 options 	PSEUDOFS		#Pseudo-filesystem framework
-options 	PSM_HOOKRESUME		#hook the system resume event, useful
-options 	PSM_RESETAFTERSUSPEND	#reset the device at the resume event
 options 	RACCT
+options 	RATELIMIT		# TX rate limiting support
 options 	RCTL
 options 	SCHED_ULE
 options 	SCSI_DELAY=5000	# Be pessimistic about Joe SCSI device
@@ -136,6 +128,7 @@ options 	TCP_BBR
 options 	TCP_OFFLOAD		# TCP offload support.
 options 	TMPFS			#Efficient memory filesystem
 options 	VESA
+options 	VIMAGE
 options 	X86BIOS
 options 	ZFS
 options 	ZSTDIO
