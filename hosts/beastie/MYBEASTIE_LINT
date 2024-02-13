@@ -867,7 +867,7 @@ device		vlan
 
 # The `vxlan' device implements the VXLAN encapsulation of Ethernet
 # frames in UDP packets according to RFC7348.
-device		vxlan
+#device		vxlan
 
 #  The `wlan' device provides generic code to support 802.11
 #  drivers, including host AP mode; it is MANDATORY for the wi,

@@ -68,7 +68,6 @@ device		vt
 device		vt_efifb	# EFI framebuffer
 device		vt_vbefb	# VBE framebuffer
 device		vt_vga		# VGA
-device		vxlan
 device		wg
 device		xhci
 device		xz		# xz_embedded LZMA de-compression library
@@ -77,7 +76,7 @@ device  	mii		# Minimal MII support
 device  	mii_bitbang	# Common module for bit-bang'ing the MII
 device         nvd     # expose NVMe namespaces as disks, depends on nvme
 device         nvme    # base NVMe driver
-ident		MYBEASTIE
+ident		MYWYSE
 options 	BPF_JITTER
 options 	CAPABILITIES	# fine-grained rights on file descriptors
 options 	CAPABILITY_MODE	# sandboxes with no global namespace access
@@ -103,7 +102,7 @@ options 	KERN_TLS		# TLS transmit and receive offload
 options 	KGSSAPI			#Kernel GSSAPI implementation
 options 	LIBICONV
 options 	LIBMCHAIN
-options 	MAXCPU=12
+options 	MAXCPU=2
 options 	MAXMEMDOM=1
 options 	MSDOSFS			#MS DOS File System (FAT, FAT32)
 options 	MSDOSFS_ICONV

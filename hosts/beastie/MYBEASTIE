@@ -77,7 +77,6 @@ device		vt
 device		vt_efifb	# EFI framebuffer
 device		vt_vbefb	# VBE framebuffer
 device		vt_vga		# VGA
-device		vxlan
 device		wg
 device		xhci
 device		xz		# xz_embedded LZMA de-compression library

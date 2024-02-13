@@ -39,7 +39,7 @@
 # This is the ``identification'' of the kernel.  Usually this should
 # be the same as the name of your kernel.
 #
-ident		MYBEASTIE
+ident		MYWYSE
 
 #
 # The `maxusers' parameter controls the static sizing of a number of
@@ -50,13 +50,13 @@ ident		MYBEASTIE
 #maxusers	10
 
 # To statically compile in device wiring instead of /boot/device.hints
-#hints		"MYBEASTIE.hints"		# Default places to look for devices.
+#hints		"MYWYSE.hints"		# Default places to look for devices.
 
 # Use the following to compile in values accessible to the kernel
 # through getenv() (or kenv(1) in userland). The format of the file
 # is 'variable=value', see kenv(1)
 #
-#env		"MYBEASTIE.env"
+#env		"MYWYSE.env"
 
 #
 # The `makeoptions' parameter allows variables to be passed to the
@@ -229,7 +229,7 @@ options 	SMP			# Symmetric MultiProcessor Kernel
 
 # MAXCPU defines the maximum number of CPUs that can boot in the system.
 # A default value should be already present, for every architecture.
-options 	MAXCPU=12
+options 	MAXCPU=2
 
 # NUMA enables use of Non-Uniform Memory Access policies in various kernel
 # subsystems.
@@ -867,7 +867,7 @@ device		vlan
 
 # The `vxlan' device implements the VXLAN encapsulation of Ethernet
 # frames in UDP packets according to RFC7348.
-device		vxlan
+#device		vxlan
 
 #  The `wlan' device provides generic code to support 802.11
 #  drivers, including host AP mode; it is MANDATORY for the wi,
