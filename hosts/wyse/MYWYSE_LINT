@@ -694,8 +694,8 @@ options  	TCPHPTS
 #options 	IPSEC_DEBUG		#debug for IP security
 
 # Alternative TCP stacks
-options 	TCP_BBR
-#options 	TCP_RACK
+#options 	TCP_BBR
+options 	TCP_RACK
 
 # TLS framing and encryption/decryption of data over TCP sockets.
 options 	KERN_TLS		# TLS transmit and receive offload

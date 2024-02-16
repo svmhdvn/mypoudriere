@@ -164,8 +164,14 @@ case "$COMMAND" in
     cp -R /usr/local/etc/poudriere.d/"$OPTIONS_DIR" "$BACKUP_DIR"
     cp /usr/local/etc/poudriere.d/"${TARGET_HOSTNAME}"-*.conf hosts/"$TARGET_HOSTNAME"/
     ;;
+  delete_pkgbase)
+    poudriere jail -d -j "${TARGET_PKGBASE_JAIL}" -C all -y || true
+    rm -rf /usr/local/poudriere/data/images/"${TARGET_PKGBASE_JAIL}"-repo
+    rm -f "tarballs/${TARGET_HOSTNAME}-${PKGBASE_REPO_NAME}.tar.zst"
+    ;;
   tarballs)
-    tar --zstd --strip-components 7 -cvf "tarballs/${TARGET_HOSTNAME}-${PKGBASE_REPO_NAME}.tar.zst" "$PKGBASE_REPO"
+    mkdir -p tarballs
+    tar --zstd --strip-components 9 -cvHf "tarballs/${TARGET_HOSTNAME}-${PKGBASE_REPO_NAME}.tar.zst" "$PKGBASE_REPO"
     tar --zstd --strip-components 7 -cvf "tarballs/${TARGET_HOSTNAME}-${PORTS_REPO_NAME}.tar.zst" "$PORTS_REPO"
     ;;
   kernconf)
@@ -173,9 +179,9 @@ case "$COMMAND" in
     ;;
   upgrade)
     refresh_kernconf
-    git -C /usr/src pull
+    git -C /usr/src pull upstream "stable/${FREEBSD_VERSION}" --rebase
     poudriere jail -u -j "${TARGET_PKGBASE_JAIL}" -b -z "${TARGET_HOSTNAME}"
-    git -C /usr/ports pull
+    git -C /usr/ports pull upstream main --rebase
     poudriere options -j "${BUILDER_JAIL}" -f "$PKGLIST" -z "${TARGET_HOSTNAME}"
     poudriere bulk -j "${BUILDER_JAIL}" -f "$PKGLIST" -z "${TARGET_HOSTNAME}"
     pkg upgrade -y

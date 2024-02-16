@@ -123,8 +123,8 @@ options 	SOFTUPDATES
 options 	SYSVMSG
 options 	SYSVSEM
 options 	SYSVSHM
-options 	TCP_BBR
 options 	TCP_OFFLOAD		# TCP offload support.
+options 	TCP_RACK
 options 	TMPFS			#Efficient memory filesystem
 options 	VESA
 options 	VIMAGE
