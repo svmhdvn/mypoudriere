@@ -121,6 +121,7 @@ options 	PSEUDOFS		#Pseudo-filesystem framework
 options 	PSM_HOOKRESUME		#hook the system resume event, useful
 options 	PSM_RESETAFTERSUSPEND	#reset the device at the resume event
 options 	RACCT
+options 	RATELIMIT		# TX rate limiting support
 options 	RCTL
 options 	SCHED_ULE
 options 	SCSI_DELAY=5000	# Be pessimistic about Joe SCSI device
@@ -131,8 +132,8 @@ options 	SOFTUPDATES
 options 	SYSVMSG
 options 	SYSVSEM
 options 	SYSVSHM
-options 	TCP_BBR
 options 	TCP_OFFLOAD		# TCP offload support.
+options 	TCP_RACK
 options 	TMPFS			#Efficient memory filesystem
 options 	VESA
 options 	X86BIOS

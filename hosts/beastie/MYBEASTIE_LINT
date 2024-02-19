@@ -673,7 +673,7 @@ options 	INET6			#IPv6 communications protocols
 #options 	CC_NEWRENO
 #options 	CC_VEGAS
 #options 	CC_DEFAULT=\"cubic\"
-#options 	RATELIMIT		# TX rate limiting support
+options 	RATELIMIT		# TX rate limiting support
 
 #options 	ROUTETABLES=2		# allocated fibs up to 65536. default is 1.
 					# but that would be a bad idea as they are large.
@@ -694,8 +694,8 @@ options  	TCPHPTS
 #options 	IPSEC_DEBUG		#debug for IP security
 
 # Alternative TCP stacks
-options 	TCP_BBR
-#options 	TCP_RACK
+#options 	TCP_BBR
+options 	TCP_RACK
 
 # TLS framing and encryption/decryption of data over TCP sockets.
 options 	KERN_TLS		# TLS transmit and receive offload

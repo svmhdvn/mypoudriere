@@ -5,7 +5,7 @@ editors/kakoune
 ftp/curl
 ftp/wget
 ports-mgmt/pkg
-ports-mgmt/poudriere
+ports-mgmt/poudriere-devel
 security/doas
 shells/fish
 sysutils/duf
