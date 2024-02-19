@@ -10,7 +10,7 @@ sync_confs() {
 
     _hostdir=hosts/"$_host"
     _kernconf="$(echo "$_host" | to_kernconf)"
-    _optionsdir="$BUILDER_JAIL"-default-"$_host"-options
+    _optionsdir="$builder_jail"-default-"$_host"-options
 
     cp "$_hostdir"/"$_host"-common-make.conf "$poudriere_etc"/"$_host"-make.conf
     cp "$_hostdir"/"$_host"-portoptions-make.conf "$poudriere_etc"/default-"$_host"-make.conf
@@ -43,16 +43,16 @@ post_pkgbase_upgrade() {
 build_pkgbase_jail() {
     _host="$1"
     _kernconf="$(echo "$_host" | to_kernconf)"
-    _jail="poudriere_stable${FREEBSD_VERSION}_${_kernconf}"
+    _jail="poudriere_stable${freebsd_version}_${_kernconf}"
 
     if test ! -d /usr/src/.git; then
         git clone \
             --origin upstream \
             --depth 1 \
-            --branch "stable/$FREEBSD_VERSION" \
+            --branch "stable/$freebsd_version" \
             https://git.freebsd.org/src.git /usr/src
     fi
-    git -C /usr/src pull upstream "stable/$FREEBSD_VERSION" --rebase --autostash
+    git -C /usr/src pull upstream "stable/$freebsd_version" --rebase --autostash
 
     sync_confs "$_host"
     if poudriere jail -l -n -q | grep -q "^${_jail}$$"; then
@@ -67,14 +67,14 @@ build_ports() {
 
     if test ! -d /usr/ports/.git; then
         git clone \
-            --origin upstream
-            --depth 1
+            --origin upstream \
+            --depth 1 \
             https://git.freebsd.org/ports.git /usr/ports
         poudriere ports -c -m null -M /usr/ports
     fi
     git -C /usr/ports pull upstream main --autostash --rebase
 
-    case "$TARGET_HOSTNAME" in
+    case "$target_hostname" in
       beastie)
         _pkglist=pkglist-builder.txt
         ;;
@@ -82,13 +82,16 @@ build_ports() {
         _pkglist=pkglist-empt.txt
         ;;
       *)
-        echo "unsupported target host: $TARGET_HOSTNAME" >&2
+        echo "unsupported target host: $target_hostname" >&2
         echo "usage: $0 <command> <hostname>" >&2
         exit 1
     esac
 
     sync_confs "$_host"
     poudriere options -j "$builder_jail" -f "$_pkglist" -z "$_host"
+    rm -rf "hosts/$builder_hostname/$options_dir"
+    cp -R "$poudriere_etc/$options_dir" "hosts/$builder_hostname/$options_dir"
+
     poudriere bulk -j "$builder_jail" -f "$_pkglist" -z "$_host"
 }
 
@@ -129,26 +132,27 @@ bootstrap_step1() {
 
     # TODO handle signatures
     cat > /usr/local/etc/pkg/repos/poudriere_pkgbase.conf <<EOF
-${PKGBASE_REPO_NAME}: {
-  url: "file://${PKGBASE_REPO}"
+${pkgbase_repo_name}: {
+  url: "file://${pkgbase_repo}"
   enabled: yes
 }
 EOF
 
-    pkg install -r "$PKGBASE_REPO_NAME" -g 'FreeBSD-*' -y
+    pkg install -r "$pkgbase_repo_name" -g 'FreeBSD-*' -y
     post_pkgbase_upgrade
 }
 
 bootstrap_step2() {
     # 5) build ports
     mkdir -p /usr/ports/distfiles
-    cp -R "$BACKUP_DIR" "$OPTIONS_DIR"
+    rm -rf "${poudriere_etc:?}/${options_dir:?}"
+    cp -R "hosts/$builder_hostname/$options_dir" "$poudriere_etc/$options_dir"
     build_ports "$builder_hostname"
 
     # 6) reinstall all system pkgs with the new poudriere repo
     cat <<EOF > /usr/local/etc/pkg/repos/poudriere_ports.conf
-${PORTS_REPO_NAME}: {
-  url: "file://$PORTS_REPO"
+${ports_repo_name}: {
+  url: "file://$ports_repo"
   enabled: yes
 }
 EOF
@@ -165,31 +169,49 @@ EOF
     pkg upgrade -y
 }
 
+freebsd_version=14
+readonly freebsd_version
 
-readonly builder_hostname="$(hostname)"
-readonly target_hostname="$2"
+builder_hostname="$(hostname)"
+readonly builder_hostname
 
-# NOTE set either of these to GENERIC for recovery or hardware testing
-readonly builder_kernconf="$(echo $builder_hostname | to_kernconf)"
-readonly target_kernconf="$(echo "$TARGET_HOSTNAME" | to_kernconf)"
+# NOTE set to GENERIC for recovery or hardware testing
+builder_kernconf="$(echo "$builder_hostname" | to_kernconf)"
+readonly builder_kernconf
 
-readonly freebsd_version=14
-readonly builder_jail="poudriere_stable${freebsd_version}_$builder_kernconf"
-readonly target_pkgbase_jail="poudriere_stable${FREEBSD_VERSION}_$target_kernconf"
+builder_jail="poudriere_stable${freebsd_version}_${builder_kernconf}"
+readonly builder_jail
 
-readonly pkgbase_repo="/usr/local/poudriere/data/images/$target_pkgbase_jail-repo/FreeBSD:$freebsd_version:$(uname -p)/latest"
-readonly pkgbase_repo_name=PoudrierePkgbase
+target_hostname="$2"
+readonly target_hostname
 
-readonly ports_repo="/usr/local/poudriere/data/packages/$builder_jail-default-$target_hostname"
-readonly ports_repo_name=PoudrierePorts
+target_kernconf="$(echo "$target_hostname" | to_kernconf)"
+readonly target_kernconf
 
-readonly options_dir="${BUILDER_JAIL}-default-${TARGET_HOSTNAME}-options"
+target_pkgbase_jail="poudriere_stable${freebsd_version}_${target_kernconf}"
+readonly target_pkgbase_jail
 
-readonly poudriere_etc=/usr/local/etc/poudriere.d
+pkgbase_repo="/usr/local/poudriere/data/images/$target_pkgbase_jail-repo/FreeBSD:$freebsd_version:$(uname -p)/latest"
+readonly pkgbase_repo
+
+pkgbase_repo_name=PoudrierePkgbase
+readonly pkgbase_repo_name
+
+ports_repo="/usr/local/poudriere/data/packages/$builder_jail-default-$target_hostname"
+readonly ports_repo
+
+ports_repo_name=PoudrierePorts
+readonly ports_repo_name
+
+options_dir="$builder_jail-default-$target_hostname-options"
+readonly options_dir
+
+poudriere_etc=/usr/local/etc/poudriere.d
+readonly poudriere_etc
 
 # NOTE use this to determine a system's CPUTYPE, then add it to a make.conf
 # inside the hosts/ directory
-#readonly cputype="$(cc -v -x c -E -march=native /dev/null 2>&1 | sed -n 's/.*-target-cpu *\([^ ]*\).*/\1/p')"
+#cputype="$(cc -v -x c -E -march=native /dev/null 2>&1 | sed -n 's/.*-target-cpu *\([^ ]*\).*/\1/p')"
 
 case "$1" in
   bootstrap1)
@@ -200,29 +222,29 @@ case "$1" in
     ;;
   upgrade1)
     build_pkgbase_jail "$builder_hostname"
-    pkg upgrade -r "$PKGBASE_REPO_NAME" -y
+    pkg upgrade -r "$pkgbase_repo_name" -y
     post_pkgbase_upgrade
     ;;
   upgrade2)
     build_ports "$builder_hostname"
-    pkg upgrade -r "$PORTS_REPO_NAME" -y
+    pkg upgrade -r "$ports_repo_name" -y
     ;;
   pkgbase)
-    build_pkgbase_jail "$TARGET_HOSTNAME"
+    build_pkgbase_jail "$target_hostname"
     ;;
   ports)
-    build_ports "$TARGET_HOSTNAME"
+    build_ports "$target_hostname"
     ;;
   tarballs)
     mkdir -p tarballs
-    tar --zstd --strip-components 9 -cvHf "tarballs/${TARGET_HOSTNAME}-${PKGBASE_REPO_NAME}.tar.zst" "$PKGBASE_REPO"
-    tar --zstd --strip-components 7 -cvf "tarballs/${TARGET_HOSTNAME}-${PORTS_REPO_NAME}.tar.zst" "$PORTS_REPO"
+    tar --zstd --strip-components 9 -cvHf "tarballs/${target_hostname}-${pkgbase_repo_name}.tar.zst" "$pkgbase_repo"
+    tar --zstd --strip-components 7 -cvf "tarballs/${target_hostname}-${ports_repo_name}.tar.zst" "$ports_repo"
     ;;
   destroy)
-    poudriere jail -d -j "${TARGET_PKGBASE_JAIL}" -C all -y || true
-    rm -f /usr/local/etc/poudriere.d/*"${TARGET_HOSTNAME}"*.conf
-    rm -rf /usr/local/poudriere/data/images/"${TARGET_PKGBASE_JAIL}"-repo
-    rm -f tarballs/"$TARGET_HOSTNAME"*.tar.zst
+    poudriere jail -d -j "${target_pkgbase_jail}" -C all -y || true
+    rm -f /usr/local/etc/poudriere.d/*"${target_hostname}"*.conf
+    rm -rf /usr/local/poudriere/data/images/"${target_pkgbase_jail}"-repo
+    rm -f tarballs/"$target_hostname"*.tar.zst
     ;;
   *)
     echo "unsupported command: $1" >&2
