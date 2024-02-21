@@ -1265,7 +1265,7 @@ options 	CAPABILITY_MODE	# sandboxes with no global namespace access
 # use a value of 100. Lower values may lower overhead at the expense of accuracy
 # of scheduling, though the adaptive tick code reduces that overhead.
 
-options 	HZ=100
+#options 	HZ=100
 
 # Enable support for the kernel PLL to use an external PPS signal,
 # under supervision of [x]ntpd(8)

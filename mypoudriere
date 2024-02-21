@@ -19,11 +19,11 @@ sync_confs() {
     	"$_hostdir"/"$_host"-src-env.conf \
 	"$poudriere_etc"
 
-    grep '^[a-z]' "$_hostdir"/"$_host"_LINT \
+    grep '^[a-z]' "$_hostdir/${_kernconf}_LINT" \
     	| sort -u \
     	| tee \
-            "$_hostdir"/"$_kernconf" \
-            /usr/src/sys/"$(uname -p)"/conf/"$_kernconf" \
+            "$_hostdir/$_kernconf" \
+            "/usr/src/sys/$(uname -p)/conf/$_kernconf" \
             > /dev/null
 }
 
@@ -55,7 +55,7 @@ build_pkgbase_jail() {
     git -C /usr/src pull upstream "stable/$freebsd_version" --rebase --autostash
 
     sync_confs "$_host"
-    if poudriere jail -l -n -q | grep -q "^${_jail}$$"; then
+    if poudriere jail -l -n -q | grep -q "^${_jail}\$"; then
         poudriere jail -u -j "$_jail" -b -z "$_host"
     else
         poudriere jail -c -j "$_jail" -b -m src=/usr/src -B -K "$_kernconf" -z "$_host"
@@ -74,7 +74,7 @@ build_ports() {
     fi
     git -C /usr/ports pull upstream main --autostash --rebase
 
-    case "$target_hostname" in
+    case "$_host" in
       beastie)
         _pkglist=pkglist-builder.txt
         ;;
@@ -82,7 +82,7 @@ build_ports() {
         _pkglist=pkglist-empt.txt
         ;;
       *)
-        echo "unsupported target host: $target_hostname" >&2
+        echo "unsupported target host: $_host" >&2
         echo "usage: $0 <command> <hostname>" >&2
         exit 1
     esac
@@ -182,7 +182,11 @@ readonly builder_kernconf
 builder_jail="poudriere_stable${freebsd_version}_${builder_kernconf}"
 readonly builder_jail
 
+if test "$2" = ""; then
+target_hostname="$builder_hostname"
+else
 target_hostname="$2"
+fi
 readonly target_hostname
 
 target_kernconf="$(echo "$target_hostname" | to_kernconf)"
@@ -203,7 +207,7 @@ readonly ports_repo
 ports_repo_name=PoudrierePorts
 readonly ports_repo_name
 
-options_dir="$builder_jail-default-$target_hostname-options"
+options_dir="${builder_jail}-${target_hostname}-options"
 readonly options_dir
 
 poudriere_etc=/usr/local/etc/poudriere.d

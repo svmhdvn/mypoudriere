@@ -102,7 +102,6 @@ options 	GEOM_PART_EBR		# Extended Boot Records
 options 	GEOM_PART_GPT		# GPT partitioning
 options 	GEOM_PART_MBR		# MBR partitioning
 options 	GZIO
-options 	HZ=100
 options 	INCLUDE_CONFIG_FILE     # Include this file in kernel
 options 	INET			#Internet communications protocols
 options 	INET6			#IPv6 communications protocols
