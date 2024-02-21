@@ -8,22 +8,21 @@ to_kernconf() {
 sync_confs() {
     _host="$1"
 
-    _hostdir=hosts/"$_host"
+    _hostdir="hosts/$_host"
     _kernconf="$(echo "$_host" | to_kernconf)"
-    _optionsdir="$builder_jail-$ports_tree-$_host-options"
 
-    cp "$_hostdir"/"$_host"-common-make.conf "$poudriere_etc"/"$_host"-make.conf
-    cp "$_hostdir"/"$_host"-portoptions-make.conf "$poudriere_etc/$ports_tree-$_host-make.conf"
+    cp "$_hostdir/$_host-common-make.conf" "$poudriere_etc/$_host-make.conf"
+    cp "$_hostdir/$_host-portoptions-make.conf" "$poudriere_etc/$ports_tree-$_host-make.conf"
     cp \
-    	"$_hostdir"/"$_host"-src.conf \
-    	"$_hostdir"/"$_host"-src-env.conf \
+    	"$_hostdir/$_host-src.conf" \
+    	"$_hostdir/$_host-src-env.conf" \
 	"$poudriere_etc"
 
     grep '^[a-z]' "$_hostdir/${_kernconf}_LINT" \
     	| sort -u \
     	| tee \
             "$_hostdir/$_kernconf" \
-            "/usr/src/sys/$(uname -p)/conf/$_kernconf" \
+            "/usr/src/sys/$target_arch/conf/$_kernconf" \
             > /dev/null
 }
 
@@ -36,7 +35,10 @@ post_pkgbase_upgrade() {
         pwd_mkdb -p /etc/master.passwd
     fi
     cp /etc/sysctl.conf.pkgsave /etc/sysctl.conf || true
-    find / -name '*.pkgsave' -delete
+
+    find / -name '*.pkgsave' | \
+    	awk 'BEGIN {print "Leftover .pkgsave files (delete after double checking):"}' | \
+    	less
     rm -f /boot/kernel/linker.hints
 }
 
@@ -173,8 +175,32 @@ EOF
 freebsd_version=14
 readonly freebsd_version
 
+# TODO support other architectures when the need arises
+target_arch=amd64
+readonly target_arch
+
 builder_hostname="$(hostname)"
 readonly builder_hostname
+
+# NOTE use this to determine a system's CPUTYPE, then add it to a make.conf
+# inside the hosts/ directory
+#cputype="$(cc -v -x c -E -march=native /dev/null 2>&1 | sed -n 's/.*-target-cpu *\([^ ]*\).*/\1/p')"
+
+poudriere_etc=/usr/local/etc/poudriere.d
+readonly poudriere_etc
+
+poudriere_data=/usr/local/poudriere/data
+readonly poudriere_data
+
+pkgbase_repo_name=PoudrierePkgbase
+readonly pkgbase_repo_name
+
+ports_repo_name=PoudrierePorts
+readonly ports_repo_name
+
+# TODO change to a more descriptive name, like "empt_ports" or something
+ports_tree=default
+readonly ports_tree
 
 # NOTE set to GENERIC for recovery or hardware testing
 builder_kernconf="$(echo "$builder_hostname" | to_kernconf)"
@@ -196,37 +222,17 @@ readonly target_kernconf
 target_pkgbase_jail="poudriere_stable${freebsd_version}_${target_kernconf}"
 readonly target_pkgbase_jail
 
-pkgbase_repo="/usr/local/poudriere/data/images/$target_pkgbase_jail-repo/FreeBSD:$freebsd_version:$(uname -p)/latest"
+pkgbase_repo="$poudriere_data/images/$target_pkgbase_jail-repo/FreeBSD:$freebsd_version:$target_arch/latest"
 readonly pkgbase_repo
 
-pkgbase_repo_name=PoudrierePkgbase
-readonly pkgbase_repo_name
-
-ports_repo="/usr/local/poudriere/data/packages/$builder_jail-$ports_tree-$target_hostname"
+ports_repo="$poudriere_data/packages/$builder_jail-$ports_tree-$target_hostname"
 readonly ports_repo
-
-ports_repo_name=PoudrierePorts
-readonly ports_repo_name
-
-# TODO change to a more descriptive name, like "empt_ports" or something
-ports_tree=default
-readonly ports_tree
-
-poudriere_etc=/usr/local/etc/poudriere.d
-readonly poudriere_etc
-
-poudriere_data=/usr/local/poudriere
-readonly poudriere_data
 
 poudriere_portoptions="$poudriere_etc/$builder_jail-$target_hostname-options"
 readonly poudriere_portoptions
 
 my_portoptions="hosts/$target_hostname/portoptions"
 readonly my_portoptions
-
-# NOTE use this to determine a system's CPUTYPE, then add it to a make.conf
-# inside the hosts/ directory
-#cputype="$(cc -v -x c -E -march=native /dev/null 2>&1 | sed -n 's/.*-target-cpu *\([^ ]*\).*/\1/p')"
 
 case "$1" in
   bootstrap1)
@@ -262,8 +268,8 @@ case "$1" in
         "$poudriere_etc/$ports_tree-$target_hostname"-*.conf
     rm -rf \
         "$poudriere_portoptions" \
-        /usr/local/poudriere/data/images/"$target_pkgbase_jail"-repo \
-        /usr/local/poudriere/data/packages/"$builder_jail-$ports_tree-$target_hostname"
+        "$pkgbase_repo" \
+        "$ports_repo"
     rm -f tarballs/"$target_hostname"-Poudriere*.tar.zst
     ;;
   *)
