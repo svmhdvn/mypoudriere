@@ -10,10 +10,10 @@ sync_confs() {
 
     _hostdir=hosts/"$_host"
     _kernconf="$(echo "$_host" | to_kernconf)"
-    _optionsdir="$builder_jail"-default-"$_host"-options
+    _optionsdir="$builder_jail-$ports_tree-$_host-options"
 
     cp "$_hostdir"/"$_host"-common-make.conf "$poudriere_etc"/"$_host"-make.conf
-    cp "$_hostdir"/"$_host"-portoptions-make.conf "$poudriere_etc"/default-"$_host"-make.conf
+    cp "$_hostdir"/"$_host"-portoptions-make.conf "$poudriere_etc/$ports_tree-$_host-make.conf"
     cp \
     	"$_hostdir"/"$_host"-src.conf \
     	"$_hostdir"/"$_host"-src-env.conf \
@@ -88,9 +88,12 @@ build_ports() {
     esac
 
     sync_confs "$_host"
+    if test ! -d "$poudriere_portoptions" && test -d "$my_portoptions"; then
+        cp -R "$my_portoptions" "$poudriere_portoptions"
+    fi
     poudriere options -j "$builder_jail" -f "$_pkglist" -z "$_host"
-    rm -rf "hosts/$builder_hostname/$options_dir"
-    cp -R "$poudriere_etc/$options_dir" "hosts/$builder_hostname/$options_dir"
+    rm -rf "$my_portoptions"
+    cp -R "$poudriere_portoptions" "$my_portoptions"
 
     poudriere bulk -j "$builder_jail" -f "$_pkglist" -z "$_host"
 }
@@ -145,8 +148,6 @@ EOF
 bootstrap_step2() {
     # 5) build ports
     mkdir -p /usr/ports/distfiles
-    rm -rf "${poudriere_etc:?}/${options_dir:?}"
-    cp -R "hosts/$builder_hostname/$options_dir" "$poudriere_etc/$options_dir"
     build_ports "$builder_hostname"
 
     # 6) reinstall all system pkgs with the new poudriere repo
@@ -201,17 +202,27 @@ readonly pkgbase_repo
 pkgbase_repo_name=PoudrierePkgbase
 readonly pkgbase_repo_name
 
-ports_repo="/usr/local/poudriere/data/packages/$builder_jail-default-$target_hostname"
+ports_repo="/usr/local/poudriere/data/packages/$builder_jail-$ports_tree-$target_hostname"
 readonly ports_repo
 
 ports_repo_name=PoudrierePorts
 readonly ports_repo_name
 
-options_dir="${builder_jail}-${target_hostname}-options"
-readonly options_dir
+# TODO change to a more descriptive name, like "empt_ports" or something
+ports_tree=default
+readonly ports_tree
 
 poudriere_etc=/usr/local/etc/poudriere.d
 readonly poudriere_etc
+
+poudriere_data=/usr/local/poudriere
+readonly poudriere_data
+
+poudriere_portoptions="$poudriere_etc/$builder_jail-$target_hostname-options"
+readonly poudriere_portoptions
+
+my_portoptions="hosts/$target_hostname/portoptions"
+readonly my_portoptions
 
 # NOTE use this to determine a system's CPUTYPE, then add it to a make.conf
 # inside the hosts/ directory
@@ -245,10 +256,15 @@ case "$1" in
     tar --zstd --strip-components 7 -cvf "tarballs/${target_hostname}-${ports_repo_name}.tar.zst" "$ports_repo"
     ;;
   destroy)
-    poudriere jail -d -j "${target_pkgbase_jail}" -C all -y || true
-    rm -f /usr/local/etc/poudriere.d/*"${target_hostname}"*.conf
-    rm -rf /usr/local/poudriere/data/images/"${target_pkgbase_jail}"-repo
-    rm -f tarballs/"$target_hostname"*.tar.zst
+    poudriere jail -d -j "$target_pkgbase_jail" -C all -y || true
+    rm -f \
+        "$poudriere_etc/$target_hostname"-*.conf \
+        "$poudriere_etc/$ports_tree-$target_hostname"-*.conf
+    rm -rf \
+        "$poudriere_portoptions" \
+        /usr/local/poudriere/data/images/"$target_pkgbase_jail"-repo \
+        /usr/local/poudriere/data/packages/"$builder_jail-$ports_tree-$target_hostname"
+    rm -f tarballs/"$target_hostname"-Poudriere*.tar.zst
     ;;
   *)
     echo "unsupported command: $1" >&2

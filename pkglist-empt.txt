@@ -1,27 +1,27 @@
-security/heimdal-devel
 dns/nsd
-irc/unreal
 irc/anope
+irc/unreal
 mail/dovecot
 mail/mlmmj
 mail/postfix
-net/samba419
 net/openntpd
+net/samba419
+security/heimdal-devel
 security/openssh-portable
 security/py-cryptography
 
 # debug, testing, and ansible stuff
+archivers/gtar
+archivers/unzip
+ftp/curl
+ftp/wget
+lang/python
+net/rsync
 ports-mgmt/pkg
 security/doas
 sysutils/htop
 sysutils/tmux
 sysutils/tree
-ftp/curl
-ftp/wget
-archivers/gtar
-archivers/unzip
-net/rsync
-lang/python
 
 # nagios stuff
 net-mgmt/nagios4
