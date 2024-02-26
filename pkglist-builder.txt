@@ -1,10 +1,10 @@
+archivers/gtar
 archivers/zstd
 devel/ccache
 devel/git
 editors/kakoune
 ftp/curl
 ftp/wget
-ports-mgmt/pkg
 ports-mgmt/poudriere-devel
 security/doas
 shells/fish

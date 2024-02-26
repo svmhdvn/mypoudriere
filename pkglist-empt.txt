@@ -17,7 +17,6 @@ ftp/curl
 ftp/wget
 lang/python
 net/rsync
-ports-mgmt/pkg
 security/doas
 sysutils/htop
 sysutils/tmux
