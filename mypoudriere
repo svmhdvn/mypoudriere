@@ -202,13 +202,6 @@ readonly ports_repo_name
 ports_tree=default
 readonly ports_tree
 
-# NOTE set to GENERIC for recovery or hardware testing
-builder_kernconf="$(echo "$builder_hostname" | to_kernconf)"
-readonly builder_kernconf
-
-builder_jail="poudriere_stable${freebsd_version}_${builder_kernconf}"
-readonly builder_jail
-
 if test "$2" = ""; then
 target_hostname="$builder_hostname"
 else
@@ -221,6 +214,19 @@ readonly target_kernconf
 
 target_pkgbase_jail="poudriere_stable${freebsd_version}_${target_kernconf}"
 readonly target_pkgbase_jail
+
+# TODO pkg-static is unfortunately built as part of ports-mgmt/pkg. This means
+# that the builder jail's base system libraries get statically linked into
+# the binary. The builder jail uses a different CPUTYPE than the target, so we
+# run into SIGILL illegal instruction crashes. We need to figure this out properly.
+# NOTE to avoid this, we build all packages using the target jail instead of the host
+# jail (even though we really should build using the host jail).
+# NOTE set to GENERIC for recovery or hardware testing
+#builder_kernconf="$(echo "$builder_hostname" | to_kernconf)"
+#readonly builder_kernconf
+#builder_jail="poudriere_stable${freebsd_version}_${builder_kernconf}"
+builder_jail="$target_pkgbase_jail"
+readonly builder_jail
 
 pkgbase_repo="$poudriere_data/images/$target_pkgbase_jail-repo/FreeBSD:$freebsd_version:$target_arch/latest"
 readonly pkgbase_repo
