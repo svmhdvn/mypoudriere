@@ -109,7 +109,7 @@ build_ports() {
     rm -rf "$my_portoptions"
     cp -R "$poudriere_portoptions" "$my_portoptions"
 
-    poudriere bulk -v -j "$builder_jail" -p "$ports_tree" -f "$_pkglist" -z "$target_hostname"
+    poudriere bulk -j "$builder_jail" -p "$ports_tree" -f "$_pkglist" -z "$target_hostname"
 }
 
 bootstrap_step1() {
@@ -132,7 +132,7 @@ bootstrap_step1() {
     #   -e 's%.*TMPFS_BLACKLIST_TMPDIR=.*%TMPFS_BLACKLIST_TMPDIR="${BASEFS}/data/cache/tmp"%' \
     sed \
         -e "s/.*BUILDER_HOSTNAME=.*/BUILDER_HOSTNAME=poudriere.home.arpa/" \
-        -e 's/.*ALLOW_MAKE_JOBS_PACKAGES=.*/ALLOW_MAKE_JOBS_PACKAGES="pkg ccache python* cmake*"/' \
+        -e 's/.*ALLOW_MAKE_JOBS_PACKAGES=.*/ALLOW_MAKE_JOBS_PACKAGES="pkg ccache gcc* rust llvm* python* cmake*"/' \
         -e 's/.*BAD_PKGNAME_DEPS_ARE_FATAL=.*/BAD_PKGNAME_DEPS_ARE_FATAL=yes/' \
         -e 's/.*PACKAGE_FETCH_BRANCH=.*/PACKAGE_FETCH_BRANCH=latest/' \
         -e 's/.*PACKAGE_FETCH_WHITELIST=.*/PACKAGE_FETCH_WHITELIST="gcc* rust llvm*"/' \
