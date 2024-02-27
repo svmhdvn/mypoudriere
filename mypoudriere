@@ -7,7 +7,7 @@ to_kernconf() {
 
 sync_confs() {
     cp \
-    	"hosts/$target_hostname/$target_hostname-common-make.conf"
+    	"hosts/$target_hostname/$target_hostname-common-make.conf" \
     	"$poudriere_etc/$target_hostname-make.conf"
     cp \
     	"hosts/$target_hostname/$target_hostname-src.conf" \
@@ -100,7 +100,7 @@ build_ports() {
     # prevents the defaults from overriding the options directory during a
     # poudriere bulk run.
     cp \
-        "hosts/$target_hostname/$target_hostname-portoptions-make.conf"
+        "hosts/$target_hostname/$target_hostname-portoptions-make.conf" \
         "$poudriere_etc/$ports_tree-$target_hostname-make.conf"
     poudriere options -j "$builder_jail" -p "$ports_tree" -f "$_pkglist" -z "$target_hostname"
     rm -f "$poudriere_etc/$ports_tree-$target_hostname-make.conf"
