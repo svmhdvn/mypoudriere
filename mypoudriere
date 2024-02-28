@@ -269,13 +269,13 @@ case "$1" in
     ;;
   pkgbase)
     build_pkgbase_jail
+    mkdir -p tarballs
+    tar --zstd --strip-components 9 -cvHf "tarballs/$target_hostname-$pkgbase_repo_name.tar.zst" "$pkgbase_repo"
+    poudriere image -j "$target_pkgbase_jail" -n "$target_hostname-base" -o tarballs -t tar
     ;;
   ports)
     build_ports
-    ;;
-  tarballs)
     mkdir -p tarballs
-    tar --zstd --strip-components 9 -cvHf "tarballs/${target_hostname}-${pkgbase_repo_name}.tar.zst" "$pkgbase_repo"
     tar --zstd --strip-components 7 -cvf "tarballs/${target_hostname}-${ports_repo_name}.tar.zst" "$ports_repo"
     ;;
   destroy)
