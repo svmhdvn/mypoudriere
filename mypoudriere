@@ -33,7 +33,8 @@ post_pkgbase_upgrade() {
     cp /etc/sysctl.conf.pkgsave /etc/sysctl.conf || true
 
     find / -name '*.pkgsave' | \
-    	awk 'BEGIN {print "Leftover .pkgsave files (delete after double checking):"}' | \
+        sort | \
+    	awk 'BEGIN {print "Leftover .pkgsave files (delete after double checking):"} {print}' | \
     	less
     rm -f /boot/kernel/linker.hints
 }
@@ -42,7 +43,6 @@ build_pkgbase_jail() {
     if test ! -d /usr/src/.git; then
         git clone \
             --origin upstream \
-            --depth 1 \
             --branch "stable/$freebsd_major_version" \
             https://git.freebsd.org/src.git /usr/src
     fi
@@ -63,11 +63,11 @@ build_ports() {
     if test ! -d /usr/ports/.git; then
         git clone \
             --origin upstream \
-            --depth 1 \
             https://git.freebsd.org/ports.git /usr/ports
         poudriere ports -c -p "$ports_tree" -m null -M /usr/ports
     fi
     git -C /usr/ports pull upstream main --autostash --rebase
+    mkdir -p /usr/ports/distfiles
 
     # If the jail already exists, upgrade to latest upstream RELEASE.
     # Otherwise, create the jail.
@@ -78,7 +78,7 @@ build_ports() {
     fi
 
     case "$target_hostname" in
-      beastie)
+      beastie|n100m*)
         _pkglist=pkglist-builder.txt
         ;;
       cl100*|wyse*)
@@ -132,7 +132,7 @@ bootstrap_step1() {
     #   -e 's%.*TMPFS_BLACKLIST_TMPDIR=.*%TMPFS_BLACKLIST_TMPDIR="${BASEFS}/data/cache/tmp"%' \
     sed \
         -e "s/.*BUILDER_HOSTNAME=.*/BUILDER_HOSTNAME=poudriere.home.arpa/" \
-        -e 's/.*ALLOW_MAKE_JOBS_PACKAGES=.*/ALLOW_MAKE_JOBS_PACKAGES="pkg ccache gcc* rust llvm* python* cmake*"/' \
+        -e 's/.*ALLOW_MAKE_JOBS_PACKAGES=.*/ALLOW_MAKE_JOBS_PACKAGES="pkg ccache gcc* rust ruby* llvm* python* cmake*"/' \
         -e 's/.*BAD_PKGNAME_DEPS_ARE_FATAL=.*/BAD_PKGNAME_DEPS_ARE_FATAL=yes/' \
         -e 's/.*PACKAGE_FETCH_BRANCH=.*/PACKAGE_FETCH_BRANCH=latest/' \
         -e 's/.*PACKAGE_FETCH_WHITELIST=.*/PACKAGE_FETCH_WHITELIST="gcc* rust llvm*"/' \
@@ -157,13 +157,12 @@ $pkgbase_repo_name: {
 }
 EOF
 
-    pkg install -r "$pkgbase_repo_name" -g 'FreeBSD-*' -y
+    pkg install -y -r "$pkgbase_repo_name" -g 'FreeBSD-*'
     post_pkgbase_upgrade
 }
 
 bootstrap_step2() {
     # 5) build ports
-    mkdir -p /usr/ports/distfiles
     build_ports
 
     # 6) reinstall all system pkgs with the new poudriere repo
@@ -245,7 +244,7 @@ readonly pkgbase_repo
 ports_repo="$poudriere_data/packages/$builder_jail-$ports_tree-$target_hostname"
 readonly ports_repo
 
-poudriere_portoptions="$poudriere_etc/$builder_jail-$target_hostname-options"
+poudriere_portoptions="$poudriere_etc/$builder_jail-$ports_tree-$target_hostname-options"
 readonly poudriere_portoptions
 
 my_portoptions="hosts/$target_hostname/portoptions"
@@ -292,4 +291,5 @@ case "$1" in
   *)
     echo "unsupported command: $1" >&2
     exit 1
+    ;;
 esac

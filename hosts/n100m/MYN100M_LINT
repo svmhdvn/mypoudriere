@@ -2404,9 +2404,9 @@ device		xhci
 device		usb
 #
 # USB Double Bulk Pipe devices
-device		udbp
+#device		udbp
 # USB temperature meter
-device		ugold
+#device		ugold
 # USB LED
 device		uled
 # Human Interface Device (anything with buttons and dials)
@@ -2424,7 +2424,7 @@ device		usfs
 # USB modem support
 #device		umodem
 # USB mouse
-device		ums
+#device		ums
 # USB touchpad(s)
 #device		atp
 #device		wsp

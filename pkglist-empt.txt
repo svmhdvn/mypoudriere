@@ -1,3 +1,6 @@
+# system hardware related stuff
+sysutils/cpu-microcode
+
 dns/nsd
 irc/anope
 irc/unreal

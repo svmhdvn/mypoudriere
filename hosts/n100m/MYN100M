@@ -4,15 +4,11 @@ device		acpi_wmi
 device		aesni		# AES-NI OpenCrypto module
 device		agp
 device		ahci
-device		amdpm
-device		amdsbwd
-device		amdsmb
-device		amdsmn
-device		amdtemp
 device		ata
 device		atkbd
 device		atkbdc
 device		bpf
+device		coretemp
 device		cpuctl
 device		cpufreq
 device		crypto		# core crypto support
@@ -32,7 +28,8 @@ device		hidraw		# Raw access driver
 device		hkbd		# HID keyboard
 device		hms		# HID mouse
 device		hsctrl		# System controls
-device		intpm
+device		ichsmb
+device		ichwd
 device		ioat		# Intel I/OAT DMA engine
 device		ipmi
 device		isa
@@ -46,7 +43,6 @@ device		ohci
 device		ossl		# OpenSSL OpenCrypto module
 device		pass		#CAM passthrough driver
 device		pci
-device		psm
 device		pt		#SCSI processor
 device		puc
 device		rdrand_rng	# Intel Bull Mountain RNG
@@ -58,15 +54,12 @@ device		smb
 device		smbios
 device		smbus		# Bus support, required for smb below.
 device		tpm
-device		uart
-device		ugold
 device		uhci
 device		uhid
 device		uinput		# install /dev/uinput cdev
 device		ukbd
 device		uled
 device		umass
-device		ums
 device		usb
 device		usbhid
 device		usfs
@@ -83,9 +76,10 @@ device		xz		# xz_embedded LZMA de-compression library
 device		zlib		# gzip/zlib compression/decompression library
 device  	mii		# Minimal MII support
 device  	mii_bitbang	# Common module for bit-bang'ing the MII
+device  	rgephy		# RealTek 8169S/8110S/8211B/8211C
 device         nvd     # expose NVMe namespaces as disks, depends on nvme
 device         nvme    # base NVMe driver
-ident		MYBEASTIE
+ident		MYN100M
 options 	BPF_JITTER
 options 	CAPABILITIES	# fine-grained rights on file descriptors
 options 	CAPABILITY_MODE	# sandboxes with no global namespace access
@@ -102,6 +96,7 @@ options 	GEOM_PART_EBR		# Extended Boot Records
 options 	GEOM_PART_GPT		# GPT partitioning
 options 	GEOM_PART_MBR		# MBR partitioning
 options 	GZIO
+options 	HZ=100
 options 	INCLUDE_CONFIG_FILE     # Include this file in kernel
 options 	INET			#Internet communications protocols
 options 	INET6			#IPv6 communications protocols
@@ -109,7 +104,7 @@ options 	KBD_INSTALL_CDEV	# install a CDEV entry in /dev
 options 	KERN_TLS		# TLS transmit and receive offload
 options 	LIBICONV
 options 	LIBMCHAIN
-options 	MAXCPU=12
+options 	MAXCPU=4
 options 	MAXMEMDOM=1
 options 	MSDOSFS			#MS DOS File System (FAT, FAT32)
 options 	MSDOSFS_ICONV
@@ -117,9 +112,8 @@ options 	NFSD			#Network Filesystem Server
 options 	NULLFS			#NULL filesystem
 options 	PROCFS			#Process filesystem (requires PSEUDOFS)
 options 	PSEUDOFS		#Pseudo-filesystem framework
-options 	PSM_HOOKRESUME		#hook the system resume event, useful
-options 	PSM_RESETAFTERSUSPEND	#reset the device at the resume event
 options 	RACCT
+options 	RANDOM_FENESTRASX
 options 	RATELIMIT		# TX rate limiting support
 options 	RCTL
 options 	SCHED_ULE
