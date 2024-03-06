@@ -69,14 +69,6 @@ build_ports() {
     git -C /usr/ports pull upstream main --autostash --rebase
     mkdir -p /usr/ports/distfiles
 
-    # If the jail already exists, upgrade to latest upstream RELEASE.
-    # Otherwise, create the jail.
-    if poudriere jail -l -n -q | grep -q "^${builder_jail}\$"; then
-        poudriere jail -u -j "$builder_jail"
-    else
-        poudriere jail -c -j "$builder_jail" -v "${freebsd_major_version}.${freebsd_minor_version}-RELEASE"
-    fi
-
     case "$target_hostname" in
       beastie|n100m*)
         _pkglist=pkglist-builder.txt
@@ -132,12 +124,12 @@ bootstrap_step1() {
     #   -e 's%.*TMPFS_BLACKLIST_TMPDIR=.*%TMPFS_BLACKLIST_TMPDIR="${BASEFS}/data/cache/tmp"%' \
     sed \
         -e "s/.*BUILDER_HOSTNAME=.*/BUILDER_HOSTNAME=poudriere.home.arpa/" \
-        -e 's/.*ALLOW_MAKE_JOBS_PACKAGES=.*/ALLOW_MAKE_JOBS_PACKAGES="pkg ccache gcc* rust ruby* llvm* python* cmake*"/' \
+        -e 's%.*CCACHE_DIR=.*%CCACHE_DIR=/root/.ccache%' \
+        -e 's/.*ALLOW_MAKE_JOBS=.*/ALLOW_MAKE_JOBS=yes/' \
         -e 's/.*BAD_PKGNAME_DEPS_ARE_FATAL=.*/BAD_PKGNAME_DEPS_ARE_FATAL=yes/' \
+        -e 's/.*NOLINUX=.*/NOLINUX=yes/' \
         -e 's/.*PACKAGE_FETCH_BRANCH=.*/PACKAGE_FETCH_BRANCH=latest/' \
         -e 's/.*PACKAGE_FETCH_WHITELIST=.*/PACKAGE_FETCH_WHITELIST="gcc* rust llvm*"/' \
-        -e 's%.*CCACHE_DIR=.*%CCACHE_DIR=/root/.ccache%' \
-        -e 's/.*NOLINUX=.*/NOLINUX=yes/' \
         -e 's/.*WRKDIR_ARCHIVE_FORMAT=.*/WRKDIR_ARCHIVE_FORMAT=tzst/' \
         -e 's/.*ZPOOL=.*/ZPOOL=zroot/' \
         /usr/local/etc/poudriere.conf.sample > /usr/local/etc/poudriere.conf
@@ -265,6 +257,15 @@ case "$1" in
   upgrade2)
     build_ports
     pkg upgrade -r "$ports_repo_name" -y
+    ;;
+  upgrade_builder)
+    # If the jail already exists, upgrade to latest upstream RELEASE.
+    # Otherwise, create the jail.
+    if poudriere jail -l -n -q | grep -q "^${builder_jail}\$"; then
+        poudriere jail -u -j "$builder_jail"
+    else
+        poudriere jail -c -j "$builder_jail" -v "${freebsd_major_version}.${freebsd_minor_version}-RELEASE"
+    fi
     ;;
   pkgbase)
     build_pkgbase_jail

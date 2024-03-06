@@ -20,13 +20,14 @@ ftp/curl
 ftp/wget
 lang/python
 net/rsync
+net/mosh
 security/doas
 sysutils/htop
 sysutils/tmux
 sysutils/tree
 
-# nagios stuff
-net-mgmt/nagios4
+# nagios plugins and checks for use with cronmonitor
+net-mgmt/nagios-plugins
 net-mgmt/nagios-check_cpu_usage
 net-mgmt/nagios-check_email_delivery
 net-mgmt/nagios-check_zpools
