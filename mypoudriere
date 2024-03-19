@@ -177,11 +177,15 @@ EOF
     pkg upgrade -y
 }
 
+
 freebsd_major_version=14
 readonly freebsd_major_version
 
 freebsd_minor_version=0
 readonly freebsd_minor_version
+
+freebsd_branch="stable/$freebsd_major_version"
+readonly freebsd_branch
 
 # NOTE support other architectures when the need arises
 target_arch="$(uname -p)"

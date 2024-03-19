@@ -1,5 +1,6 @@
 # system hardware related stuff
 sysutils/cpu-microcode
+sysutils/x86info
 
 dns/nsd
 irc/anope
@@ -7,6 +8,7 @@ irc/unreal
 mail/dovecot
 mail/mlmmj
 mail/postfix
+net/dhcpcd
 net/openntpd
 net/samba419
 security/heimdal-devel
@@ -19,9 +21,11 @@ archivers/unzip
 ftp/curl
 ftp/wget
 lang/python
-net/rsync
+net/py-netaddr
 net/mosh
+net/rsync
 security/doas
+sysutils/ansible
 sysutils/htop
 sysutils/tmux
 sysutils/tree
