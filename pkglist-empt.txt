@@ -1,9 +1,11 @@
 # system hardware related stuff
 sysutils/cpu-microcode
+sysutils/smartmontools
 sysutils/x86info
 
 dns/nsd
-irc/anope
+#irc/anope
+irc/anope-devel
 irc/unreal
 mail/dovecot
 mail/mlmmj
@@ -14,6 +16,8 @@ net/samba419
 security/heimdal-devel
 security/openssh-portable
 security/py-cryptography
+www/radicale
+www/py-gunicorn
 
 # debug, testing, and ansible stuff
 archivers/gtar

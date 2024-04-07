@@ -16,6 +16,7 @@ sysutils/cpu-microcode
 sysutils/duf
 sysutils/fd
 sysutils/htop
+sysutils/smartmontools
 sysutils/tmux
 sysutils/tree
 sysutils/x86info

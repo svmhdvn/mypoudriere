@@ -368,6 +368,9 @@ options 	COMPAT_FREEBSD12
 # Enable FreeBSD13 compatibility syscalls
 options 	COMPAT_FREEBSD13
 
+# Enable FreeBSD14 compatibility syscalls
+options 	COMPAT_FREEBSD14
+
 # Enable Linux Kernel Programming Interface
 #options 	COMPAT_LINUXKPI
 
@@ -694,14 +697,14 @@ options  	TCPHPTS
 #options 	IPSEC_DEBUG		#debug for IP security
 
 # Alternative TCP stacks
-options 	TCP_BBR
-#options 	TCP_RACK
+#options 	TCP_BBR
+options 	TCP_RACK
 
 # TLS framing and encryption/decryption of data over TCP sockets.
 options 	KERN_TLS		# TLS transmit and receive offload
 
 # Netlink kernel/user<>kernel/user messaging interface
-#options 	NETLINK
+options 	NETLINK
 
 #
 # SMB/CIFS requester
@@ -733,8 +736,8 @@ options 	LIBMCHAIN
 # The SCTP_SUPPORT option does not enable SCTP, but provides the necessary
 # support for loading SCTP as a loadable kernel module.
 #
-options 	SCTP
-options 	SCTP_SUPPORT
+#options 	SCTP
+#options 	SCTP_SUPPORT
 
 # There are bunches of options:
 # this one turns on all sorts of

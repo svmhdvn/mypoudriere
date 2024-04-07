@@ -694,8 +694,8 @@ options  	TCPHPTS
 #options 	IPSEC_DEBUG		#debug for IP security
 
 # Alternative TCP stacks
-options 	TCP_BBR
-#options 	TCP_RACK
+#options 	TCP_BBR
+options 	TCP_RACK
 
 # TLS framing and encryption/decryption of data over TCP sockets.
 options 	KERN_TLS		# TLS transmit and receive offload
@@ -953,8 +953,9 @@ device		netmap
 # Bridge interface.
 #device		if_bridge
 
+# TODO delete if it doesn't work out
 # Common Address Redundancy Protocol. See carp(4) for more details.
-#device		carp
+device		carp
 
 # IPsec interface.
 #device		enc
