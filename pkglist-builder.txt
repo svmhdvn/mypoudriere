@@ -20,6 +20,7 @@ sysutils/smartmontools
 sysutils/tmux
 sysutils/tree
 sysutils/x86info
+sysutils/zrep
 textproc/bat
 textproc/fzf
 textproc/ripgrep

@@ -164,10 +164,10 @@ options 	INCLUDE_CONFIG_FILE     # Include this file in kernel
 options 	GEOM_LABEL		# Providers labelization.
 #options 	GEOM_LINUX_LVM		# Linux LVM2 volumes
 #options 	GEOM_MAP		# Map based partitioning
-#options 	GEOM_MIRROR		# Disk mirroring.
+options 	GEOM_MIRROR		# Disk mirroring.
 #options 	GEOM_MULTIPATH		# Disk multipath
 #options 	GEOM_NOP		# Test class.
-#options 	GEOM_PART_APM		# Apple partitioning
+options 	GEOM_PART_APM		# Apple partitioning
 options 	GEOM_PART_BSD		# BSD disklabel
 options 	GEOM_PART_BSD64		# BSD disklabel64
 options 	GEOM_PART_EBR		# Extended Boot Records
@@ -177,7 +177,7 @@ options 	GEOM_PART_MBR		# MBR partitioning
 #options 	GEOM_RAID		# Soft RAID functionality.
 #options 	GEOM_RAID3		# RAID3 functionality.
 #options 	GEOM_SHSEC		# Shared secret.
-#options 	GEOM_STRIPE		# Disk striping.
+options 	GEOM_STRIPE		# Disk striping.
 #options 	GEOM_UZIP		# Read-only compressed disks
 #options 	GEOM_VINUM		# Vinum logical volume manager
 #options 	GEOM_VIRSTOR		# Virtual storage.
@@ -497,9 +497,7 @@ options 	SYSVMSG
 # The size of the pool can be adjusted both at boottime and runtime via
 # the kern.ktrace_request_pool tunable and sysctl.
 #
-# TODO SIVA add back in if truss or strace-like requirements are needed in the 
-# build system. I don't think it's needed for now tbh.
-#options 	KTRACE			#kernel tracing
+options 	KTRACE			#kernel tracing
 #options 	KTRACE_REQUEST_POOL=101
 
 #
@@ -953,9 +951,8 @@ device		netmap
 # Bridge interface.
 #device		if_bridge
 
-# TODO delete if it doesn't work out
 # Common Address Redundancy Protocol. See carp(4) for more details.
-device		carp
+#device		carp
 
 # IPsec interface.
 #device		enc
@@ -1363,14 +1360,14 @@ options 	HZ=100
 # The pass driver provides a passthrough API to access the CAM subsystem.
 
 device		scbus		#base SCSI code
-#device		ch		#SCSI media changers
+device		ch		#SCSI media changers
 device		da		#SCSI direct access devices (aka disks)
-#device		sa		#SCSI tapes
-#device		cd		#SCSI CD-ROMs
-#device		ses		#Enclosure Services (SES and SAF-TE)
+device		sa		#SCSI tapes
+device		cd		#SCSI CD-ROMs
+device		ses		#Enclosure Services (SES and SAF-TE)
 device		pt		#SCSI processor
-#device		targ		#SCSI Target Mode Code
-#device		targbh		#SCSI Target Mode Blackhole Device
+device		targ		#SCSI Target Mode Code
+device		targbh		#SCSI Target Mode Blackhole Device
 device		pass		#CAM passthrough driver
 #device		sg		#Linux SCSI passthrough
 device		ctl		#CAM Target Layer
@@ -2399,8 +2396,6 @@ device		ohci
 device		ehci
 # XHCI controller
 device		xhci
-# SL811 Controller
-#device		slhci
 # General USB code (mandatory for USB)
 device		usb
 #
@@ -2415,7 +2410,7 @@ device		uhid
 # USB keyboard
 device		ukbd
 # USB printer
-#device		ulpt
+device		ulpt
 # USB mass storage driver (Requires scbus and da)
 device		umass
 # USB mass storage driver for device-side mode

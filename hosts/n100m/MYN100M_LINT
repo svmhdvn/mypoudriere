@@ -500,9 +500,7 @@ options 	SYSVMSG
 # The size of the pool can be adjusted both at boottime and runtime via
 # the kern.ktrace_request_pool tunable and sysctl.
 #
-# TODO SIVA add back in if truss or strace-like requirements are needed in the 
-# build system. I don't think it's needed for now tbh.
-#options 	KTRACE			#kernel tracing
+options 	KTRACE			#kernel tracing
 #options 	KTRACE_REQUEST_POOL=101
 
 #

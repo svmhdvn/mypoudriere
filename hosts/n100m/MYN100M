@@ -103,6 +103,7 @@ options 	INET			#Internet communications protocols
 options 	INET6			#IPv6 communications protocols
 options 	KBD_INSTALL_CDEV	# install a CDEV entry in /dev
 options 	KERN_TLS		# TLS transmit and receive offload
+options 	KTRACE			#kernel tracing
 options 	LIBICONV
 options 	LIBMCHAIN
 options 	MAXCPU=4

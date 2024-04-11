@@ -16,6 +16,7 @@ net/samba419
 security/heimdal-devel
 security/openssh-portable
 security/py-cryptography
+sysutils/zrep
 www/radicale
 www/py-gunicorn
 

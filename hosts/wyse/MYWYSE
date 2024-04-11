@@ -11,7 +11,8 @@ device		ata
 device		atkbd
 device		atkbdc
 device		bpf
-device		carp
+device		cd		#SCSI CD-ROMs
+device		ch		#SCSI media changers
 device		cpuctl
 device		cpufreq
 device		crypto		# core crypto support
@@ -45,11 +46,15 @@ device		pci
 device		pt		#SCSI processor
 device		puc
 device		re		# RealTek 8139C+/8169/8169S/8110S
+device		sa		#SCSI tapes
 device		sc
 device		scbus		#base SCSI code
+device		ses		#Enclosure Services (SES and SAF-TE)
 device		smb
 device		smbios
 device		smbus		# Bus support, required for smb below.
+device		targ		#SCSI Target Mode Code
+device		targbh		#SCSI Target Mode Blackhole Device
 device		uart
 device		ugold
 device		uhci
@@ -57,6 +62,7 @@ device		uhid
 device		uinput		# install /dev/uinput cdev
 device		ukbd
 device		uled
+device		ulpt
 device		umass
 device		ums
 device		usb
@@ -88,11 +94,14 @@ options 	EFIRT
 options 	FDESCFS			#File descriptor filesystem
 options 	FFS			#Fast filesystem
 options 	GEOM_LABEL		# Providers labelization.
+options 	GEOM_MIRROR		# Disk mirroring.
+options 	GEOM_PART_APM		# Apple partitioning
 options 	GEOM_PART_BSD		# BSD disklabel
 options 	GEOM_PART_BSD64		# BSD disklabel64
 options 	GEOM_PART_EBR		# Extended Boot Records
 options 	GEOM_PART_GPT		# GPT partitioning
 options 	GEOM_PART_MBR		# MBR partitioning
+options 	GEOM_STRIPE		# Disk striping.
 options 	GZIO
 options 	HZ=100
 options 	INCLUDE_CONFIG_FILE     # Include this file in kernel
@@ -101,6 +110,7 @@ options 	INET6			#IPv6 communications protocols
 options 	KBD_INSTALL_CDEV	# install a CDEV entry in /dev
 options 	KERN_TLS		# TLS transmit and receive offload
 options 	KGSSAPI			#Kernel GSSAPI implementation
+options 	KTRACE			#kernel tracing
 options 	LIBICONV
 options 	LIBMCHAIN
 options 	MAXCPU=2
