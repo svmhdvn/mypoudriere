@@ -5,7 +5,6 @@ devel/git
 editors/kakoune
 ftp/curl
 ftp/wget
-net/dhcpcd
 net/mosh
 net/rsync
 ports-mgmt/poudriere-devel

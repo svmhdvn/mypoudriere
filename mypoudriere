@@ -102,6 +102,7 @@ build_ports() {
     cp -R "$poudriere_portoptions" "$my_portoptions"
 
     poudriere bulk -j "$builder_jail" -p "$ports_tree" -f "$_pkglist" -z "$target_hostname"
+    poudriere pkgclean -y -j "$builder_jail" -p "$ports_tree" -f "$_pkglist" -z "$target_hostname"
 }
 
 bootstrap_step1() {
