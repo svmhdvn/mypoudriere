@@ -5,104 +5,131 @@ to_kernconf() {
     awk '{printf("MY%s\n", toupper($1))}'
 }
 
+# TODO handle signatures on pkg repos
+gen_pkgbase_repo_conf() {
+    cat <<EOF
+$pkgbase_repo_name: {
+  url: "file://$pkgbase_repo"
+  enabled: yes
+}
+EOF
+}
+
+gen_ports_repo_conf() {
+    cat <<EOF
+$ports_repo_name: {
+  url: "file://$ports_repo"
+  enabled: yes
+}
+EOF
+}
+
+gen_freebsd_repo_conf() {
+    cat <<EOF
+FreeBSD: {
+  url: "pkg+https://pkg.freebsd.org/$${ABI}/latest",
+  mirror_type: "srv",
+  signature_type: "fingerprints",
+  fingerprints: "/usr/share/keys/pkg",
+  enabled: "no"
+}
+EOF
+}
+
 sync_confs() {
-    cp \
+    doas cp \
     	"hosts/$target_hostname/$target_hostname-common-make.conf" \
     	"$poudriere_etc/$target_hostname-make.conf"
-    cp \
+    doas cp \
     	"hosts/$target_hostname/$target_hostname-src.conf" \
     	"hosts/$target_hostname/$target_hostname-src-env.conf" \
 	"$poudriere_etc"
 
     grep '^[a-z]' "hosts/$target_hostname/${target_kernconf}_LINT" \
     	| sort -u \
-    	| tee \
-            "hosts/$target_hostname/$target_kernconf" \
-            "/usr/src/sys/$target_arch/conf/$target_kernconf" \
-            > /dev/null
+    	| tee "hosts/$target_hostname/$target_kernconf" \
+    	| doas tee "/usr/src/sys/$target_arch/conf/$target_kernconf" > /dev/null
+}
+
+pull_freebsd_src() {
+    if test ! -d /usr/src/.git; then
+        doas git clone \
+            --origin upstream \
+            --branch "$freebsd_branch" \
+            https://git.freebsd.org/src.git /usr/src
+    fi
+    doas git -C /usr/src pull upstream "$freebsd_branch" --rebase --autostash
+}
+
+pull_freebsd_ports() {
+    # TODO setup a downstream EMPT ports repo and rebase from upstream here
+    if test ! -d /usr/ports/.git; then
+        doas git clone \
+            --origin upstream \
+            https://git.freebsd.org/ports.git /usr/ports
+        doas poudriere ports -c -p "$ports_tree" -m null -M /usr/ports
+    fi
+    doas git -C /usr/ports pull upstream main --autostash --rebase
+    doas mkdir -p /usr/ports/distfiles
 }
 
 # TODO find a cleaner way to do this
 # Instructions from https://wiki.freebsd.org/PkgBase
 post_pkgbase_upgrade() {
     if test -r /etc/master.passwd.pkgsave || test -r /etc/group.pkgsave ; then
-        cp /etc/master.passwd.pkgsave /etc/master.passwd || true
-        cp /etc/group.pkgsave /etc/group || true
-        pwd_mkdb -p /etc/master.passwd
+        doas cp /etc/master.passwd.pkgsave /etc/master.passwd || true
+        doas cp /etc/group.pkgsave /etc/group || true
+        doas pwd_mkdb -p /etc/master.passwd
     fi
-    cp /etc/sysctl.conf.pkgsave /etc/sysctl.conf || true
+    doas cp /etc/sysctl.conf.pkgsave /etc/sysctl.conf || true
 
     find / -name '*.pkgsave' | \
         sort | \
     	awk 'BEGIN {print "Leftover .pkgsave files (delete after double checking):"} {print}' | \
     	less
-    rm -f /boot/kernel/linker.hints
+    doas rm -f /boot/kernel/linker.hints
 }
 
 build_pkgbase_jail() {
-    if test ! -d /usr/src/.git; then
-        git clone \
-            --origin upstream \
-            --branch "$freebsd_branch" \
-            https://git.freebsd.org/src.git /usr/src
-    fi
-    git -C /usr/src pull upstream "$freebsd_branch" --rebase --autostash
+    pull_freebsd_src
+    sync_confs
 
     # If the jail already exists, upgrade and build the new pkgbase set.
     # Otherwise, create the jail.
-    sync_confs
     if poudriere jail -l -n -q | grep -q "^${target_pkgbase_jail}\$"; then
-        poudriere jail -u -j "$target_pkgbase_jail" -b -z "$target_hostname"
+        doas poudriere jail -u -j "$target_pkgbase_jail" -b -z "$target_hostname"
     else
-        poudriere jail -c -j "$target_pkgbase_jail" -b -m src=/usr/src -B -K "$target_kernconf" -z "$target_hostname"
+        doas poudriere jail -c -j "$target_pkgbase_jail" -b -m src=/usr/src -B -K "$target_kernconf" -z "$target_hostname"
     fi
 }
 
-build_ports() {
-    # TODO setup a downstream EMPT ports repo and rebase from upstream here
-    if test ! -d /usr/ports/.git; then
-        git clone \
-            --origin upstream \
-            https://git.freebsd.org/ports.git /usr/ports
-        poudriere ports -c -p "$ports_tree" -m null -M /usr/ports
-    fi
-    git -C /usr/ports pull upstream main --autostash --rebase
-    mkdir -p /usr/ports/distfiles
-
-    case "$target_hostname" in
-      beastie|n100m*)
-        _pkglist=pkglist-builder.txt
-        ;;
-      cl100*|wyse*)
-        _pkglist=pkglist-empt.txt
-        ;;
-      *)
-        echo "unsupported target host: $target_hostname" >&2
-        echo "usage: $0 <command> <hostname>" >&2
-        exit 1
-    esac
-    readonly _pkglist
-
+poudriere_options() {
+    pull_freebsd_ports
     sync_confs
+
     if test ! -d "$poudriere_portoptions" && test -d "$my_portoptions"; then
-        cp -R "$my_portoptions" "$poudriere_portoptions"
+        doas cp -R "$my_portoptions" "$poudriere_portoptions"
     fi
 
     # Only use our portoptions make.conf for options directory creation. This
     # prevents the defaults from overriding the options directory during a
     # poudriere bulk run.
-    cp \
+    doas cp \
         "hosts/$target_hostname/$target_hostname-portoptions-make.conf" \
         "$poudriere_etc/$ports_tree-$target_hostname-make.conf"
-    poudriere options -j "$builder_jail" -p "$ports_tree" -f "$_pkglist" -z "$target_hostname"
-    rm -f "$poudriere_etc/$ports_tree-$target_hostname-make.conf"
+    doas poudriere options -j "$builder_jail" -p "$ports_tree" -f "$ports_pkglist" -z "$target_hostname"
+    doas rm -f "$poudriere_etc/$ports_tree-$target_hostname-make.conf"
 
     # Treat the poudriere_etc options directory as the ground truth.
     rm -rf "$my_portoptions"
     cp -R "$poudriere_portoptions" "$my_portoptions"
+}
 
-    poudriere bulk -j "$builder_jail" -p "$ports_tree" -f "$_pkglist" -z "$target_hostname"
-    poudriere pkgclean -y -j "$builder_jail" -p "$ports_tree" -f "$_pkglist" -z "$target_hostname"
+poudriere_bulk() {
+    doas poudriere bulk -j "$builder_jail" -p "$ports_tree" -f "$ports_pkglist" -z "$target_hostname"
+    doas poudriere pkgclean -y -j "$builder_jail" -p "$ports_tree" -f "$ports_pkglist" -z "$target_hostname"
+    mkdir -p tarballs
+    tar --zstd --strip-components 7 -cvf "tarballs/${target_hostname}-${ports_repo_name}.tar.zst" "$ports_repo"
 }
 
 bootstrap_step1() {
@@ -116,7 +143,7 @@ bootstrap_step1() {
     # * doas (configured with 'permit nopass :wheel')
 
     # 1) install required packages from upstream mirror
-    pkg install -y git poudriere ccache
+    doas pkg install -y git poudriere ccache
 
     # 2) setup poudriere
     # TODO change ccache directory to a better global location, possibly /var/cache/ccache
@@ -133,66 +160,49 @@ bootstrap_step1() {
         -e 's/.*PACKAGE_FETCH_WHITELIST=.*/PACKAGE_FETCH_WHITELIST="gcc* rust llvm*"/' \
         -e 's/.*WRKDIR_ARCHIVE_FORMAT=.*/WRKDIR_ARCHIVE_FORMAT=tzst/' \
         -e 's/.*ZPOOL=.*/ZPOOL=zroot/' \
-        /usr/local/etc/poudriere.conf.sample > /usr/local/etc/poudriere.conf
+        /usr/local/etc/poudriere.conf.sample \
+        | doas tee /usr/local/etc/poudriere.conf > /dev/null
 
     # 3) build system pkgbase
     kldload -n filemon
     build_pkgbase_jail
 
     # 4) convert system into a pkgbase installation
-    mkdir -p /usr/local/etc/pkg/repos
+    doas mkdir -p /usr/local/etc/pkg/repos
 
-    # TODO handle signatures
-    cat > /usr/local/etc/pkg/repos/poudriere_pkgbase.conf <<EOF
-$pkgbase_repo_name: {
-  url: "file://$pkgbase_repo"
-  enabled: yes
-}
-EOF
+    gen_pkgbase_repo_conf | doas tee /usr/local/etc/pkg/repos/poudriere_pkgbase.conf > /dev/null
 
-    pkg install -y -r "$pkgbase_repo_name" -g 'FreeBSD-*'
+    doas pkg install -y -r "$pkgbase_repo_name" -g 'FreeBSD-*'
     post_pkgbase_upgrade
 }
 
 bootstrap_step2() {
     # 5) build ports
-    build_ports
+    poudriere_options
+    poudriere_bulk
 
     # 6) reinstall all system pkgs with the new poudriere repo
-    cat <<EOF > /usr/local/etc/pkg/repos/poudriere_ports.conf
-$ports_repo_name: {
-  url: "file://$ports_repo"
-  enabled: yes
-}
-EOF
+    gen_ports_repo_conf | doas tee /usr/local/etc/pkg/repos/poudriere_ports.conf > /dev/null
+    gen_freebsd_repo_conf | doas tee /usr/local/etc/pkg/repos/FreeBSD.conf > /dev/null
 
-    cat <<EOF > /usr/local/etc/pkg/repos/FreeBSD.conf
-FreeBSD: {
-  url: "pkg+https://pkg.freebsd.org/$${ABI}/latest",
-  mirror_type: "srv",
-  signature_type: "fingerprints",
-  fingerprints: "/usr/share/keys/pkg",
-  enabled: "no"
-}
-EOF
-    pkg upgrade -y
+    doas pkg upgrade -y -f
 }
 
-
-#freebsd_major_version=14
 freebsd_major_version=15
 readonly freebsd_major_version
 
 freebsd_minor_version=0
 readonly freebsd_minor_version
 
-#freebsd_branch="stable/$freebsd_major_version"
 freebsd_branch="main"
 readonly freebsd_branch
 
 # NOTE support other architectures when the need arises
 target_arch="$(uname -p)"
 readonly target_arch
+
+target_abi="FreeBSD:$freebsd_major_version:$target_arch"
+readonly target_abi
 
 # NOTE use this to determine a system's CPUTYPE, then add it to a make.conf
 # inside the hosts/ directory
@@ -238,7 +248,7 @@ readonly target_kernconf
 target_pkgbase_jail="poudriere_${freebsd_major_version}CURRENT_${target_kernconf}"
 readonly target_pkgbase_jail
 
-pkgbase_repo="$poudriere_data/images/$target_pkgbase_jail-repo/FreeBSD:$freebsd_major_version:$target_arch/latest"
+pkgbase_repo="$poudriere_data/images/$target_pkgbase_jail-repo/$target_abi/latest"
 readonly pkgbase_repo
 
 ports_repo="$poudriere_data/packages/$builder_jail-$ports_tree-$target_hostname"
@@ -250,6 +260,20 @@ readonly poudriere_portoptions
 my_portoptions="hosts/$target_hostname/portoptions"
 readonly my_portoptions
 
+case "$target_hostname" in
+  beastie|n100m*)
+    ports_pkglist=pkglist-builder.txt
+    ;;
+  cl100*|wyse*)
+    ports_pkglist=pkglist-empt.txt
+    ;;
+  *)
+    echo "unsupported target host: $target_hostname" >&2
+    echo "usage: $0 <command> <hostname>" >&2
+    exit 1
+esac
+readonly ports_pkglist
+
 case "$1" in
   bootstrap1)
     bootstrap_step1
@@ -259,40 +283,46 @@ case "$1" in
     ;;
   upgrade1)
     build_pkgbase_jail
-    pkg upgrade -r "$pkgbase_repo_name" -y
+    doas env "ABI=$target_abi" IGNORE_OSVERSION=yes \
+        pkg install -y -r "$pkgbase_repo_name" -g 'FreeBSD-*'
     post_pkgbase_upgrade
     ;;
   upgrade2)
-    build_ports
-    pkg upgrade -r "$ports_repo_name" -y
+    poudriere_options
+    poudriere_bulk
+    doas pkg upgrade -y -r "$ports_repo_name"
     ;;
   upgrade_builder)
     # If the jail already exists, upgrade to latest upstream image.
     # Otherwise, create the jail.
     if poudriere jail -l -n -q | grep -q "^${builder_jail}\$"; then
         # TODO figure out the right builder jail update strategy
-        poudriere jail -d -j "$builder_jail" -y
+        doas poudriere jail -y -d -j "$builder_jail"
         #poudriere jail -u -j "$builder_jail"
     fi
-    poudriere jail -c -j "$builder_jail" -v "${freebsd_major_version}.${freebsd_minor_version}-CURRENT"
+    doas poudriere jail -c -j "$builder_jail" -v "${freebsd_major_version}.${freebsd_minor_version}-CURRENT"
     ;;
   pkgbase)
     build_pkgbase_jail
     mkdir -p tarballs
     tar --zstd --strip-components 9 -cvHf "tarballs/$target_hostname-$pkgbase_repo_name.tar.zst" "$pkgbase_repo"
-    poudriere image -j "$target_pkgbase_jail" -n "$target_hostname-base" -o tarballs -t tar
+    ;;
+  options)
+    poudriere_options
+    ;;
+  bulk)
+    poudriere_bulk
     ;;
   ports)
-    build_ports
-    mkdir -p tarballs
-    tar --zstd --strip-components 7 -cvf "tarballs/${target_hostname}-${ports_repo_name}.tar.zst" "$ports_repo"
+    poudriere_options
+    poudriere_bulk
     ;;
   destroy)
-    poudriere jail -d -j "$target_pkgbase_jail" -C all -y || true
-    rm -f \
+    doas poudriere jail -d -j "$target_pkgbase_jail" -C all -y || true
+    doas rm -f \
         "$poudriere_etc/$target_hostname"-*.conf \
         "$poudriere_etc/$ports_tree-$target_hostname"-*.conf
-    rm -rf \
+    doas rm -rf \
         "$poudriere_portoptions" \
         "$pkgbase_repo" \
         "$ports_repo"
