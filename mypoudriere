@@ -324,7 +324,7 @@ case "$1" in
         "$poudriere_etc/$ports_tree-$target_hostname"-*.conf
     doas rm -rf \
         "$poudriere_portoptions" \
-        "$pkgbase_repo" \
+        "$poudriere_data/images/$target_pkgbase_jail-repo" \
         "$ports_repo"
     rm -f tarballs/"$target_hostname"-*.tar.zst
     ;;

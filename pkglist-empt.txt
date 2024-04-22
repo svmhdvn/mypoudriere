@@ -19,6 +19,7 @@ security/py-cryptography
 sysutils/zrep
 www/radicale
 www/py-gunicorn
+www/py-wsgi-kerberos
 
 # debug, testing, and ansible stuff
 archivers/gtar

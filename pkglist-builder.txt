@@ -23,3 +23,8 @@ sysutils/zrep
 textproc/bat
 textproc/fzf
 textproc/ripgrep
+
+# XXX temp remove
+www/radicale
+www/py-gunicorn
+www/py-wsgi-kerberos
