@@ -158,13 +158,15 @@ bootstrap_step1() {
         -e 's/.*NOLINUX=.*/NOLINUX=yes/' \
         -e 's/.*PACKAGE_FETCH_BRANCH=.*/PACKAGE_FETCH_BRANCH=latest/' \
         -e 's/.*PACKAGE_FETCH_WHITELIST=.*/PACKAGE_FETCH_WHITELIST="gcc* rust llvm*"/' \
+        -e 's/.*PRIORITY_BOOST=.*/PRIORITY_BOOST="curl"/' \
+        -e 's/.*SAVE_WRKDIR=.*/SAVE_WRKDIR="yes"/' \
         -e 's/.*WRKDIR_ARCHIVE_FORMAT=.*/WRKDIR_ARCHIVE_FORMAT=tzst/' \
         -e 's/.*ZPOOL=.*/ZPOOL=zroot/' \
         /usr/local/etc/poudriere.conf.sample \
         | doas tee /usr/local/etc/poudriere.conf > /dev/null
 
     # 3) build system pkgbase
-    kldload -n filemon
+    doas kldload -n filemon
     build_pkgbase_jail
 
     # 4) convert system into a pkgbase installation
@@ -224,6 +226,16 @@ readonly ports_repo_name
 ports_tree=default
 readonly ports_tree
 
+target_hostname="${2:-$(hostname)}"
+readonly target_hostname
+
+target_kernconf="$(echo "$target_hostname" | to_kernconf)"
+readonly target_kernconf
+
+#target_pkgbase_jail="poudriere_stable${freebsd_major_version}_${target_kernconf}"
+target_pkgbase_jail="poudriere_${freebsd_major_version}CURRENT_${target_kernconf}"
+readonly target_pkgbase_jail
+
 # TODO pkg-static is unfortunately built as part of ports-mgmt/pkg. This means
 # that the builder jail's base system libraries get statically linked into
 # the binary. The builder jail uses a different CPUTYPE than the target, so we
@@ -235,18 +247,12 @@ readonly ports_tree
 #builder_kernconf="$(echo "$builder_hostname" | to_kernconf)"
 #readonly builder_kernconf
 #builder_jail="poudriere_${freebsd_branch}_${builder_kernconf}"
-builder_jail="r${freebsd_major_version}${freebsd_minor_version}${target_arch}"
+if test "$(hostname)" = "$target_hostname"; then
+    builder_jail="$target_pkgbase_jail"
+else
+    builder_jail="r${freebsd_major_version}${freebsd_minor_version}${target_arch}"
+fi
 readonly builder_jail
-
-target_hostname="${2:-$(hostname)}"
-readonly target_hostname
-
-target_kernconf="$(echo "$target_hostname" | to_kernconf)"
-readonly target_kernconf
-
-#target_pkgbase_jail="poudriere_stable${freebsd_major_version}_${target_kernconf}"
-target_pkgbase_jail="poudriere_${freebsd_major_version}CURRENT_${target_kernconf}"
-readonly target_pkgbase_jail
 
 pkgbase_repo="$poudriere_data/images/$target_pkgbase_jail-repo/$target_abi/latest"
 readonly pkgbase_repo
