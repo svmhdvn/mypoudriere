@@ -1,7 +1,9 @@
 archivers/gtar
 archivers/zstd
+benchmarks/bonnie++
 devel/ccache
 devel/git
+devel/hs-ShellCheck
 editors/kakoune
 ftp/curl
 ftp/wget
