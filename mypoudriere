@@ -24,10 +24,10 @@ EOF
 
 sync_confs() {
     doas cp \
-    	"hosts/$target_hostname/$target_hostname-common-make.conf" \
+    	"$target_confdir/$target_hostname-common-make.conf" \
     	"$poudriere_etc/$target_hostname-make.conf"
     doas cp \
-    	"hosts/$target_hostname/$target_hostname-src-env.conf" \
+    	"$target_confdir/$target_hostname-src-env.conf" \
 	"$poudriere_etc"
 }
 
@@ -75,28 +75,47 @@ cp /etc/sysctl.conf.pkgsave /etc/sysctl.conf || true
     doas rm -f /boot/kernel/linker.hints
 }
 
-build_pkgbase() {
-    _type="$1"
-    _builder="$2"
-
+build_host_pkgbase() {
     pull_freebsd_src
     sync_confs
-    grep '^[a-z]' "hosts/$target_hostname/${target_kernconf}_LINT" \
+    grep '^[a-z]' "$target_confdir/${target_kernconf}_LINT" \
     	| sort -u \
-    	| tee "hosts/$target_hostname/$target_kernconf" \
+    	| tee "$target_confdir/$target_kernconf" \
     	| doas tee "/usr/src/sys/$target_arch/conf/$target_kernconf" > /dev/null
 
     doas cp \
-    	"hosts/$target_hostname/$target_hostname-$_type-src.conf" \
-    	"$poudriere_etc/$_builder-src.conf"
+    	"$target_confdir/$target_hostname-host-src.conf" \
+    	"$poudriere_etc/$host_pkgbase_builder-src.conf"
 
     # If the jail already exists, upgrade and build the new pkgbase set.
     # Otherwise, create the jail.
-    if poudriere jail -l -n -q | grep -q "^${_builder}\$"; then
-        doas poudriere jail -u -j "$_builder" -b -z "$target_hostname"
+    if poudriere jail -l -n -q | grep -q "^${host_pkgbase_builder}\$"; then
+        doas poudriere jail -u -j "$host_pkgbase_builder" -b -z "$target_hostname"
     else
-        doas poudriere jail -c -j "$_builder" -b -m src=/usr/src -B -K "$target_kernconf" -z "$target_hostname"
+        doas poudriere jail -c -j "$host_pkgbase_builder" -b -m src=/usr/src -B -K "$target_kernconf" -z "$target_hostname"
     fi
+}
+
+build_jail_pkgbase() {
+    pull_freebsd_src
+
+    # TODO file upstream bug to figure out the order of target dependencies
+    # between 'buildworld' and the stage/create/sign targets
+    # For now, use two make invocations
+    _pkgversion="$(doas git -C /usr/src rev-parse --short HEAD)-$(date -u +%Y%m%d%H%M%S)"
+    doas make -C /usr/src -j"$(nproc)" \
+        __MAKE_CONF="$target_confdir/$target_hostname-common-make.conf" \
+        SRCCONF="$target_confdir/$target_hostname-jail-src.conf" \
+        SRC_ENV_CONF="$target_confdir/$target_hostname-src-env.conf" \
+        buildworld
+
+    doas make -C /usr/src \
+        __MAKE_CONF="$target_confdir/$target_hostname-common-make.conf" \
+        SRCCONF="$target_confdir/$target_hostname-jail-src.conf" \
+        SRC_ENV_CONF="$target_confdir/$target_hostname-src-env.conf" \
+        REPODIR="$poudriere_data/images/$jail_pkgbase_builder-repo" \
+        PKG_VERSION="$_pkgversion" \
+        stage-packages-world create-packages-world sign-packages
 }
 
 poudriere_options() {
@@ -111,7 +130,7 @@ poudriere_options() {
     # prevents the defaults from overriding the options directory during a
     # poudriere bulk run.
     doas cp \
-        "hosts/$target_hostname/$target_hostname-portoptions-make.conf" \
+        "$target_confdir/$target_hostname-portoptions-make.conf" \
         "$poudriere_etc/$ports_tree-$target_hostname-make.conf"
     doas poudriere options -j "$ports_builder" -p "$ports_tree" -f "$ports_pkglist" -z "$target_hostname"
     doas rm -f "$poudriere_etc/$ports_tree-$target_hostname-make.conf"
@@ -163,7 +182,7 @@ bootstrap_step1() {
 
     # 3) build system pkgbase
     doas kldload -n filemon
-    build_pkgbase host "$host_pkgbase_builder"
+    build_host_pkgbase
 
     # 4) convert system into a pkgbase installation
     doas mkdir -p /usr/local/etc/pkg/repos
@@ -184,6 +203,9 @@ bootstrap_step2() {
 
     doas pkg upgrade -y -r poudriere_ports -f
 }
+
+top="$(cd "$(dirname "$0")" && pwd)"
+readonly top
 
 freebsd_major_version=15
 readonly freebsd_major_version
@@ -217,6 +239,9 @@ readonly ports_tree
 
 target_hostname="${2:-$(hostname)}"
 readonly target_hostname
+
+target_confdir="$top/hosts/$target_hostname"
+readonly target_confdir
 
 target_kernconf="$(echo "$target_hostname" | to_kernconf)"
 readonly target_kernconf
@@ -257,7 +282,7 @@ readonly ports_repo
 poudriere_portoptions="$poudriere_etc/$ports_builder-$ports_tree-$target_hostname-options"
 readonly poudriere_portoptions
 
-my_portoptions="hosts/$target_hostname/portoptions"
+my_portoptions="$target_confdir/portoptions"
 readonly my_portoptions
 
 case "$target_hostname" in
@@ -282,7 +307,7 @@ case "$1" in
     bootstrap_step2
     ;;
   upgrade1)
-    build_pkgbase host "$host_pkgbase_builder"
+    build_host_pkgbase
     local_pkgbase_upgrade
     ;;
   upgrade2)
@@ -302,12 +327,12 @@ case "$1" in
     doas poudriere jail -c -j "$ports_builder" -v "${freebsd_major_version}.${freebsd_minor_version}-CURRENT"
     ;;
   host_pkgbase)
-    build_pkgbase host "$host_pkgbase_builder"
+    build_host_pkgbase
     mkdir -p tarballs
     tar --zstd --strip-components 9 -cvHf "tarballs/$target_hostname-host-pkgbase.tar.zst" "$host_pkgbase_repo"
     ;;
   jail_pkgbase)
-    build_pkgbase jail "$jail_pkgbase_builder"
+    build_jail_pkgbase
     mkdir -p tarballs
     tar --zstd --strip-components 9 -cvHf "tarballs/$target_hostname-jail-pkgbase.tar.zst" "$jail_pkgbase_repo"
     ;;
