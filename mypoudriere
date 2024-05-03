@@ -68,7 +68,7 @@ fi
 cp /etc/sysctl.conf.pkgsave /etc/sysctl.conf || true
 "
 
-    find / -name '*.pkgsave' | \
+    doas find / -name '*.pkgsave' | \
         sort | \
     	awk 'BEGIN {print "Leftover .pkgsave files (delete after double checking):"} {print}' | \
     	less
@@ -102,7 +102,8 @@ build_jail_pkgbase() {
     # TODO file upstream bug to figure out the order of target dependencies
     # between 'buildworld' and the stage/create/sign targets
     # For now, use two make invocations
-    _pkgversion="$(doas git -C /usr/src rev-parse --short HEAD)-$(date -u +%Y%m%d%H%M%S)"
+    # TODO file upstream bug for pkgversion issues
+    _pkgversion="$freebsd_major_version.snap$(date -u +%Y%m%d%H%M%S)"
     doas make -C /usr/src -j"$(nproc)" \
         __MAKE_CONF="$target_confdir/$target_hostname-common-make.conf" \
         SRCCONF="$target_confdir/$target_hostname-jail-src.conf" \

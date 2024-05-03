@@ -8,6 +8,7 @@ dns/nsd
 irc/anope-devel
 irc/unreal
 mail/dovecot
+mail/fdm
 mail/mlmmj
 mail/postfix
 net/dhcpcd
