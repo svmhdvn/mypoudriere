@@ -11,7 +11,6 @@ net/mosh
 net/rsync
 ports-mgmt/poudriere-devel
 security/doas
-security/openssh-portable
 shells/fish
 sysutils/cpu-microcode
 sysutils/duf
