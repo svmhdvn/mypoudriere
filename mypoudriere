@@ -133,7 +133,7 @@ poudriere_options() {
     doas cp \
         "$target_confdir/$target_hostname-portoptions-make.conf" \
         "$poudriere_etc/$ports_tree-$target_hostname-make.conf"
-    doas poudriere options -j "$ports_builder" -p "$ports_tree" -f "$ports_pkglist" -z "$target_hostname"
+    doas poudriere options -j "$ports_builder" -p "$ports_tree" -z "$target_hostname" -f "$ports_pkglist"
     doas rm -f "$poudriere_etc/$ports_tree-$target_hostname-make.conf"
 
     # Treat the poudriere_etc options directory as the ground truth.
@@ -142,8 +142,8 @@ poudriere_options() {
 }
 
 poudriere_bulk() {
-    doas poudriere bulk -j "$ports_builder" -p "$ports_tree" -f "$ports_pkglist" -z "$target_hostname"
-    doas poudriere pkgclean -y -j "$ports_builder" -p "$ports_tree" -f "$ports_pkglist" -z "$target_hostname"
+    doas poudriere bulk -j "$ports_builder" -p "$ports_tree" -z "$target_hostname" -f "$ports_pkglist"
+    doas poudriere pkgclean -y -j "$ports_builder" -p "$ports_tree" -z "$target_hostname" -f "$ports_pkglist"
     mkdir -p tarballs
     tar --zstd --strip-components 7 -cvf "tarballs/${target_hostname}-ports.tar.zst" "$ports_repo"
 }

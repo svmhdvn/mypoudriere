@@ -10,6 +10,7 @@ ftp/wget
 net/mosh
 net/rsync
 ports-mgmt/poudriere-devel
+ports-mgmt/modules2tuple
 security/doas
 shells/fish
 sysutils/cpu-microcode

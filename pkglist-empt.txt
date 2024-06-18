@@ -4,9 +4,8 @@ sysutils/smartmontools
 sysutils/x86info
 
 dns/nsd
-#irc/anope
-#irc/anope-devel
 irc/ngircd
+irc/soju
 mail/dovecot
 mail/fdm
 mail/mlmmj
@@ -15,10 +14,11 @@ net/dhcpcd
 net/openntpd
 net/samba419
 security/py-cryptography
-sysutils/zrep
 www/py-gunicorn
-www/py-wsgi-kerberos
+www/py-wsgi-auth-middleware
 www/radicale
+www/kimchi
+www/tlstunnel
 
 # debug, testing, and ansible stuff
 archivers/gtar
@@ -27,7 +27,6 @@ ftp/curl
 ftp/wget
 lang/python
 net/py-netaddr
-net/mosh
 net/rsync
 security/doas
 sysutils/ansible
