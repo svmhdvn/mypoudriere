@@ -1,6 +1,4 @@
 # system hardware related stuff
-sysutils/cpu-microcode
-sysutils/smartmontools
 sysutils/x86info
 
 # jail services
@@ -13,7 +11,12 @@ mail/postfix
 devel/git
 ftp/curl
 ftp/wget
+net/mosh
 security/doas
+sysutils/duf
+sysutils/fd
 sysutils/htop
 sysutils/tmux
 sysutils/tree
+textproc/bat
+textproc/ripgrep
