@@ -1,3 +1,6 @@
+# EMPT packages
+sysutils/empt-scripts
+
 # system hardware related stuff
 sysutils/cpu-microcode
 sysutils/smartmontools

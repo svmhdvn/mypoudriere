@@ -293,6 +293,9 @@ case "$target_hostname" in
   cl100*|wyse*)
     ports_pkglist=pkglist-empt.txt
     ;;
+  arpvps*)
+    ports_pkglist=pkglist-arpvps.txt
+    ;;
   *)
     echo "unsupported target host: $target_hostname" >&2
     echo "usage: $0 <command> <hostname>" >&2
@@ -342,6 +345,20 @@ case "$1" in
     ;;
   bulk)
     poudriere_bulk
+    ;;
+  hostconfig)
+    make -C /usr/src \
+        __MAKE_CONF="$target_confdir/$target_hostname-common-make.conf" \
+        SRCCONF="$target_confdir/$target_hostname-host-src.conf" \
+        SRC_ENV_CONF="$target_confdir/$target_hostname-src-env.conf" \
+        showconfig
+    ;;
+  jailconfig)
+    make -C /usr/src \
+        __MAKE_CONF="$target_confdir/$target_hostname-common-make.conf" \
+        SRCCONF="$target_confdir/$target_hostname-jail-src.conf" \
+        SRC_ENV_CONF="$target_confdir/$target_hostname-src-env.conf" \
+        showconfig
     ;;
   ports)
     poudriere_options

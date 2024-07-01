@@ -1,0 +1,19 @@
+# system hardware related stuff
+sysutils/cpu-microcode
+sysutils/smartmontools
+sysutils/x86info
+
+# jail services
+dns/nsd
+mail/dovecot
+mail/postfix
+#net/dhcpcd
+
+# debug, testing, and development stuff
+devel/git
+ftp/curl
+ftp/wget
+security/doas
+sysutils/htop
+sysutils/tmux
+sysutils/tree
