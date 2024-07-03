@@ -5,15 +5,18 @@ sysutils/x86info
 dns/nsd
 mail/dovecot
 mail/postfix
+www/radicale
 #net/dhcpcd
 
 # debug, testing, and development stuff
 devel/git
+editors/kakoune
 ftp/curl
 ftp/wget
 net/mosh
+net/rsync
 security/doas
-sysutils/duf
+shells/fish
 sysutils/fd
 sysutils/htop
 sysutils/tmux

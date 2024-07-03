@@ -356,10 +356,10 @@ options 	PREEMPTION
 # Enable FreeBSD10 compatibility syscalls
 #options 	COMPAT_FREEBSD10
 
+# TODO rust depends on 11+ currently
 # Enable FreeBSD11 compatibility syscalls
-#options 	COMPAT_FREEBSD11
+options 	COMPAT_FREEBSD11
 
-# TODO rust depends on 12+ currently
 # Enable FreeBSD12 compatibility syscalls
 options 	COMPAT_FREEBSD12
 
@@ -1035,11 +1035,11 @@ device		netmap
 # ROUTE_MPATH provides support for multipath routing.
 #
 #options 	MROUTING		# Multicast routing
-#options 	IPFIREWALL		#firewall
-#options 	IPFIREWALL_VERBOSE	#enable logging to syslogd(8)
+options 	IPFIREWALL		#firewall
+options 	IPFIREWALL_VERBOSE	#enable logging to syslogd(8)
 #options 	IPFIREWALL_VERBOSE_LIMIT=100	#limit verbosity
 #options 	IPFIREWALL_DEFAULT_TO_ACCEPT	#allow everything by default
-#options 	IPFIREWALL_NAT		#ipfw kernel nat support
+options 	IPFIREWALL_NAT		#ipfw kernel nat support
 #options 	IPFIREWALL_NAT64	#ipfw kernel NAT64 support
 #options 	IPFIREWALL_NPTV6	#ipfw kernel IPv6 NPT support
 #options 	IPDIVERT		#divert sockets
