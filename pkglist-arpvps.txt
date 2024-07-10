@@ -5,8 +5,8 @@ sysutils/x86info
 dns/nsd
 mail/dovecot
 mail/postfix
+security/acme.sh
 www/radicale
-#net/dhcpcd
 
 # debug, testing, and development stuff
 devel/git

@@ -3,6 +3,7 @@ benchmarks/bonnie++
 devel/ccache
 devel/git
 devel/hs-ShellCheck
+devel/universal-ctags
 editors/kakoune
 ftp/curl
 ftp/wget

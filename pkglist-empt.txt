@@ -6,6 +6,7 @@ sysutils/cpu-microcode
 sysutils/smartmontools
 sysutils/x86info
 
+# services
 dns/nsd
 irc/ngircd
 irc/soju
@@ -13,8 +14,6 @@ mail/dovecot
 mail/fdm
 mail/mlmmj
 mail/postfix
-net/dhcpcd
-net/openntpd
 net/samba419
 security/py-cryptography
 www/py-gunicorn
@@ -36,9 +35,3 @@ sysutils/ansible
 sysutils/htop
 sysutils/tmux
 sysutils/tree
-
-# nagios plugins and checks for use with cronmonitor
-net-mgmt/nagios-plugins
-net-mgmt/nagios-check_cpu_usage
-net-mgmt/nagios-check_email_delivery
-net-mgmt/nagios-check_zpools
