@@ -12,6 +12,7 @@ irc/ngircd
 irc/soju
 mail/dovecot
 mail/fdm
+mail/cyrus-imapd38
 mail/mlmmj
 mail/postfix
 net/samba419
@@ -21,6 +22,8 @@ www/py-wsgi-auth-middleware
 www/radicale
 www/kimchi
 www/tlstunnel
+www/nginx-lite
+www/sabredav
 
 # debug, testing, and ansible stuff
 archivers/gtar

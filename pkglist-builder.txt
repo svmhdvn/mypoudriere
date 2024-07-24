@@ -24,5 +24,6 @@ sysutils/tmux
 sysutils/tree
 sysutils/x86info
 textproc/bat
+textproc/jq
 textproc/fzf
 textproc/ripgrep

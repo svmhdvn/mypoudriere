@@ -2,11 +2,13 @@
 sysutils/x86info
 
 # jail services
-dns/nsd
+#dns/nsd
 mail/dovecot
 mail/postfix
 security/acme.sh
-www/radicale
+#security/py-certbot-nginx
+www/baikal
+www/nginx-lite
 
 # debug, testing, and development stuff
 devel/git
@@ -17,9 +19,12 @@ net/mosh
 net/rsync
 security/doas
 shells/fish
-sysutils/fd
 sysutils/htop
 sysutils/tmux
 sysutils/tree
-textproc/bat
-textproc/ripgrep
+
+# I don't need these nicer utilities for now, but add them back
+# if I do a lot of development on arpvps.
+#sysutils/fd
+#textproc/bat
+#textproc/ripgrep

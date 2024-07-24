@@ -145,7 +145,7 @@ poudriere_bulk() {
     doas poudriere bulk -j "$ports_builder" -p "$ports_tree" -z "$target_hostname" -f "$ports_pkglist"
     doas poudriere pkgclean -y -j "$ports_builder" -p "$ports_tree" -z "$target_hostname" -f "$ports_pkglist"
     mkdir -p tarballs
-    tar --zstd --strip-components 7 -cvf "tarballs/${target_hostname}-ports.tar.zst" "$ports_repo"
+    tar -C "$ports_repo/.latest" -cvf "tarballs/${target_hostname}-ports.tar.zst" --zstd --strip-components 1 .
 }
 
 bootstrap_step1() {
@@ -333,12 +333,12 @@ case "$1" in
   host_pkgbase)
     build_host_pkgbase
     mkdir -p tarballs
-    tar --zstd --strip-components 9 -cvHf "tarballs/$target_hostname-host-pkgbase.tar.zst" "$host_pkgbase_repo"
+    tar -C "$host_pkgbase_repo" -cvf "tarballs/$target_hostname-host-pkgbase.tar.zst" --zstd --strip-components 1 .
     ;;
   jail_pkgbase)
     build_jail_pkgbase
     mkdir -p tarballs
-    tar --zstd --strip-components 9 -cvHf "tarballs/$target_hostname-jail-pkgbase.tar.zst" "$jail_pkgbase_repo"
+    tar -C "$jail_pkgbase_repo" -cvf "tarballs/$target_hostname-jail-pkgbase.tar.zst" --zstd --strip-components 1 .
     ;;
   options)
     poudriere_options
