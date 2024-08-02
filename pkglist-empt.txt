@@ -8,22 +8,16 @@ sysutils/x86info
 
 # services
 dns/nsd
-irc/ngircd
-irc/soju
-mail/dovecot
-mail/fdm
 mail/cyrus-imapd38
+mail/fdm
 mail/mlmmj
 mail/postfix
 net/samba419
-security/py-cryptography
-www/py-gunicorn
-www/py-wsgi-auth-middleware
-www/radicale
+irc/ngircd
+irc/soju
 www/kimchi
 www/tlstunnel
-www/nginx-lite
-www/sabredav
+#www/nginx-lite
 
 # debug, testing, and ansible stuff
 archivers/gtar
@@ -35,6 +29,7 @@ net/py-netaddr
 net/rsync
 security/doas
 sysutils/ansible
+security/py-cryptography
 sysutils/htop
 sysutils/tmux
 sysutils/tree

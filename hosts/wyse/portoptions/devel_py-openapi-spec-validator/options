@@ -2,4 +2,4 @@
 # Options for py311-openapi-spec-validator-0.7.1
 _OPTIONS_READ=py311-openapi-spec-validator-0.7.1
 _FILE_COMPLETE_OPTIONS_LIST=REQUESTS
-OPTIONS_FILE_SET+=REQUESTS
+OPTIONS_FILE_UNSET+=REQUESTS
