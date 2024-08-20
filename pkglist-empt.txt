@@ -17,19 +17,12 @@ irc/ngircd
 irc/soju
 www/kimchi
 www/tlstunnel
+# TODO switch to a lightweight C-based HTTP reverse proxy for web needs
 #www/nginx-lite
 
-# debug, testing, and ansible stuff
-archivers/gtar
-archivers/unzip
+# debug and testing stuff
 ftp/curl
-ftp/wget
-lang/python
-net/py-netaddr
-net/rsync
 security/doas
-sysutils/ansible
-security/py-cryptography
 sysutils/htop
 sysutils/tmux
 sysutils/tree

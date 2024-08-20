@@ -2,20 +2,19 @@
 sysutils/x86info
 
 # jail services
-#dns/nsd
-mail/dovecot
-mail/postfix
+dns/unbound
+mail/cyrus-imapd38
+mail/opensmtpd
+mail/opensmtpd-filter-rspamd
+mail/opensmtpd-filter-senderscore
+mail/opensmtpd-extras
+mail/rspamd
 security/acme.sh
-#security/py-certbot-nginx
-www/baikal
-www/nginx-lite
 
 # debug, testing, and development stuff
 devel/git
 editors/kakoune
 ftp/curl
-ftp/wget
-net/mosh
 net/rsync
 security/doas
 shells/fish
@@ -28,3 +27,6 @@ sysutils/tree
 #sysutils/fd
 #textproc/bat
 #textproc/ripgrep
+
+# TODO only needed for primary-secondary DNS configuration
+#dns/nsd

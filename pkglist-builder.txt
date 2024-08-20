@@ -1,16 +1,17 @@
 archivers/gtar
 benchmarks/bonnie++
+benchmarks/iperf3
 devel/ccache
 devel/git
 devel/hs-ShellCheck
 devel/universal-ctags
 editors/kakoune
 ftp/curl
-ftp/wget
 mail/msmtp
 net/mosh
 net/rsync
 ports-mgmt/modules2tuple
+ports-mgmt/portfmt
 ports-mgmt/portlint
 ports-mgmt/poudriere-devel
 security/doas
@@ -24,6 +25,8 @@ sysutils/tmux
 sysutils/tree
 sysutils/x86info
 textproc/bat
-textproc/jq
 textproc/fzf
+textproc/jq
 textproc/ripgrep
+# TODO add back once dependency on 'sudo' is removed
+#ports-mgmt/porttools
