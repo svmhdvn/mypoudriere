@@ -2,12 +2,11 @@
 sysutils/x86info
 
 # jail services
+databases/redis
 dns/unbound
-mail/cyrus-imapd38
+mail/cyrus-imapd310
 mail/opensmtpd
 mail/opensmtpd-filter-rspamd
-mail/opensmtpd-filter-senderscore
-mail/opensmtpd-extras
 mail/rspamd
 security/acme.sh
 
