@@ -6,19 +6,30 @@ sysutils/cpu-microcode
 sysutils/smartmontools
 sysutils/x86info
 
-# services
-dns/nsd
-mail/cyrus-imapd38
+# cronjob deps
+security/acme.sh
 mail/fdm
+
+# DNS deps
+dns/nsd
+dns/unbound
+
+# mail deps
+databases/redis
+mail/cyrus-imapd310
 mail/mlmmj
 mail/postfix
+mail/rspamd
+security/cyrus-sasl2-gssapi
+security/cyrus-sasl2-saslauthd
+
+# cifs deps
 net/samba419
+
+# IRC deps
 irc/ngircd
 irc/soju
-www/kimchi
-www/tlstunnel
-# TODO switch to a lightweight C-based HTTP reverse proxy for web needs
-#www/nginx-lite
+www/nginx-lite
 
 # debug and testing stuff
 ftp/curl
@@ -26,3 +37,4 @@ security/doas
 sysutils/htop
 sysutils/tmux
 sysutils/tree
+security/pamtester
