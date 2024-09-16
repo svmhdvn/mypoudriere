@@ -2,6 +2,7 @@ archivers/gtar
 benchmarks/bonnie++
 benchmarks/iperf3
 devel/ccache
+devel/gh
 devel/git
 devel/hs-ShellCheck
 devel/universal-ctags
@@ -29,5 +30,6 @@ textproc/bat
 textproc/fzf
 textproc/jq
 textproc/ripgrep
+
 # TODO add back once dependency on 'sudo' is removed
 #ports-mgmt/porttools

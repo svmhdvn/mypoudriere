@@ -136,7 +136,6 @@ ident		MYWYSE
 # This allows you to actually store this configuration file into
 # the kernel binary itself. See config(8) for more details.
 #
-# TODO SIVA do we need this? it's nice to have I guess
 options 	INCLUDE_CONFIG_FILE     # Include this file in kernel
 
 #
@@ -155,7 +154,6 @@ options 	INCLUDE_CONFIG_FILE     # Include this file in kernel
 # size for both BOOT_TAG and the assocated tunable.
 #options 	BOOT_TAG_SZ=32
 
-#options 	GEOM_BDE		# Disk encryption.
 #options 	GEOM_CACHE		# Disk cache.
 #options 	GEOM_CONCAT		# Disk concatenation.
 #options 	GEOM_ELI		# Disk encryption.
@@ -167,7 +165,7 @@ options 	GEOM_LABEL		# Providers labelization.
 options 	GEOM_MIRROR		# Disk mirroring.
 #options 	GEOM_MULTIPATH		# Disk multipath
 #options 	GEOM_NOP		# Test class.
-options 	GEOM_PART_APM		# Apple partitioning
+#options 	GEOM_PART_APM		# Apple partitioning
 options 	GEOM_PART_BSD		# BSD disklabel
 options 	GEOM_PART_BSD64		# BSD disklabel64
 options 	GEOM_PART_EBR		# Extended Boot Records
@@ -191,6 +189,7 @@ options 	GEOM_STRIPE		# Disk striping.
 #
 #options 	ROOTDEVNAME=\"ufs:da0s2e\"
 
+
 #####################################################################
 # Scheduler options:
 #
@@ -213,6 +212,7 @@ options 	GEOM_STRIPE		# Disk striping.
 #options 	SCHED_4BSD
 #options 	SCHED_STATS
 options 	SCHED_ULE
+
 #####################################################################
 # SMP OPTIONS:
 #
@@ -355,18 +355,18 @@ options 	MAXMEMDOM=1
 # Enable FreeBSD10 compatibility syscalls
 #options 	COMPAT_FREEBSD10
 
-# TODO SIVA waiting on https://github.com/rust-lang/rust/issues/89058
-# to remove COMPAT_FREEBSD11
-# EOL as of 2021-09-30
 # Enable FreeBSD11 compatibility syscalls
+# TODO SIVA waiting on https://github.com/rust-lang/rust/issues/89058
 options 	COMPAT_FREEBSD11
 
-# TODO SIVA FreeBSD 12 is EOL as of 2023-12-31
 # Enable FreeBSD12 compatibility syscalls
 options 	COMPAT_FREEBSD12
 
 # Enable FreeBSD13 compatibility syscalls
 options 	COMPAT_FREEBSD13
+
+# Enable FreeBSD14 compatibility syscalls
+options 	COMPAT_FREEBSD14
 
 # Enable Linux Kernel Programming Interface
 #options 	COMPAT_LINUXKPI
@@ -376,11 +376,11 @@ options 	COMPAT_FREEBSD13
 # Definition-style interprocess communication, in the form of shared
 # memory, semaphores, and message queues, respectively.
 #
-# TODO SIVA do we need these?
-options 	SYSVSHM
-options 	SYSVSEM
-options 	SYSVMSG
+#options 	SYSVSHM
+#options 	SYSVSEM
+#options 	SYSVMSG
 
+
 #####################################################################
 # DEBUGGING OPTIONS
 
@@ -497,7 +497,7 @@ options 	SYSVMSG
 # The size of the pool can be adjusted both at boottime and runtime via
 # the kern.ktrace_request_pool tunable and sysctl.
 #
-options 	KTRACE			#kernel tracing
+#options 	KTRACE			#kernel tracing
 #options 	KTRACE_REQUEST_POOL=101
 
 #
@@ -596,7 +596,6 @@ options 	KTRACE			#kernel tracing
 # for the purpose of procinfo(1), etc.  stack(9) will also be compiled in
 # automatically if DDB(4) is compiled into the kernel.
 #
-# TODO SIVA might need this for debugging
 #options 	STACK
 
 #
@@ -627,6 +626,7 @@ options 	KTRACE			#kernel tracing
 #options 	TSLOG
 #options 	TSLOGSIZE=262144
 
+
 #####################################################################
 # PERFORMANCE MONITORING OPTIONS
 
@@ -643,6 +643,7 @@ options 	KTRACE			#kernel tracing
 #options 	HWPMC_DEBUG
 #options 	HWPMC_HOOKS		# Other necessary kernel hooks
 
+
 #####################################################################
 # NETWORKING OPTIONS
 
@@ -699,7 +700,7 @@ options 	TCP_RACK
 options 	KERN_TLS		# TLS transmit and receive offload
 
 # Netlink kernel/user<>kernel/user messaging interface
-#options 	NETLINK
+options 	NETLINK
 
 #
 # SMB/CIFS requester
@@ -711,7 +712,7 @@ options 	KERN_TLS		# TLS transmit and receive offload
 options 	LIBMCHAIN
 
 # libalias library, performing NAT
-#options 	LIBALIAS
+options 	LIBALIAS
 
 #
 # SCTP is a NEW transport protocol defined by
@@ -731,8 +732,8 @@ options 	LIBMCHAIN
 # The SCTP_SUPPORT option does not enable SCTP, but provides the necessary
 # support for loading SCTP as a loadable kernel module.
 #
-options 	SCTP
-options 	SCTP_SUPPORT
+#options 	SCTP
+#options 	SCTP_SUPPORT
 
 # There are bunches of options:
 # this one turns on all sorts of
@@ -769,6 +770,19 @@ options 	SCTP_SUPPORT
 #options 	SCTP_PACKET_LOGGING
 #options 	SCTP_LTRACE_CHUNKS
 #options 	SCTP_LTRACE_ERRORS
+
+# OpenFabrics Enterprise Distribution (Infiniband).
+#options 	OFED
+#options 	OFED_DEBUG_INIT
+
+# Sockets Direct Protocol
+#options 	SDP
+#options 	SDP_DEBUG
+
+# IP over Infiniband
+#options 	IPOIB
+#options 	IPOIB_DEBUG
+#options 	IPOIB_CM
 
 # altq(9). Enable the base part of the hooks with the ALTQ option.
 # Individual disciplines must be built into the base system and can not be
@@ -846,7 +860,7 @@ options 	SCTP_SUPPORT
 #options 	NETGRAPH_VLAN
 
 # Network stack virtualization.
-options 	VIMAGE
+#options 	VIMAGE
 #options 	VNET_DEBUG	# debug for VIMAGE
 
 #
@@ -861,6 +875,7 @@ device		ether
 
 #  The `vlan' device implements the VLAN tagging of Ethernet frames
 #  according to IEEE 802.1Q.
+# TODO SIVA do we need this?
 device		vlan
 
 # The `vxlan' device implements the VXLAN encapsulation of Ethernet
@@ -872,6 +887,7 @@ device		vlan
 #  and ath drivers and will eventually be required by all 802.11 drivers.
 #device		wlan
 #options 	IEEE80211_DEBUG		#enable debugging msgs
+#options 	IEEE80211_DEBUG_REFCNT
 #options 	IEEE80211_SUPPORT_MESH	#enable 802.11s D3.0 support
 #options 	IEEE80211_SUPPORT_TDMA	#enable TDMA support
 
@@ -961,7 +977,10 @@ device		netmap
 #device		lagg
 
 # WireGuard interface.
-device		wg
+#device		wg
+
+# dummymbuf – mbuf alteration pfil hooks
+#device		dummymbuf
 
 #
 # Internet family options:
@@ -1014,15 +1033,16 @@ device		wg
 # TCP_BLACKBOX enables enhanced TCP event logging.
 #
 # TCP_HHOOK enables the hhook(9) framework hooks for the TCP stack.
+# SOCKET_HHOOK enables the hhook(9) framework hooks for socket operations.
 #
 # ROUTE_MPATH provides support for multipath routing.
 #
 #options 	MROUTING		# Multicast routing
-#options 	IPFIREWALL		#firewall
-#options 	IPFIREWALL_VERBOSE	#enable logging to syslogd(8)
+options 	IPFIREWALL		#firewall
+options 	IPFIREWALL_VERBOSE	#enable logging to syslogd(8)
 #options 	IPFIREWALL_VERBOSE_LIMIT=100	#limit verbosity
 #options 	IPFIREWALL_DEFAULT_TO_ACCEPT	#allow everything by default
-#options 	IPFIREWALL_NAT		#ipfw kernel nat support
+options 	IPFIREWALL_NAT		#ipfw kernel nat support
 #options 	IPFIREWALL_NAT64	#ipfw kernel NAT64 support
 #options 	IPFIREWALL_NPTV6	#ipfw kernel IPv6 NPT support
 #options 	IPDIVERT		#divert sockets
@@ -1035,6 +1055,7 @@ device		wg
 #options 	TCPPCAP
 #options 	TCP_BLACKBOX
 #options 	TCP_HHOOK
+#options		SOCKET_HHOOK
 #options 	ROUTE_MPATH
 
 # The MBUF_STRESS_TEST option enables options which create
@@ -1051,6 +1072,7 @@ device		wg
 #options 	ACCEPT_FILTER_DATA
 #options 	ACCEPT_FILTER_DNS
 #options 	ACCEPT_FILTER_HTTP
+#options		ACCEPT_FILTER_TLS
 
 # TCP_SIGNATURE adds support for RFC 2385 (TCP-MD5) digests. These are
 # carried in TCP option 19. This option is commonly used to protect
@@ -1097,14 +1119,13 @@ options 	FFS			#Fast filesystem
 
 # The rest are optional:
 #options 	AUTOFS			#Automounter filesystem
-#options 	CD9660			#ISO 9660 filesystem
+options 	CD9660			#ISO 9660 filesystem
 options 	FDESCFS			#File descriptor filesystem
 #options 	FUSEFS			#FUSEFS support module
 options 	MSDOSFS			#MS DOS File System (FAT, FAT32)
-options 	NFSLOCKD		#Network Lock Manager
-# TODO find a way to compile ZFS without NFSD
-options 	NFSD			#Network Filesystem Server
-options 	KGSSAPI			#Kernel GSSAPI implementation
+#options 	NFSLOCKD		#Network Lock Manager
+#options 	NFSD			#Network Filesystem Server
+#options 	KGSSAPI			#Kernel GSSAPI implementation
 
 options 	NULLFS			#NULL filesystem
 options 	PROCFS			#Process filesystem (requires PSEUDOFS)
@@ -1205,9 +1226,10 @@ options 	SOFTUPDATES
 # Optional character code conversion support with LIBICONV.
 # Each option requires their base file system and LIBICONV.
 #options 	CD9660_ICONV
-options 	MSDOSFS_ICONV
+#options 	MSDOSFS_ICONV
 #options 	UDF_ICONV
 
+
 #####################################################################
 # POSIX P1003.1B
 
@@ -1221,6 +1243,7 @@ options 	_KPOSIX_PRIORITY_SCHEDULING
 
 # POSIX message queue
 #options 	P1003_1B_MQUEUE
+
 #####################################################################
 # SECURITY POLICY PARAMETERS
 
@@ -1255,6 +1278,7 @@ options 	_KPOSIX_PRIORITY_SCHEDULING
 options 	CAPABILITIES	# fine-grained rights on file descriptors
 options 	CAPABILITY_MODE	# sandboxes with no global namespace access
 
+
 #####################################################################
 # CLOCK OPTIONS
 
@@ -1263,7 +1287,7 @@ options 	CAPABILITY_MODE	# sandboxes with no global namespace access
 # use a value of 100. Lower values may lower overhead at the expense of accuracy
 # of scheduling, though the adaptive tick code reduces that overhead.
 
-options 	HZ=100
+#options 	HZ=100
 
 # Enable support for the kernel PLL to use an external PPS signal,
 # under supervision of [x]ntpd(8)
@@ -1279,6 +1303,7 @@ options 	HZ=100
 
 #options 	FFCLOCK
 
+
 #####################################################################
 # SCSI DEVICES
 
@@ -1347,7 +1372,8 @@ options 	HZ=100
 # source level API compatibility for porting apps to FreeBSD.
 #
 # Target Mode support is provided here but also requires that a SIM
-# (SCSI Host Adapter Driver) provide support as welt out
+# (SCSI Host Adapter Driver) provide support as well.
+#
 # The targ driver provides target mode support as a Processor type device.
 # It exists to give the minimal context necessary to respond to Inquiry
 # commands. There is a sample user application that shows how the rest
@@ -1360,11 +1386,11 @@ options 	HZ=100
 # The pass driver provides a passthrough API to access the CAM subsystem.
 
 device		scbus		#base SCSI code
-device		ch		#SCSI media changers
+#device		ch		#SCSI media changers
 device		da		#SCSI direct access devices (aka disks)
 device		sa		#SCSI tapes
 device		cd		#SCSI CD-ROMs
-device		ses		#Enclosure Services (SES and SAF-TE)
+#device		ses		#Enclosure Services (SES and SAF-TE)
 device		pt		#SCSI processor
 device		targ		#SCSI Target Mode Code
 device		targbh		#SCSI Target Mode Blackhole Device
@@ -1401,7 +1427,7 @@ device		ctl		#CAM Target Layer
 #options 	CAM_MAX_HIGHPOWER=4
 #options 	SCSI_NO_SENSE_STRINGS
 #options 	SCSI_NO_OP_STRINGS
-options 	SCSI_DELAY=5000	# Be pessimistic about Joe SCSI device
+#options 	SCSI_DELAY=5000	# Be pessimistic about Joe SCSI device
 #options 	CAM_IOSCHED_DYNAMIC
 #options 	CAM_IO_STATS
 #options 	CAM_TEST_FAILURE
@@ -1443,6 +1469,16 @@ options 	SCSI_DELAY=5000	# Be pessimistic about Joe SCSI device
 # a topology with the SES device that's on the box these drives are in....
 #options 	SES_ENABLE_PASSTHROUGH
 
+# iSCSI
+#
+# iSCSI permits access to SCSI peripherals over a network connection
+# (e.g. via a TCP/IP socket)
+
+#device		cfiscsi		# CAM Target Layer iSCSI target frontend
+#device		iscsi		# iSCSI initiator
+#device		iser		# iSCSI Extensions for RDMA (iSER) initiator
+
+
 #####################################################################
 # MISCELLANEOUS DEVICES AND OPTIONS
 
@@ -1459,7 +1495,7 @@ options 	LIBICONV
 # Size of the kernel message buffer.  Should be N * pagesize.
 #options 	MSGBUF_SIZE=40960
 
-
+
 #####################################################################
 # HARDWARE BUS CONFIGURATION
 
@@ -1470,6 +1506,7 @@ device		pci
 #options 	PCI_HP			# PCI-Express native HotPlug
 #options 	PCI_IOV			# PCI SR-IOV support
 
+
 #####################################################################
 # HARDWARE DEVICE CONFIGURATION
 
@@ -1483,12 +1520,13 @@ device		pci
 
 # These options are valid for other keyboard drivers as well.
 #options 	KBD_DISABLE_KEYMAP_LOAD	# refuse to load a keymap
-options 	KBD_INSTALL_CDEV	# install a CDEV entry in /dev
+#options 	KBD_INSTALL_CDEV	# install a CDEV entry in /dev
 
 # Define keyboard latency (try 200/15 for a snappy interactive console)
 #options 	KBD_DELAY1=200		# define initial key delay
 #options 	KBD_DELAY2=15		# define key delay
 
+# TODO SIVA do we need this?
 device		kbdmux			# keyboard multiplexer
 #options 	KBDMUX_DFLT_KEYMAP	# specify the built-in keymap
 #makeoptions	KBDMUX_DFLT_KEYMAP=it.iso
@@ -1600,10 +1638,6 @@ device		vt
 # Bitmap of units to enable targetmode operations.
 #options 	AHD_TMODE_ENABLE
 
-# Options used in dev/iscsi (Software iSCSI stack)
-#
-#options 	ISCSI_INITIATOR_DEBUG=9
-
 # Options used in dev/isp/ (Qlogic SCSI/FC driver).
 #
 #	ISP_TARGET_MODE		-	enable target mode operation
@@ -1646,6 +1680,23 @@ device		vt
 #options 	MFI_DEBUG
 #device		mrsas		# LSI/Avago MegaRAID SAS/SATA, 6Gb/s and 12Gb/s
 
+# NVM Express
+#
+# nvme:	PCI-express NVM Express host controllers
+# nvmf:	NVM Express over Fabrics host
+# nvmft: NVM Express over Fabrics CAM Target Layer frontend
+# nvmf_tcp: TCP transport for NVM Express over Fabrics
+# nda:	CAM NVMe disk driver
+# nvd:	non-CAM NVMe disk driver
+
+device		nvme		# PCI-express NVMe host driver
+#options 	NVME_USE_NVD=1	# Use nvd(4) instead of the CAM nda(4) driver
+#device		nvmf		# NVMeoF host driver
+#device		nvmft		# NVMeoF ctl(4) frontend
+#device		nvmf_tcp	# NVMeoF TCP transport
+device		nda		# NVMe direct access devices (aka disks)
+#device		nvd		# expose NVMe namespaces as disks, depends on nvme
+
 #
 # Serial ATA host controllers:
 #
@@ -1656,9 +1707,10 @@ device		vt
 # These drivers are part of cam(4) subsystem. They supersede less featured
 # ata(4) subsystem drivers, supporting same hardware.
 
-device		ahci
-#device		mvs
-#device		siis
+device		ahci		# AHCI-compatible SATA controllers
+#device		mvs		# Marvell 88SX50XX/88SX60XX/88SX70XX/SoC SATA
+#device		siis		# SiliconImage SiI3124/SiI3132/SiI3531 SATA
+device		ada		# ATA/SATA direct access devices (aka disks)
 
 #
 # The 'ATA' driver supports all legacy ATA/ATAPI controllers, including
@@ -1668,7 +1720,7 @@ device		ahci
 # the 'atacore' driver then selecting the drivers on a per vendor basis.
 # For example to build a system which only supports a VIA chipset,
 # omit 'ata' and include the 'atacore', 'atapci' and 'atavia' drivers.
-device		ata
+device		ata		# Legacy ATA/SATA controllers
 
 # Modular ATA
 #device		atacore		# Core ATA functionality
@@ -1760,7 +1812,7 @@ device		uart
 
 # PCI Universal Communications driver
 # Supports various multi port PCI I/O cards.
-device		puc
+#device		puc
 
 #
 # Network interfaces:
@@ -2046,6 +2098,7 @@ device		re		# RealTek 8139C+/8169/8169S/8110S
 # snd_fm801:		Forte Media FM801 PCI.
 # snd_hda:		Intel High Definition Audio (Controller) and
 #			compatible.
+# snd_hdsp:		RME HDSP 9632 and HDSP 9652
 # snd_hdspe:		RME HDSPe AIO and RayDAT.
 # snd_ich:		Intel ICH AC'97 and some more audio controllers
 #			embedded in a chipset, for example nVidia
@@ -2073,6 +2126,7 @@ device		re		# RealTek 8139C+/8169/8169S/8110S
 #device		snd_es137x
 #device		snd_fm801
 #device		snd_hda
+#device		snd_hdsp
 #device		snd_hdspe
 #device		snd_ich
 #device		snd_maestro3
@@ -2182,6 +2236,7 @@ device		re		# RealTek 8139C+/8169/8169S/8110S
 device		smbus		# Bus support, required for smb below.
 
 device		intpm
+#options 	ENABLE_ALART	# Control alarm on Intel intpm driver
 #device		alpm
 #device		ichsmb
 #device		viapm
@@ -2305,7 +2360,7 @@ device		jedec_dimm
 #
 # etherswitch	The etherswitch(4) framework
 # miiproxy	Proxy device for miibus(4) functionality
-#
+# 
 # Switch hardware support:
 # arswitch	Atheros switches
 # ip17x 	IC+ 17x family switches
@@ -2341,16 +2396,6 @@ device		jedec_dimm
 #
 #options 	DEADLKRES
 
-#
-# Disable swapping of stack pages.  This option removes all
-# code which actually performs swapping, so it's not possible to turn
-# it back on at run-time.
-#
-# This is sometimes usable for systems which don't have any swap space
-# (see also sysctl "vm.disable_swapspace_pageouts")
-#
-#options 	NO_SWAPPING
-
 # Set the number of sf_bufs to allocate. sf_bufs are virtual buffers
 # for sendfile(2) that are used to map file VM pages, and normally
 # default to a quantity that is roughly 16*MAXUSERS+512. You would
@@ -2366,6 +2411,26 @@ device		jedec_dimm
 # modules should be recompiled as this option modifies KBI.
 #
 #options 	DEBUG_LOCKS
+
+#
+# VirtIO support
+#
+# The virtio entry provides a generic bus for use by the device drivers.
+# It must be combined with an interface that communicates with the host.
+# Multiple such interfaces are defined by the VirtIO specification
+# including PCI and MMIO.
+#
+#device		virtio		# Generic VirtIO bus (required)
+#device		virtio_mmio	# VirtIO MMIO Interface
+#device		virtio_pci	# VirtIO PCI Interface
+#device		vtnet		# VirtIO Ethernet device
+#device		virtio_balloon	# VirtIO Memory Balloon device
+#device		virtio_blk	# VirtIO Block device
+#device		virtio_console	# VirtIO Console device
+#device		virtio_gpu	# VirtIO GPU device
+#device		virtio_random	# VirtIO Entropy device
+#device		virtio_scmi	# VirtIO SCMI device
+#device		virtio_scsi	# VirtIO SCSI device
 
 #####################################################################
 # HID support
@@ -2396,15 +2461,17 @@ device		ohci
 device		ehci
 # XHCI controller
 device		xhci
+# SL811 Controller
+#device		slhci
 # General USB code (mandatory for USB)
 device		usb
 #
 # USB Double Bulk Pipe devices
 #device		udbp
 # USB temperature meter
-device		ugold
+#device		ugold
 # USB LED
-device		uled
+#device		uled
 # Human Interface Device (anything with buttons and dials)
 device		uhid
 # USB keyboard
@@ -2414,7 +2481,7 @@ device		ulpt
 # USB mass storage driver (Requires scbus and da)
 device		umass
 # USB mass storage driver for device-side mode
-device		usfs
+#device		usfs
 # USB support for Belkin F5U109 and Magic Control Technology serial adapters
 #device		umct
 # USB modem support
@@ -2591,6 +2658,10 @@ device		cryptodev	# /dev/crypto for access to h/w
 #options 	HIFN_DEBUG	# enable debugging support: hw.hifn.debug
 #options 	HIFN_RNDTEST	# enable rndtest support
 
+#device		safe		# SafeNet 1141
+#options 	SAFE_DEBUG	# enable debugging support: hw.safe.debug
+#options 	SAFE_RNDTEST	# enable rndtest support
+
 #####################################################################
 
 
@@ -2738,7 +2809,7 @@ options 	RCTL
 #options 	RANDOM_ENABLE_UMA	# slab allocator
 
 # Select this to allow high-rate but potentially expensive
-# harvesting of of the m_next pointer in the mbuf. Note that
+# harvesting of the m_next pointer in the mbuf. Note that
 # the m_next pointer is NULL except when receiving > 4K
 # jumbo frames or sustained bursts by way of LRO. Thus in
 # the common case it is stirring zero in to the entropy
@@ -2783,7 +2854,7 @@ device		uinput		# install /dev/uinput cdev
 #options 	EKCD
 
 # Serial Peripheral Interface (SPI) support.
-#device		spibus		# Bus support.
+device		spibus		# Bus support.
 #device		at45d		# DataFlash driver
 #device		cqspi		# 
 #device		mx25l		# SPIFlash driver
@@ -2797,10 +2868,54 @@ device		zlib		# gzip/zlib compression/decompression library
 device		xz		# xz_embedded LZMA de-compression library
 
 # Kernel support for stats(3).
-#options 	STATS
+options 	STATS
+
+# File system monitoring
+#device		filemon		# file monitoring for make(1) meta-mode
+#
 
 # Common NOTES between i386 and amd64
 
+#
+# Enable the kernel DTrace hooks which are required to load the DTrace
+# kernel modules.
+#
+#options 	KDTRACE_HOOKS
+
+# DTrace core
+# NOTE: introduces CDDL-licensed components into the kernel
+#device		dtrace
+
+# DTrace modules
+#device		dtrace_profile
+#device		dtrace_sdt
+#device		dtrace_fbt
+#device		dtrace_systrace
+#device		dtrace_prototype
+#device		dtnfscl
+#device		dtmalloc
+
+# Alternatively include all the DTrace modules
+#device		dtraceall
+
+
+#####################################################################
+# SMP OPTIONS:
+#
+# Notes:
+#
+# IPI_PREEMPTION instructs the kernel to preempt threads running on other
+# CPUS if needed.  Relies on the PREEMPTION option
+
+# Optional:
+#options 	IPI_PREEMPTION
+
+# Debugging options.
+#
+#options 	COUNT_XINVLTLB_HITS	# Counters for TLB events
+#options 	COUNT_IPIS		# Per-CPU IPI interrupt counters
+
+
 #####################################################################
 # COMPATIBILITY OPTIONS
 
@@ -2809,11 +2924,152 @@ device		xz		# xz_embedded LZMA de-compression library
 # a.out binaries.
 #options 	COMPAT_43
 
+
+#####################################################################
+# NETWORKING OPTIONS
+
+#
+# DEVICE_POLLING adds support for mixed interrupt-polling handling
+# of network device drivers, which has significant benefits in terms
+# of robustness to overloads and responsivity, as well as permitting
+# accurate scheduling of the CPU time between kernel network processing
+# and other activities.  The drawback is a moderate (up to 1/HZ seconds)
+# potential increase in response times.
+# It is strongly recommended to use HZ=1000 or 2000 with DEVICE_POLLING
+# to achieve smoother behaviour.
+# Additionally, you can enable/disable polling at runtime with help of
+# the ifconfig(8) utility, and select the CPU fraction reserved to
+# userland with the sysctl variable kern.polling.user_frac
+# (default 50, range 0..100).
+#
+# Not all device drivers support this mode of operation at the time of
+# this writing.  See polling(4) for more details.
+
+options 	DEVICE_POLLING
+
+# BPF_JITTER adds support for BPF just-in-time compiler.
+
+options 	BPF_JITTER
+
+
+#####################################################################
+# CLOCK OPTIONS
+
+# Provide read/write access to the memory in the clock chip.
+#device		nvram		# Access to rtc cmos via /dev/nvram
+
+
+#####################################################################
+# MISCELLANEOUS DEVICES AND OPTIONS
+
+#device		speaker		#Play IBM BASIC-style noises out your speaker
+#envvar		hint.speaker.0.at="isa"
+#envvar		hint.speaker.0.port="0x61"
+
+
+#####################################################################
+# HARDWARE BUS CONFIGURATION
+
+options 	IOMMU			# Enable IOMMU support
+
+#
+# ISA bus
+#
+device		isa
+
+#
+# Options for `isa':
+#
+# AUTO_EOI_1 enables the `automatic EOI' feature for the master 8259A
+# interrupt controller.  This saves about 0.7-1.25 usec for each interrupt.
+# This option breaks suspend/resume on some portables.
+#
+# AUTO_EOI_2 enables the `automatic EOI' feature for the slave 8259A
+# interrupt controller.  This saves about 0.7-1.25 usec for each interrupt.
+# Automatic EOI is documented not to work for the slave with the
+# original i8259A, but it works for some clones and some integrated
+# versions.
+#
+# MAXMEM specifies the amount of RAM on the machine; if this is not
+# specified, FreeBSD will first read the amount of memory from the CMOS
+# RAM, so the amount of memory will initially be limited to 64MB or 16MB
+# depending on the BIOS.  If the BIOS reports 64MB, a memory probe will
+# then attempt to detect the installed amount of RAM.  If this probe
+# fails to detect >64MB RAM you will have to use the MAXMEM option.
+# The amount is in kilobytes, so for a machine with 128MB of RAM, it would
+# be 131072 (128 * 1024).
+#
+# BROKEN_KEYBOARD_RESET disables the use of the keyboard controller to
+# reset the CPU for reboot.  This is needed on some systems with broken
+# keyboard controllers.
+
+#options 	AUTO_EOI_1
+#options 	AUTO_EOI_2
+
+#options 	MAXMEM=(128*1024)
+#options 	BROKEN_KEYBOARD_RESET
+
+#
+# AGP GART support
+#device		agp
+
+# AGP debugging.
+#options 	AGP_DEBUG
+
+#
+# ACPI support using the Intel ACPI Component Architecture reference
+# implementation.
+#
+# ACPI_DEBUG enables the use of the debug.acpi.level and debug.acpi.layer
+# kernel environment variables to select initial debugging levels for the
+# Intel ACPICA code.  (Note that the Intel code must also have USE_DEBUGGER
+# defined when it is built).
+
+device		acpi
+#options 	ACPI_DEBUG
+
+# ACPI WMI Mapping driver
+device		acpi_wmi
+
+# ACPI Asus Extras (LCD backlight/brightness, video output, etc.)
+#device		acpi_asus
+
+# ACPI Fujitsu Extras (Buttons)
+#device		acpi_fujitsu
+
+# ACPI extras driver for HP laptops
+#device		acpi_hp
+
+# ACPI extras driver for IBM laptops
+#device		acpi_ibm
+
+# ACPI Panasonic Extras (LCD backlight/brightness, video output, etc.)
+#device		acpi_panasonic
+
+# ACPI Sony extra (LCD brightness)
+#device		acpi_sony
+
+# ACPI Toshiba Extras (LCD backlight/brightness, video output, etc.)
+#device		acpi_toshiba
+
+# ACPI Video Extensions (LCD backlight/brightness, video output, etc.)
+device		acpi_video
+
+# ACPI Docking Station
+#device		acpi_dock
+
+# ACPI ASOC ATK0110 ASUSTeK AI Booster (voltage, temperature and fan sensors)
+#device		aibs
+
+
 #####################################################################
 # HARDWARE DEVICE CONFIGURATION
 
+#
+# Optional devices:
+#
+
 # The syscons console driver (SCO color console compatible).
-# TODO siva this is needed for VESA for some reason, figure it out
 device		sc
 #envvar		hint.sc.0.at="isa"
 #options 	MAXCONS=16		# number of virtual consoles
@@ -2875,214 +3131,19 @@ device		sc
 #device		star_saver
 #device		warp_saver
 
-#
-# Standard floppy disk controllers and floppy tapes, supports
-# the Y-E DATA External FDD (PC Card)
-#
-#device		fdc
-#envvar		hint.fdc.0.at="isa"
-#envvar		hint.fdc.0.port="0x3F0"
-#envvar		hint.fdc.0.irq="6"
-#envvar		hint.fdc.0.drq="2"
-#
-# FDC_DEBUG enables floppy debugging.  Since the debug output is huge, you
-# gotta turn it actually on by setting the variable fd_debug with DDB,
-# however.
-#options 	FDC_DEBUG
-#
-# Activate this line if you happen to have an Insight floppy tape.
-# Probing them proved to be dangerous for people with floppy disks only,
-# so it's "hidden" behind a flag:
-#hint.fdc.0.flags="1"
-
-# Specify floppy devices
-#envvar		hint.fd.0.at="fdc0"
-#envvar		hint.fd.0.drive="0"
-#envvar		hint.fd.1.at="fdc0"
-#envvar		hint.fd.1.drive="1"
-#
-# NOTES -- Lines that can be cut/pasted into kernel and hints configs.
-#
-# This file contains machine dependent kernel configuration notes.  For
-# machine independent notes, look in /sys/conf/NOTES.
-#
-#
-
-#
-# Enable the kernel DTrace hooks which are required to load the DTrace
-# kernel modules.
-#
-#options 	KDTRACE_HOOKS
-
-# DTrace core
-# NOTE: introduces CDDL-licensed components into the kernel
-#device		dtrace
-
-# DTrace modules
-#device		dtrace_profile
-#device		dtrace_sdt
-#device		dtrace_fbt
-#device		dtrace_systrace
-#device		dtrace_prototype
-#device		dtnfscl
-#device		dtmalloc
-
-# Alternatively include all the DTrace modules
-#device		dtraceall
-
-#####################################################################
-# SMP OPTIONS:
-#
-# Notes:
-#
-# IPI_PREEMPTION instructs the kernel to preempt threads running on other
-#	  CPUS if needed.  Relies on the PREEMPTION option
-
-# Optional:
-#options 	IPI_PREEMPTION
-#device		atpic			# Optional legacy pic support
-#device		mptable			# Optional MPSPEC mptable support
-
-# Debugging options.
-#
-#options 	COUNT_XINVLTLB_HITS	# Counters for TLB events
-#options 	COUNT_IPIS		# Per-CPU IPI interrupt counters
-
-#####################################################################
-# CPU OPTIONS
-
-#
-# You must specify at least one CPU (the one you intend to run on);
-# deleting the specification for CPUs you don't need to use may make
-# parts of the system run faster.
-#
-cpu		HAMMER			# aka K8, aka Opteron & Athlon64
-
-#
-# Options for CPU features.
-#
-
-#####################################################################
-# NETWORKING OPTIONS
-
-#
-# DEVICE_POLLING adds support for mixed interrupt-polling handling
-# of network device drivers, which has significant benefits in terms
-# of robustness to overloads and responsivity, as well as permitting
-# accurate scheduling of the CPU time between kernel network processing
-# and other activities.  The drawback is a moderate (up to 1/HZ seconds)
-# potential increase in response times.
-# It is strongly recommended to use HZ=1000 or 2000 with DEVICE_POLLING
-# to achieve smoother behaviour.
-# Additionally, you can enable/disable polling at runtime with help of
-# the ifconfig(8) utility, and select the CPU fraction reserved to
-# userland with the sysctl variable kern.polling.user_frac
-# (default 50, range 0..100).
-#
-# Not all device drivers support this mode of operation at the time of
-# this writing.  See polling(4) for more details.
-
-#options 	DEVICE_POLLING
-
-# BPF_JITTER adds support for BPF just-in-time compiler.
-
-options 	BPF_JITTER
-
-# OpenFabrics Enterprise Distribution (Infiniband).
-#options 	OFED
-#options 	OFED_DEBUG_INIT
-
-# Sockets Direct Protocol
-#options 	SDP
-#options 	SDP_DEBUG
-
-# IP over Infiniband
-#options 	IPOIB
-#options 	IPOIB_DEBUG
-#options 	IPOIB_CM
-
-#####################################################################
-# CLOCK OPTIONS
-
-# Provide read/write access to the memory in the clock chip.
-device		nvram		# Access to rtc cmos via /dev/nvram
-
-#####################################################################
-# MISCELLANEOUS DEVICES AND OPTIONS
-
-#device		speaker		#Play IBM BASIC-style noises out your speaker
-#envvar		hint.speaker.0.at="isa"
-#envvar		hint.speaker.0.port="0x61"
-
-#####################################################################
-# HARDWARE BUS CONFIGURATION
-
-#
-# ISA bus
-#
-device		isa
-
-#
-# Options for `isa':
-#
-# AUTO_EOI_1 enables the `automatic EOI' feature for the master 8259A
-# interrupt controller.  This saves about 0.7-1.25 usec for each interrupt.
-# This option breaks suspend/resume on some portables.
-#
-# AUTO_EOI_2 enables the `automatic EOI' feature for the slave 8259A
-# interrupt controller.  This saves about 0.7-1.25 usec for each interrupt.
-# Automatic EOI is documented not to work for the slave with the
-# original i8259A, but it works for some clones and some integrated
-# versions.
-#
-# MAXMEM specifies the amount of RAM on the machine; if this is not
-# specified, FreeBSD will first read the amount of memory from the CMOS
-# RAM, so the amount of memory will initially be limited to 64MB or 16MB
-# depending on the BIOS.  If the BIOS reports 64MB, a memory probe will
-# then attempt to detect the installed amount of RAM.  If this probe
-# fails to detect >64MB RAM you will have to use the MAXMEM option.
-# The amount is in kilobytes, so for a machine with 128MB of RAM, it would
-# be 131072 (128 * 1024).
-#
-# BROKEN_KEYBOARD_RESET disables the use of the keyboard controller to
-# reset the CPU for reboot.  This is needed on some systems with broken
-# keyboard controllers.
-
-#options 	AUTO_EOI_1
-#options 	AUTO_EOI_2
-
-#options 	MAXMEM=(128*1024)
-#options 	BROKEN_KEYBOARD_RESET
-
-#
-# AGP GART support
-device		agp
-
-#
-# AGP debugging.
-#
-#options 	AGP_DEBUG
-
-#####################################################################
-# HARDWARE DEVICE CONFIGURATION
-
 # To include support for VGA VESA video modes
 options 	VESA
 
 # Turn on extra debugging checks and output for VESA support.
 #options 	VESA_DEBUG
 
-#device		dpms		# DPMS suspend & resume via VESA BIOS
+device		dpms		# DPMS suspend & resume via VESA BIOS
 
 # x86 real mode BIOS emulator, required by atkbdc/dpms/vesa
 options 	X86BIOS
 
-#
-# Optional devices:
-#
-
 # PS/2 mouse
-#device		psm
+device		psm
 #envvar		hint.psm.0.at="atkbdc"
 #envvar		hint.psm.0.irq="12"
 
@@ -3138,31 +3199,90 @@ device		vga
 
 # vt(4) drivers.
 device		vt_vga		# VGA
-device		vt_efifb	# EFI framebuffer
 device		vt_vbefb	# VBE framebuffer
 
 # Linear framebuffer driver for S3 VESA 1.2 cards. Works on top of VESA.
 #device		s3pci
 
-# 3Dfx Voodoo Graphics, Voodoo II /dev/3dfx CDEV support.  This will create
-# the /dev/3dfx0 device to work with glide implementations.  This should get
-# linked to /dev/3dfx and /dev/voodoo.  Note that this is not the same as
-# the tdfx DRI module from XFree86 and is completely unrelated.
+#
+# RAID adapters
 #
 
-#device		tdfx			# Enable 3Dfx Voodoo support
+#
+# Areca 11xx and 12xx series of SATA II RAID controllers.
+# CAM is required.
+#
+#device		arcmsr		# Areca SATA II RAID
 
 #
-# ACPI support using the Intel ACPI Component Architecture reference
-# implementation.
-#
-# ACPI_DEBUG enables the use of the debug.acpi.level and debug.acpi.layer
-# kernel environment variables to select initial debugging levels for the
-# Intel ACPICA code.  (Note that the Intel code must also have USE_DEBUGGER
-# defined when it is built).
+# Adaptec FSA RAID controllers, including integrated DELL controllers,
+# the Dell PERC 2/QC and the HP NetRAID-4M
+#device		aac
+#device		aacp	# SCSI Passthrough interface (optional, CAM required)
 
-device		acpi
-#options 	ACPI_DEBUG
+#
+# Highpoint RocketRAID 27xx.
+#device		hpt27xx
+
+#
+# Highpoint RocketRAID 182x.
+#device		hptmv
+
+#
+# Highpoint DC7280 and R750.
+#device		hptnr
+
+#
+# Highpoint RocketRAID.  Supports RR172x, RR222x, RR2240, RR232x, RR2340,
+# RR2210, RR174x, RR2522, RR231x, RR230x.
+#device		hptrr
+
+#
+# Highpoint RocketRaid 3xxx series SATA RAID
+#device		hptiop
+
+#
+# IBM (now Adaptec) ServeRAID controllers
+#device		ips
+
+#
+# Intel C600 (Patsburg) integrated SAS controller
+#device		isci
+#options 	ISCI_LOGGING	# enable debugging in isci HAL
+
+#
+# Intel Volume Management Device (VMD) support
+#device		vmd
+
+#
+# PMC-Sierra SAS/SATA controller
+#device		pmspcv
+
+#
+# Standard floppy disk controllers and floppy tapes, supports
+# the Y-E DATA External FDD (PC Card)
+#
+#device		fdc
+#envvar		hint.fdc.0.at="isa"
+#envvar		hint.fdc.0.port="0x3F0"
+#envvar		hint.fdc.0.irq="6"
+#envvar		hint.fdc.0.drq="2"
+#
+# FDC_DEBUG enables floppy debugging.  Since the debug output is huge, you
+# gotta turn it actually on by setting the variable fd_debug with DDB,
+# however.
+#options 	FDC_DEBUG
+#
+# Activate this line if you happen to have an Insight floppy tape.
+# Probing them proved to be dangerous for people with floppy disks only,
+# so it's "hidden" behind a flag:
+#hint.fdc.0.flags="1"
+
+# Specify floppy devices
+#envvar		hint.fd.0.at="fdc0"
+#envvar		hint.fd.0.drive="0"
+#envvar		hint.fd.1.at="fdc0"
+#envvar		hint.fd.1.drive="1"
 
 # The cpufreq(4) driver provides support for non-ACPI CPU frequency control
 device		cpufreq
@@ -3171,17 +3291,12 @@ device		cpufreq
 # Network interfaces:
 #
 
-# axp: AMD EPYC integrated NIC
-#	Requires the miibus module
 # bxe:  Broadcom NetXtreme II (BCM5771X/BCM578XX) PCIe 10Gb Ethernet
 #       adapters.
-# ice:	Intel 800 Series Physical Function
-#	Requires the ice_ddp module for full functionality
+# gve:	Google Virtual NIC (gVNIC)
 # igc:	Intel I225 2.5Gb Ethernet adapter
 # ipw:	Intel PRO/Wireless 2100 IEEE 802.11 adapter
 #	Requires the ipw firmware module
-# irdma: Intel 800 Series RDMA driver
-#        Requires the ice module
 # iwi:	Intel PRO/Wireless 2200BG/2225BG/2915ABG IEEE 802.11 adapters
 #	Requires the iwi firmware module
 # iwn:	Intel Wireless WiFi Link 1000/105/135/2000/4965/5000/6000/6050 abgn
@@ -3191,36 +3306,21 @@ device		cpufreq
 # mlx4ib: Mellanox ConnectX HCA InfiniBand
 # mlx4en: Mellanox ConnectX HCA Ethernet
 # nfe:	nVidia nForce MCP on-board Ethernet Networking (BSD open source)
-# qlxgb: QLogic 3200 and 8200 series 10 Gigabit Ethernet & CNA Adapter
-# qlxgbe: QLogic 8300 series 10 Gigabit Ethernet & CNA Adapter
-# qlxge: QLogic 8100 series 10 Gigabit Ethernet & CNA Adapter
-# qlnxe: Cavium QLogic 41000/45000 series 10/25/40/100 Gigabit Ethernet & CNA Adapter
-# sfxge: Solarflare SFC9000 family 10Gb Ethernet adapters
 # vmx:	VMware VMXNET3 Ethernet (BSD open source)
 # wpi:	Intel 3945ABG Wireless LAN controller
 #	Requires the wpi firmware module
 
-#device		axp		# AMD EPYC integrated NIC
 #device		bxe		# Broadcom NetXtreme II BCM5771X/BCM578XX 10GbE
+#device		gve		# Google Virtual NIC (gVNIC)
 #device		igc		# Intel I225 2.5G Ethernet
 #device		ipw		# Intel 2100 wireless NICs.
 #device		iwi		# Intel 2200BG/2225BG/2915ABG wireless NICs.
 #device		iwn		# Intel 4965/1000/5000/6000 wireless NICs.
-#device		ixl		# Intel 700 Series Physical Function
-#device		iavf		# Intel Adaptive Virtual Function
-#device		ice		# Intel 800 Series Physical Function
-#device		ice_ddp		# Intel 800 Series DDP Package
-#device		irdma		# Intel 800 Series RDMA driver
 #device  	mthca		# Mellanox HCA InfiniBand
 #device  	mlx4		# Shared code module between IB and Ethernet
 #device  	mlx4ib		# Mellanox ConnectX HCA InfiniBand
 #device  	mlx4en		# Mellanox ConnectX HCA Ethernet
 #device		nfe		# nVidia nForce MCP on-board Ethernet
-#device		qlxgb		# QLogic 3200/8200 Ethernet
-#device		qlxgbe		# QLogic 8300 Ethernet
-#device		qlxge		# QLogic 8100 Ethernet
-#device		qlnxe		# QLogic 41000/45000 Ethernet
-#device		sfxge		# Solarflare SFC9000 10Gb Ethernet
 #device		vmx		# VMware VMXNET3 Ethernet
 #device		wpi		# Intel 3945ABG wireless NICs.
 
@@ -3275,9 +3375,6 @@ device		cpufreq
 #device		iwn6050fw
 #device		wpifw
 
-# net80211 options
-#options 	IEEE80211_DEBUG_REFCNT
-
 #
 # Non-Transparent Bridge (NTB) drivers
 #
@@ -3287,125 +3384,6 @@ device		cpufreq
 #device		ntb_hw_amd	# AMD NTB hardware driver
 #device		ntb_hw_intel	# Intel NTB hardware driver
 #device		ntb_hw_plx	# PLX NTB hardware driver
-
-#
-#XXX this stores pointers in a 32bit field that is defined by the hardware
-#device	pst
-
-#
-# Areca 11xx and 12xx series of SATA II RAID controllers.
-# CAM is required.
-#
-#device		arcmsr		# Areca SATA II RAID
-
-#
-# Microsemi smartpqi controllers.
-# These controllers have a SCSI-like interface, and require the
-# CAM infrastructure.
-#
-#device		smartpqi
-
-#
-# Adaptec FSA RAID controllers, including integrated DELL controllers,
-# the Dell PERC 2/QC and the HP NetRAID-4M
-#device		aac
-#device		aacp	# SCSI Passthrough interface (optional, CAM required)
-
-#
-# Highpoint RocketRAID 27xx.
-#device		hpt27xx
-
-#
-# Highpoint RocketRAID 182x.
-#device		hptmv
-
-#
-# Highpoint DC7280 and R750.
-#device		hptnr
-
-#
-# Highpoint RocketRAID.  Supports RR172x, RR222x, RR2240, RR232x, RR2340,
-# RR2210, RR174x, RR2522, RR231x, RR230x.
-#device		hptrr
-
-#
-# Highpoint RocketRaid 3xxx series SATA RAID
-#device		hptiop
-
-#
-# IBM (now Adaptec) ServeRAID controllers
-#device		ips
-
-#
-# Intel integrated Memory Controller (iMC) SMBus controller
-#	Sandybridge-Xeon, Ivybridge-Xeon, Haswell-Xeon, Broadwell-Xeon
-#device		imcsmb
-
-#
-# Intel C600 (Patsburg) integrated SAS controller
-#device		isci
-#options 	ISCI_LOGGING	# enable debugging in isci HAL
-
-#
-# NVM Express (NVMe) support
-device         nvme    # base NVMe driver
-device         nvd     # expose NVMe namespaces as disks, depends on nvme
-
-#
-# Intel Volume Management Device (VMD) support
-#device		vmd
-
-#
-# PMC-Sierra SAS/SATA controller
-#device		pmspcv
-
-#
-# Intel QuickAssist driver with OpenCrypto support
-#
-# Only for legacy Atom C2XXX chipsets.
-#device		qat_c2xxx
-
-#
-# SafeNet crypto driver: can be moved to the MI NOTES as soon as
-# it's tested on a big-endian machine
-#
-#device		safe		# SafeNet 1141
-#options 	SAFE_DEBUG	# enable debugging support: hw.safe.debug
-#options 	SAFE_RNDTEST	# enable rndtest support
-
-#
-# VirtIO support
-#
-# The virtio entry provides a generic bus for use by the device drivers.
-# It must be combined with an interface that communicates with the host.
-# Multiple such interfaces are defined by the VirtIO specification. FreeBSD
-# only has support for PCI. Therefore, virtio_pci must be statically
-# compiled in or loaded as a module for the device drivers to function.
-#
-#device		virtio		# Generic VirtIO bus (required)
-#device		virtio_pci	# VirtIO PCI Interface
-#device		vtnet		# VirtIO Ethernet device
-#device		virtio_blk	# VirtIO Block device
-#device		virtio_scsi	# VirtIO SCSI device
-#device		virtio_balloon	# VirtIO Memory Balloon device
-#device		virtio_random	# VirtIO Entropy device
-#device		virtio_console	# VirtIO Console device
-
-# Linux KVM paravirtualization support
-#device		kvm_clock	# KVM paravirtual clock driver
-
-# Google Virtual NIC
-#device		gve		# Google Virtual NIC (gVNIC) driver
-
-# Microsoft Hyper-V enhancement support
-#device 	hyperv		# HyperV drivers
-#device		hvhid		# HyperV HID device
-
-# Xen HVM Guest Optimizations
-#options 	XENHVM		# Xen HVM kernel infrastructure
-#device		xenefi		# Xen EFI timer device
-#device 	xenpci		# Xen HVM Hypervisor services driver
-#device		xentimer	# Xen x86 PV timer device
 
 #####################################################################
 
@@ -3431,15 +3409,25 @@ device		ipmi
 #envvar		hint.pbio.0.at="isa"
 #envvar		hint.pbio.0.port="0x360"
 device		smbios
-device		vpd
+#device		vpd
 #device		asmc
 #device		tpm
 #device		padlock_rng	# VIA Padlock RNG
 #device		rdrand_rng	# Intel Bull Mountain RNG
-# NOTE SIVA isn't supported by the wyse AMD G-T56N CPU
 #device		aesni		# AES-NI OpenCrypto module
-device		ossl		# OpenSSL OpenCrypto module
-#device		ioat		# Intel I/OAT DMA engine
+#device		ossl		# OpenSSL OpenCrypto module
+
+# Linux KVM paravirtualization support
+#device		kvm_clock	# KVM paravirtual clock driver
+
+# Microsoft Hyper-V enhancement support
+#device 		hyperv		# HyperV drivers
+#device		hvhid		# HyperV HID device
+
+# VMware hypervisor support
+#device		pvscsi		# Paravirtual SCSI driver
+#device		vmci		# Virtual Machine Communication Interface (VMCI)
+#device		vmware_guestrpc	# GuestRPC interface
 
 #
 # Laptop/Notebook options:
@@ -3448,8 +3436,26 @@ device		ossl		# OpenSSL OpenCrypto module
 #device backlight
 
 #
-# I2C Bus
+# System Management Bus (SMB)
 #
+# Supported SMB interfaces:
+# imcsmb	integrated Memory Controller (iMC) SMBus controller
+#		Sandybridge-Xeon, Ivybridge-Xeon, Haswell-Xeon, Broadwell-Xeon
+#
+
+#device		imcsmb
+
+#
+# HID-over-I2C support
+#
+#device		iichid		# HID-over-I2C support
+#options 	IICHID_DEBUG	# Enable HID-over-I2C debug messages
+#options 	IICHID_SAMPLING	# Workaround missing GPIO INTR support
+
+#
+# AMD System Management Network (SMN)
+#
+#device		amdsmn
 
 #
 # Hardware watchdog timers:
@@ -3460,7 +3466,7 @@ device		ossl		# OpenSSL OpenCrypto module
 # wbwd: Winbond watchdog timer
 # itwd: ITE Super I/O watchdog timer
 #
-#device		ichwd
+device		ichwd
 device		amdsbwd
 #device		viawd
 #device		wbwd
@@ -3486,64 +3492,6 @@ device		cpuctl
 #
 #device		superio
 
-#
-# System Management Bus (SMB)
-#
-#options 	ENABLE_ALART		# Control alarm on Intel intpm driver
-
-#
-# AMD System Management Network (SMN)
-#
-device		amdsmn
-
-#
-# Number of initial kernel page table pages used for early bootstrap.
-# This number should include enough pages to map the kernel and any
-# modules or other data loaded with the kernel by the loader.  Each
-# page table page maps 2MB.
-#
-#options 	NKPT=31
-
-# EFI Runtime Services support
-options 	EFIRT
-
-#
-# HID-over-I2C support
-#
-#device		iichid		# HID-over-I2C support
-#options 	IICHID_DEBUG	# Enable HID-over-I2C debug messages
-#options 	IICHID_SAMPLING	# Workaround missing GPIO INTR support
-
-#####################################################################
-# ABI Emulation
-
-#XXX keep these here for now and reactivate when support for emulating
-#XXX these 32 bit binaries is added.
-
-# Enable 32-bit runtime support for FreeBSD/i386 binaries.
-#options 	COMPAT_FREEBSD32
-
-# Enable (32-bit) a.out binary support
-#options 	COMPAT_AOUT
-
-#####################################################################
-# ZFS support
-
-# NB: This depends on crypto, cryptodev and ZSTDIO
-options 	ZFS
-
-#####################################################################
-# VM OPTIONS
-
-# KSTACK_PAGES is the number of memory pages to assign to the kernel
-# stack of each thread.
-
-#options 	KSTACK_PAGES=5
-
-# Enable detailed accounting by the PV entry allocator.
-
-#options 	PV_STATS
-
 #####################################################################
 
 # More undocumented options for linting.
@@ -3561,8 +3509,176 @@ options 	ZFS
 #options 	VM_KMEM_SIZE
 #options 	VM_KMEM_SIZE_MAX
 #options 	VM_KMEM_SIZE_SCALE
+#
+# NOTES -- Lines that can be cut/pasted into kernel and hints configs.
+#
+# This file contains machine dependent kernel configuration notes.  For
+# machine independent notes, look in /sys/conf/NOTES.  For notes shared
+# with i386, look in /sys/x86/conf/NOTES.
+#
+#
 
 # GCOV (code coverage) support
 
 #options 	LINDEBUGFS
 #options 	GCOV
+
+
+#####################################################################
+# SMP OPTIONS:
+
+# Optional:
+#device		atpic			# Optional legacy pic support
+#device		mptable			# Optional MPSPEC mptable support
+
+
+#####################################################################
+# CPU OPTIONS
+
+#
+# You must specify at least one CPU (the one you intend to run on);
+# deleting the specification for CPUs you don't need to use may make
+# parts of the system run faster.
+#
+cpu		HAMMER			# aka K8, aka Opteron & Athlon64
+
+#
+# Options for CPU features.
+#
+
+
+#####################################################################
+# HARDWARE DEVICE CONFIGURATION
+
+#
+# Optional devices:
+#
+
+# vt(4) drivers.
+device		vt_efifb	# EFI framebuffer
+
+# 3Dfx Voodoo Graphics, Voodoo II /dev/3dfx CDEV support.  This will create
+# the /dev/3dfx0 device to work with glide implementations.  This should get
+# linked to /dev/3dfx and /dev/voodoo.  Note that this is not the same as
+# the tdfx DRI module from XFree86 and is completely unrelated.
+#
+
+#device		tdfx			# Enable 3Dfx Voodoo support
+
+#
+# RAID adapters
+#
+
+#XXX this stores pointers in a 32bit field that is defined by the hardware
+#device	pst
+
+#
+# Microsemi smartpqi controllers.
+# These controllers have a SCSI-like interface, and require the
+# CAM infrastructure.
+#
+#device		smartpqi
+
+#
+# Network interfaces:
+#
+
+# axp: AMD EPYC integrated NIC
+#	Requires the miibus module
+# ice:	Intel 800 Series Physical Function
+#	Requires the ice_ddp module for full functionality
+# irdma: Intel 800 Series RDMA driver
+#        Requires the ice module
+# qlxgb: QLogic 3200 and 8200 series 10 Gigabit Ethernet & CNA Adapter
+# qlxgbe: QLogic 8300 series 10 Gigabit Ethernet & CNA Adapter
+# qlxge: QLogic 8100 series 10 Gigabit Ethernet & CNA Adapter
+# qlnxe: Cavium QLogic 41000/45000 series 10/25/40/100 Gigabit Ethernet & CNA Adapter
+# sfxge: Solarflare SFC9000 family 10Gb Ethernet adapters
+
+#device		axp		# AMD EPYC integrated NIC
+#device		ixl		# Intel 700 Series Physical Function
+#device		iavf		# Intel Adaptive Virtual Function
+#device		ice		# Intel 800 Series Physical Function
+#device		ice_ddp		# Intel 800 Series DDP Package
+#device		irdma		# Intel 800 Series RDMA driver
+#device		qlxgb		# QLogic 3200/8200 Ethernet
+#device		qlxgbe		# QLogic 8300 Ethernet
+#device		qlxge		# QLogic 8100 Ethernet
+#device		qlnxe		# QLogic 41000/45000 Ethernet
+#device		sfxge		# Solarflare SFC9000 10Gb Ethernet
+
+#####################################################################
+
+#
+# Miscellaneous hardware:
+#
+
+#device		ioat		# Intel I/OAT DMA engine
+
+# EFI Runtime Services support
+options 	EFIRT
+
+# EFI pseudo-device
+device		efidev
+
+# EFI RTC
+device		efirtc
+
+#
+# Intel QuickAssist driver with OpenCrypto support
+#
+# Only for legacy Atom C2XXX chipsets.
+#device		qat_c2xxx
+
+# Xen HVM Guest Optimizations
+#options 	XENHVM		# Xen HVM kernel infrastructure
+#device		xenefi		# Xen EFI timer device
+#device 		xenpci		# Xen HVM Hypervisor services driver
+#device		xentimer	# Xen x86 PV timer device
+
+#####################################################################
+# ABI Emulation
+
+# Enable 32-bit runtime support for FreeBSD/i386 binaries.
+#options 	COMPAT_FREEBSD32
+
+# Enable (32-bit) a.out binary support
+#options 	COMPAT_AOUT
+
+#####################################################################
+# ZFS support
+
+# NB: This depends on crypto, cryptodev and ZSTDIO
+options 	ZFS
+
+#####################################################################
+# VM OPTIONS
+
+#
+# Number of initial kernel page table pages used for early bootstrap.
+# This number should include enough pages to map the kernel and any
+# modules or other data loaded with the kernel by the loader.  Each
+# page table page maps 2MB.
+#
+#options 	NKPT=31
+
+# KSTACK_PAGES is the number of memory pages to assign to the kernel
+# stack of each thread.
+
+#options 	KSTACK_PAGES=5
+
+# Enable detailed accounting by the PV entry allocator.
+
+#options 	PV_STATS
+
+#####################################################################
+# Kernel sanitizers
+
+#options	COVERAGE		# Generic kernel coverage. Used by KCOV
+#options	KCOV			# Kernel Coverage Sanitizer
+# Warning: KUBSAN can result in a kernel too large for loader to load
+#options	KUBSAN			# Kernel Undefined Behavior Sanitizer
+#options	KCSAN			# Kernel Concurrency Sanitizer
+#options	KASAN			# Kernel Address Sanitizer
+#options	KCSAN			# Kernel Concurrency Sanitizer
+#options	KMSAN			# Kernel Memory Sanitizer
