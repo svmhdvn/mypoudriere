@@ -163,19 +163,26 @@ bootstrap_step1() {
 
     # 2) setup poudriere
     # TODO change ccache directory to a better global location, possibly /var/cache/ccache
+    # TODO remove PKG_NO_VERSION_FOR_DEPS when stabilized upstream
     # NOTE add back if needed to the sed command:
     #   -e 's/.*TMPFS_BLACKLIST=.*/TMPFS_BLACKLIST="ghc* llvm* rust*"/' \
     #   -e 's%.*TMPFS_BLACKLIST_TMPDIR=.*%TMPFS_BLACKLIST_TMPDIR="${BASEFS}/data/cache/tmp"%' \
     sed \
-        -e "s/.*BUILDER_HOSTNAME=.*/BUILDER_HOSTNAME=poudriere.home.arpa/" \
-        -e 's%.*CCACHE_DIR=.*%CCACHE_DIR=/root/.ccache%' \
         -e 's/.*ALLOW_MAKE_JOBS=.*/ALLOW_MAKE_JOBS=yes/' \
         -e 's/.*BAD_PKGNAME_DEPS_ARE_FATAL=.*/BAD_PKGNAME_DEPS_ARE_FATAL=yes/' \
+        -e 's/.*BASEFS=.*/BASEFS=/usr/local/poudriere/' \
+        -e "s/.*BUILDER_HOSTNAME=.*/BUILDER_HOSTNAME=poudriere.home.arpa/" \
+        -e 's%.*CCACHE_DIR=.*%CCACHE_DIR=/root/.ccache%' \
+        -e 's%.*DISTFILES_CACHE=.*%DISTFILES_CACHE=/usr/ports/distfiles%' \
         -e 's/.*NOLINUX=.*/NOLINUX=yes/' \
         -e 's/.*PACKAGE_FETCH_BRANCH=.*/PACKAGE_FETCH_BRANCH=latest/' \
-        -e 's/.*PACKAGE_FETCH_WHITELIST=.*/PACKAGE_FETCH_WHITELIST="gcc* rust ghc llvm*"/' \
+        -e 's/.*PACKAGE_FETCH_WHITELIST=.*/PACKAGE_FETCH_WHITELIST="gcc* rust ghc llvm* texlive-texmf"/' \
+        -e 's/.*PKG_NO_VERSION_FOR_DEPS=.*/PKG_NO_VERSION_FOR_DEPS=yes/' \
+        -e 's/.*PRESERVE_TIMESTAMP=.*/PRESERVE_TIMESTAMP=yes/' \
         -e 's/.*PRIORITY_BOOST=.*/PRIORITY_BOOST="curl"/' \
+        -e 's%.*RESOLV_CONF=.*%RESOLV_CONF=/etc/resolv.conf%' \
         -e 's/.*SAVE_WRKDIR=.*/SAVE_WRKDIR="yes"/' \
+        -e 's/.*USE_TMPFS=.*/USE_TMPFS="yes"/' \
         -e 's/.*WRKDIR_ARCHIVE_FORMAT=.*/WRKDIR_ARCHIVE_FORMAT=tzst/' \
         -e 's/.*ZPOOL=.*/ZPOOL=zroot/' \
         /usr/local/etc/poudriere.conf.sample \
@@ -287,13 +294,13 @@ my_portoptions="$target_confdir/portoptions"
 readonly my_portoptions
 
 case "$target_hostname" in
-  beastie|n100m*)
+  beastie|n100m|x470)
     ports_pkglist=pkglist-builder.txt
     ;;
-  cl100*|wyse*)
+  cl100|wyse*)
     ports_pkglist=pkglist-empt.txt
     ;;
-  arpvps*)
+  arpvps)
     ports_pkglist=pkglist-arpvps.txt
     ;;
   *)
