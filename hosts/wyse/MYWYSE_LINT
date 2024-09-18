@@ -1041,7 +1041,7 @@ device		netmap
 options 	IPFIREWALL		#firewall
 options 	IPFIREWALL_VERBOSE	#enable logging to syslogd(8)
 #options 	IPFIREWALL_VERBOSE_LIMIT=100	#limit verbosity
-#options 	IPFIREWALL_DEFAULT_TO_ACCEPT	#allow everything by default
+options 	IPFIREWALL_DEFAULT_TO_ACCEPT	#allow everything by default
 options 	IPFIREWALL_NAT		#ipfw kernel nat support
 #options 	IPFIREWALL_NAT64	#ipfw kernel NAT64 support
 #options 	IPFIREWALL_NPTV6	#ipfw kernel IPv6 NPT support

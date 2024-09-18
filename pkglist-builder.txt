@@ -1,5 +1,3 @@
-archivers/gtar
-benchmarks/bonnie++
 benchmarks/iperf3
 devel/ccache
 devel/gh
@@ -8,8 +6,6 @@ devel/hs-ShellCheck
 devel/universal-ctags
 editors/kakoune
 ftp/curl
-lang/rust
-mail/msmtp
 net/mosh
 net/rsync
 ports-mgmt/modules2tuple

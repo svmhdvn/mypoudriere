@@ -107,6 +107,7 @@ options 	INET			#Internet communications protocols
 options 	INET6			#IPv6 communications protocols
 options 	IOMMU			# Enable IOMMU support
 options 	IPFIREWALL		#firewall
+options 	IPFIREWALL_DEFAULT_TO_ACCEPT	#allow everything by default
 options 	IPFIREWALL_NAT		#ipfw kernel nat support
 options 	IPFIREWALL_VERBOSE	#enable logging to syslogd(8)
 options 	KERN_TLS		# TLS transmit and receive offload
