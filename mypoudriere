@@ -45,8 +45,10 @@ pull_freebsd_ports() {
     # TODO setup a downstream EMPT ports repo and rebase from upstream here
     if test ! -d /usr/ports/.git; then
         doas git clone \
-            --origin upstream \
-            https://git.freebsd.org/ports.git /usr/ports
+            --origin mymirrors \
+            --branch empt \
+            git@github.com:svmhdvn/freebsd-ports.git /usr/ports
+        doas git -C /usr/ports remote add upstream https://git.freebsd.org/ports.git
         doas poudriere ports -c -p "$ports_tree" -m null -M /usr/ports
     fi
     doas git -C /usr/ports pull upstream main --autostash --rebase
@@ -170,7 +172,7 @@ bootstrap_step1() {
     sed \
         -e 's/.*ALLOW_MAKE_JOBS=.*/ALLOW_MAKE_JOBS=yes/' \
         -e 's/.*BAD_PKGNAME_DEPS_ARE_FATAL=.*/BAD_PKGNAME_DEPS_ARE_FATAL=yes/' \
-        -e 's/.*BASEFS=.*/BASEFS=/usr/local/poudriere/' \
+        -e 's%.*BASEFS=.*%BASEFS=/usr/local/poudriere%' \
         -e "s/.*BUILDER_HOSTNAME=.*/BUILDER_HOSTNAME=poudriere.home.arpa/" \
         -e 's%.*CCACHE_DIR=.*%CCACHE_DIR=/root/.ccache%' \
         -e 's%.*DISTFILES_CACHE=.*%DISTFILES_CACHE=/usr/ports/distfiles%' \
@@ -196,8 +198,8 @@ bootstrap_step1() {
     doas mkdir -p /usr/local/etc/pkg/repos
     print_poudriere_repo_conf pkgbase "$host_pkgbase_repo" | doas tee /usr/local/etc/pkg/repos/poudriere_pkgbase.conf > /dev/null
 
-    doas pkg install -y -r poudriere_pkgbase -g 'FreeBSD-*'
-    post_pkgbase_upgrade
+    doas env ABI="${target_abi}" IGNORE_OSVERSION=yes pkg install -y -r poudriere_pkgbase -g 'FreeBSD-*'
+    local_pkgbase_upgrade
 }
 
 bootstrap_step2() {
