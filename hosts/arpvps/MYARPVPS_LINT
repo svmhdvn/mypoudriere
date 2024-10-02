@@ -154,15 +154,14 @@ ident		MYARPVPS
 # size for both BOOT_TAG and the assocated tunable.
 #options 	BOOT_TAG_SZ=32
 
-#options 	GEOM_BDE		# Disk encryption.
-options 	GEOM_CACHE		# Disk cache.
+#options 	GEOM_CACHE		# Disk cache.
 #options 	GEOM_CONCAT		# Disk concatenation.
 #options 	GEOM_ELI		# Disk encryption.
 options 	GEOM_GATE		# Userland services.
 options 	GEOM_JOURNAL		# Journaling.
 options 	GEOM_LABEL		# Providers labelization.
 #options 	GEOM_LINUX_LVM		# Linux LVM2 volumes
-options 	GEOM_MAP		# Map based partitioning
+#options 	GEOM_MAP		# Map based partitioning
 #options 	GEOM_MIRROR		# Disk mirroring.
 #options 	GEOM_MULTIPATH		# Disk multipath
 #options 	GEOM_NOP		# Test class.
@@ -178,8 +177,8 @@ options 	GEOM_PART_GPT		# GPT partitioning
 #options 	GEOM_SHSEC		# Shared secret.
 #options 	GEOM_STRIPE		# Disk striping.
 #options 	GEOM_UZIP		# Read-only compressed disks
-options 	GEOM_VINUM		# Vinum logical volume manager
-options 	GEOM_VIRSTOR		# Virtual storage.
+#options 	GEOM_VINUM		# Vinum logical volume manager
+#options 	GEOM_VIRSTOR		# Virtual storage.
 #options 	GEOM_ZERO		# Performance testing helper.
 
 #
@@ -377,9 +376,9 @@ options 	COMPAT_FREEBSD14
 # Definition-style interprocess communication, in the form of shared
 # memory, semaphores, and message queues, respectively.
 #
-options 	SYSVSHM
-options 	SYSVSEM
-options 	SYSVMSG
+#options 	SYSVSHM
+#options 	SYSVSEM
+#options 	SYSVMSG
 
 
 #####################################################################
@@ -979,6 +978,9 @@ device		netmap
 # WireGuard interface.
 #device		wg
 
+# dummymbuf – mbuf alteration pfil hooks
+#device		dummymbuf
+
 #
 # Internet family options:
 #
@@ -1115,7 +1117,7 @@ options 	FFS			#Fast filesystem
 #options 	NFSCL			#Network File System client
 
 # The rest are optional:
-options 	AUTOFS			#Automounter filesystem
+#options 	AUTOFS			#Automounter filesystem
 options 	CD9660			#ISO 9660 filesystem
 options 	FDESCFS			#File descriptor filesystem
 #options 	FUSEFS			#FUSEFS support module
@@ -1215,15 +1217,15 @@ options 	UFS_GJOURNAL
 #options 	EXT2FS
 
 # The system memory devices; /dev/mem, /dev/kmem
-device		mem
+#device		mem
 
 # The kernel symbol table device; /dev/ksyms
-device		ksyms
+#device		ksyms
 
 # Optional character code conversion support with LIBICONV.
 # Each option requires their base file system and LIBICONV.
-options 	CD9660_ICONV
-options 	MSDOSFS_ICONV
+#options 	CD9660_ICONV
+#options 	MSDOSFS_ICONV
 #options 	UDF_ICONV
 
 
@@ -1236,16 +1238,16 @@ options 	MSDOSFS_ICONV
 options 	_KPOSIX_PRIORITY_SCHEDULING
 # p1003_1b_semaphores are very experimental,
 # user should be ready to assist in debugging if problems arise.
-options 	P1003_1B_SEMAPHORES
+#options 	P1003_1B_SEMAPHORES
 
 # POSIX message queue
-options 	P1003_1B_MQUEUE
+#options 	P1003_1B_MQUEUE
 
 #####################################################################
 # SECURITY POLICY PARAMETERS
 
 # Support for BSM audit
-options 	AUDIT
+#options 	AUDIT
 
 # Support for Mandatory Access Control (MAC):
 #options 	MAC
@@ -1284,7 +1286,7 @@ options 	CAPABILITY_MODE	# sandboxes with no global namespace access
 # use a value of 100. Lower values may lower overhead at the expense of accuracy
 # of scheduling, though the adaptive tick code reduces that overhead.
 
-options 	HZ=100
+#options 	HZ=100
 
 # Enable support for the kernel PLL to use an external PPS signal,
 # under supervision of [x]ntpd(8)
@@ -1383,17 +1385,17 @@ options 	HZ=100
 # The pass driver provides a passthrough API to access the CAM subsystem.
 
 device		scbus		#base SCSI code
-device		ch		#SCSI media changers
+#device		ch		#SCSI media changers
 device		da		#SCSI direct access devices (aka disks)
-device		sa		#SCSI tapes
+#device		sa		#SCSI tapes
 device		cd		#SCSI CD-ROMs
-device		ses		#Enclosure Services (SES and SAF-TE)
-device		pt		#SCSI processor
-device		targ		#SCSI Target Mode Code
-device		targbh		#SCSI Target Mode Blackhole Device
-device		pass		#CAM passthrough driver
+#device		ses		#Enclosure Services (SES and SAF-TE)
+#device		pt		#SCSI processor
+#device		targ		#SCSI Target Mode Code
+#device		targbh		#SCSI Target Mode Blackhole Device
+#device		pass		#CAM passthrough driver
 #device		sg		#Linux SCSI passthrough
-device		ctl		#CAM Target Layer
+#device		ctl		#CAM Target Layer
 
 # CAM OPTIONS:
 # debugging options:
@@ -1464,7 +1466,7 @@ device		ctl		#CAM Target Layer
 # Normally disabled because a lot of newer SCSI disks report themselves
 # as having SES capabilities, but this can then clot up attempts to build
 # a topology with the SES device that's on the box these drives are in....
-options 	SES_ENABLE_PASSTHROUGH
+#options 	SES_ENABLE_PASSTHROUGH
 
 # iSCSI
 #
@@ -1482,12 +1484,12 @@ options 	SES_ENABLE_PASSTHROUGH
 device		pty		#BSD-style compatibility pseudo ttys
 device		nmdm		#back-to-back tty devices
 device		md		#Memory/malloc disk
-device		snp		#Snoop device - to look at pty/vty/etc..
+#device		snp		#Snoop device - to look at pty/vty/etc..
 #device		ccd		#Concatenated disk driver
-device		firmware	#firmware(9) support
+#device		firmware	#firmware(9) support
 
 # Kernel side iconv library
-options 	LIBICONV
+#options 	LIBICONV
 
 # Size of the kernel message buffer.  Should be N * pagesize.
 #options 	MSGBUF_SIZE=40960
@@ -1523,7 +1525,7 @@ options 	PCI_IOV			# PCI SR-IOV support
 #options 	KBD_DELAY1=200		# define initial key delay
 #options 	KBD_DELAY2=15		# define key delay
 
-device		kbdmux			# keyboard multiplexer
+#device		kbdmux			# keyboard multiplexer
 #options 	KBDMUX_DFLT_KEYMAP	# specify the built-in keymap
 #makeoptions	KBDMUX_DFLT_KEYMAP=it.iso
 
@@ -1590,8 +1592,8 @@ device		vt
 #envvar		hint.isp.0.topology="nport"
 #envvar		hint.isp.0.topology="lport-only"
 #envvar		hint.isp.0.topology="nport-only"
-## we can't get u_int64_t types, nor can we get strings if it's got
-## a leading 0x, hence this silly dodge.
+# we can't get u_int64_t types, nor can we get strings if it's got
+# a leading 0x, hence this silly dodge.
 #envvar		hint.isp.0.portwnn="w50000000aaaa0000"
 #envvar		hint.isp.0.nodewnn="w50000000aaaa0001"
 #device		ispfw
@@ -1804,7 +1806,7 @@ device		uart
 # Serial Communications Controller
 # Supports the Freescale/NXP QUad Integrated and Zilog Z8530 multi-channel
 # communications controllers.
-device		scc
+#device		scc
 
 # PCI Universal Communications driver
 # Supports various multi port PCI I/O cards.
@@ -2032,9 +2034,9 @@ device		puc
 # from the card usually bursts 128 bytes, but on the affected CPUs, only
 # 4 are safe.
 #options    	AH_RXCFG_SDMAMW_4BYTES
-##device		ath_ar9160	# AR9160 chips
-##device		ath_ar9280	# AR9280 chips
-##device		ath_ar9285	# AR9285 chips
+#device		ath_ar9160	# AR9160 chips
+#device		ath_ar9280	# AR9280 chips
+#device		ath_ar9285	# AR9285 chips
 #device		ath_rate_sample	# SampleRate tx rate control for ath
 #device		bwi		# Broadcom BCM430* BCM431*
 #device		bwn		# Broadcom BCM43xx
@@ -2232,7 +2234,7 @@ device		puc
 device		smbus		# Bus support, required for smb below.
 
 device		intpm
-#options 	ENABLE_ALART	# Control alarm on Intel intpm driver
+options 	ENABLE_ALART	# Control alarm on Intel intpm driver
 #device		alpm
 #device		ichsmb
 #device		viapm
@@ -2392,16 +2394,6 @@ device		jedec_dimm
 #
 #options 	DEADLKRES
 
-#
-# Disable swapping of stack pages.  This option removes all
-# code which actually performs swapping, so it's not possible to turn
-# it back on at run-time.
-#
-# This is sometimes usable for systems which don't have any swap space
-# (see also sysctl "vm.disable_swapspace_pageouts")
-#
-#options 	NO_SWAPPING
-
 # Set the number of sf_bufs to allocate. sf_bufs are virtual buffers
 # for sendfile(2) that are used to map file VM pages, and normally
 # default to a quantity that is roughly 16*MAXUSERS+512. You would
@@ -2427,16 +2419,16 @@ device		jedec_dimm
 # including PCI and MMIO.
 #
 device		virtio		# Generic VirtIO bus (required)
-#device		virtio_mmio	# VirtIO MMIO Interface
+device		virtio_mmio	# VirtIO MMIO Interface
 device		virtio_pci	# VirtIO PCI Interface
 device		vtnet		# VirtIO Ethernet device
 device		virtio_balloon	# VirtIO Memory Balloon device
 device		virtio_blk	# VirtIO Block device
 device		virtio_console	# VirtIO Console device
-#device		virtio_gpu	# VirtIO GPU device
+device		virtio_gpu	# VirtIO GPU device
 device		virtio_random	# VirtIO Entropy device
-#device		virtio_scmi	# VirtIO SCSI device
-device		virtio_scsi	# VirtIO SCMI device
+device		virtio_scmi	# VirtIO SCMI device
+device		virtio_scsi	# VirtIO SCSI device
 
 #####################################################################
 # HID support
@@ -2806,7 +2798,7 @@ options 	RCTL
 
 # Random number generator
 # Alternative algorithm.
-options 	RANDOM_FENESTRASX
+#options 	RANDOM_FENESTRASX
 # Allow the CSPRNG algorithm to be loaded as a module.
 #options 	RANDOM_LOADABLE
 # Select this to allow high-rate but potentially expensive
@@ -2853,7 +2845,7 @@ options 	ZSTDIO
 device		evdev		# input event device support
 options 	EVDEV_SUPPORT	# evdev support in legacy drivers
 #options 	EVDEV_DEBUG	# enable event debug msgs
-device		uinput		# install /dev/uinput cdev
+#device		uinput		# install /dev/uinput cdev
 #options 	UINPUT_DEBUG	# enable uinput debug msgs
 
 # Encrypted kernel crash dumps.
@@ -2875,6 +2867,9 @@ device		xz		# xz_embedded LZMA de-compression library
 
 # Kernel support for stats(3).
 options 	STATS
+
+# File system monitoring
+#device		filemon		# file monitoring for make(1) meta-mode
 #
 
 # Common NOTES between i386 and amd64
@@ -2948,7 +2943,7 @@ options 	IPI_PREEMPTION
 # Not all device drivers support this mode of operation at the time of
 # this writing.  See polling(4) for more details.
 
-#options 	DEVICE_POLLING
+options 	DEVICE_POLLING
 
 # BPF_JITTER adds support for BPF just-in-time compiler.
 
@@ -3407,16 +3402,16 @@ device		vt_vbefb	# VBE framebuffer
 #  The Rev 2 host cards use a 32K chunk, on a 32K boundary.
 #  The cards can use an IRQ of 11, 12 or 15.
 
-#device		ipmi
+device		ipmi
 #device		pbio
 #envvar		hint.pbio.0.at="isa"
 #envvar		hint.pbio.0.port="0x360"
 device		smbios
 #device		vpd
 #device		asmc
-device		tpm
+#device		tpm
 #device		padlock_rng	# VIA Padlock RNG
-device		rdrand_rng	# Intel Bull Mountain RNG
+#device		rdrand_rng	# Intel Bull Mountain RNG
 device		aesni		# AES-NI OpenCrypto module
 device		ossl		# OpenSSL OpenCrypto module
 
@@ -3469,7 +3464,7 @@ device		kvm_clock	# KVM paravirtual clock driver
 # wbwd: Winbond watchdog timer
 # itwd: ITE Super I/O watchdog timer
 #
-device		ichwd
+#device		ichwd
 #device		amdsbwd
 #device		viawd
 #device		wbwd

@@ -10,12 +10,10 @@ device		atkbd
 device		atkbdc
 device		bpf
 device		cd		#SCSI CD-ROMs
-device		ch		#SCSI media changers
 device		coretemp
 device		cpuctl
 device		crypto		# core crypto support
 device		cryptodev	# /dev/crypto for access to h/w
-device		ctl		#CAM Target Layer
 device		da		#SCSI direct access devices (aka disks)
 device		dpms		# DPMS suspend & resume via VESA BIOS
 device		efidev
@@ -23,52 +21,40 @@ device		efirtc
 device		ehci
 device		ether
 device		evdev		# input event device support
-device		firmware	#firmware(9) support
-device		ichwd
 device		intpm
+device		ipmi
 device		isa
 device		jedec_dimm
-device		kbdmux			# keyboard multiplexer
-device		ksyms
 device		kvm_clock	# KVM paravirtual clock driver
 device		loop
 device		md		#Memory/malloc disk
-device		mem
 device		netmap
 device		nmdm		#back-to-back tty devices
 device		ohci
 device		ossl		# OpenSSL OpenCrypto module
-device		pass		#CAM passthrough driver
 device		pci
 device		psm
-device		pt		#SCSI processor
 device		pty		#BSD-style compatibility pseudo ttys
 device		puc
-device		rdrand_rng	# Intel Bull Mountain RNG
-device		sa		#SCSI tapes
 device		sc
 device		scbus		#base SCSI code
-device		scc
-device		ses		#Enclosure Services (SES and SAF-TE)
 device		smb
 device		smbios
 device		smbus		# Bus support, required for smb below.
-device		snp		#Snoop device - to look at pty/vty/etc..
-device		targ		#SCSI Target Mode Code
-device		targbh		#SCSI Target Mode Blackhole Device
-device		tpm
 device		uart
 device		uhci
-device		uinput		# install /dev/uinput cdev
 device		usb
 device		vga
 device		virtio		# Generic VirtIO bus (required)
 device		virtio_balloon	# VirtIO Memory Balloon device
 device		virtio_blk	# VirtIO Block device
 device		virtio_console	# VirtIO Console device
+device		virtio_gpu	# VirtIO GPU device
+device		virtio_mmio	# VirtIO MMIO Interface
 device		virtio_pci	# VirtIO PCI Interface
 device		virtio_random	# VirtIO Entropy device
-device		virtio_scsi	# VirtIO SCMI device
+device		virtio_scmi	# VirtIO SCMI device
+device		virtio_scsi	# VirtIO SCSI device
 device		vlan
 device		vt
 device		vt_efifb	# EFI framebuffer
@@ -79,34 +65,28 @@ device		xhci
 device		xz		# xz_embedded LZMA de-compression library
 device		zlib		# gzip/zlib compression/decompression library
 ident		MYARPVPS
-options 	AUDIT
-options 	AUTOFS			#Automounter filesystem
 options 	BPF_JITTER
 options 	CAPABILITIES	# fine-grained rights on file descriptors
 options 	CAPABILITY_MODE	# sandboxes with no global namespace access
 options 	CD9660			#ISO 9660 filesystem
-options 	CD9660_ICONV
 options 	COMPAT_FREEBSD11
 options 	COMPAT_FREEBSD12
 options 	COMPAT_FREEBSD13
 options 	COMPAT_FREEBSD14
+options 	DEVICE_POLLING
 options 	EFIRT
+options 	ENABLE_ALART	# Control alarm on Intel intpm driver
 options 	EVDEV_SUPPORT	# evdev support in legacy drivers
 options 	FDESCFS			#File descriptor filesystem
 options 	FFS			#Fast filesystem
-options 	GEOM_CACHE		# Disk cache.
 options 	GEOM_GATE		# Userland services.
 options 	GEOM_JOURNAL		# Journaling.
 options 	GEOM_LABEL		# Providers labelization.
-options 	GEOM_MAP		# Map based partitioning
 options 	GEOM_PART_BSD		# BSD disklabel
 options 	GEOM_PART_BSD64		# BSD disklabel64
 options 	GEOM_PART_EBR		# Extended Boot Records
 options 	GEOM_PART_GPT		# GPT partitioning
-options 	GEOM_VINUM		# Vinum logical volume manager
-options 	GEOM_VIRSTOR		# Virtual storage.
 options 	GZIO
-options 	HZ=100
 options 	INET			#Internet communications protocols
 options 	INET6			#IPv6 communications protocols
 options 	IOMMU			# Enable IOMMU support
@@ -116,33 +96,24 @@ options 	IPFIREWALL_VERBOSE	#enable logging to syslogd(8)
 options 	IPI_PREEMPTION
 options 	KERN_TLS		# TLS transmit and receive offload
 options 	LIBALIAS
-options 	LIBICONV
 options 	LIBMCHAIN
 options 	MAXCPU=2
 options 	MAXMEMDOM=1
 options 	MSDOSFS			#MS DOS File System (FAT, FAT32)
-options 	MSDOSFS_ICONV
 options 	NETLINK
 options 	NULLFS			#NULL filesystem
-options 	P1003_1B_MQUEUE
-options 	P1003_1B_SEMAPHORES
 options 	PCI_HP			# PCI-Express native HotPlug
 options 	PCI_IOV			# PCI SR-IOV support
 options 	PREEMPTION
 options 	PROCFS			#Process filesystem (requires PSEUDOFS)
 options 	PSEUDOFS		#Pseudo-filesystem framework
 options 	RACCT
-options 	RANDOM_FENESTRASX
 options 	RATELIMIT		# TX rate limiting support
 options 	RCTL
 options 	SCHED_ULE
-options 	SES_ENABLE_PASSTHROUGH
 options 	SMP			# Symmetric MultiProcessor Kernel
 options 	SOFTUPDATES
 options 	STATS
-options 	SYSVMSG
-options 	SYSVSEM
-options 	SYSVSHM
 options 	TCP_OFFLOAD		# TCP offload support.
 options 	TCP_RACK
 options 	TMPFS			#Efficient memory filesystem

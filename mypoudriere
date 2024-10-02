@@ -22,23 +22,15 @@ FreeBSD: {
 EOF
 }
 
-sync_confs() {
-    doas cp \
-    	"$target_confdir/$target_hostname-common-make.conf" \
-    	"$poudriere_etc/$target_hostname-make.conf"
-    doas cp \
-    	"$target_confdir/$target_hostname-src-env.conf" \
-	"$poudriere_etc"
-}
-
 pull_freebsd_src() {
-    if test ! -d /usr/src/.git; then
-        doas git clone \
+    if test ! -d "${freebsd_src}/.git"; then
+        mkdir -p "${freebsd_src}"
+        git clone \
             --origin upstream \
             --branch "$freebsd_branch" \
-            https://git.freebsd.org/src.git /usr/src
+            https://git.freebsd.org/src.git "${freebsd_src}"
     fi
-    doas git -C /usr/src pull upstream "$freebsd_branch" --rebase --autostash
+    git -C "${freebsd_src}" pull upstream "$freebsd_branch" --rebase --autostash
 }
 
 pull_freebsd_ports() {
@@ -79,23 +71,28 @@ cp /etc/sysctl.conf.pkgsave /etc/sysctl.conf || true
 
 build_host_pkgbase() {
     pull_freebsd_src
-    sync_confs
     grep '^[a-z]' "$target_confdir/${target_kernconf}_LINT" \
     	| sort -u \
-    	| tee "$target_confdir/$target_kernconf" \
-    	| doas tee "/usr/src/sys/$target_arch/conf/$target_kernconf" > /dev/null
+    	| tee "$target_confdir/$target_kernconf" "${freebsd_src}/sys/$target_arch/conf/$target_kernconf" > /dev/null
 
-    doas cp \
-    	"$target_confdir/$target_hostname-host-src.conf" \
-    	"$poudriere_etc/$host_pkgbase_builder-src.conf"
+    make -C "${freebsd_src}" -j"$(nproc)" \
+        __MAKE_CONF="$target_confdir/$target_hostname-common-make.conf" \
+        SRCCONF="$target_confdir/$target_hostname-host-src.conf" \
+        SRC_ENV_CONF="$target_confdir/$target_hostname-host-src-env.conf" \
+        KERNCONF="${target_kernconf}" \
+        buildworld buildkernel
 
-    # If the jail already exists, upgrade and build the new pkgbase set.
-    # Otherwise, create the jail.
-    if poudriere jail -l -n -q | grep -q "^${host_pkgbase_builder}\$"; then
-        doas poudriere jail -u -j "$host_pkgbase_builder" -b -z "$target_hostname"
-    else
-        doas poudriere jail -c -j "$host_pkgbase_builder" -b -m src=/usr/src -B -K "$target_kernconf" -z "$target_hostname"
-    fi
+    # TODO file upstream bug for PKG_VERSION issues
+    make -C "${freebsd_src}" \
+        __MAKE_CONF="$target_confdir/$target_hostname-common-make.conf" \
+        SRCCONF="$target_confdir/$target_hostname-host-src.conf" \
+        SRC_ENV_CONF="$target_confdir/$target_hostname-host-src-env.conf" \
+        KERNCONF="${target_kernconf}" \
+        REPODIR="${repodir_prefix}-host" \
+        PKG_VERSION="$freebsd_major_version.snap$(date -u +%Y%m%d%H%M%S)" \
+        stage-packages-world stage-packages-kernel \
+        create-packages-world create-packages-kernel \
+        real-update-packages
 }
 
 build_jail_pkgbase() {
@@ -104,26 +101,30 @@ build_jail_pkgbase() {
     # TODO file upstream bug to figure out the order of target dependencies
     # between 'buildworld' and the stage/create/sign targets
     # For now, use two make invocations
-    # TODO file upstream bug for pkgversion issues
-    _pkgversion="$freebsd_major_version.snap$(date -u +%Y%m%d%H%M%S)"
-    doas make -C /usr/src -j"$(nproc)" \
+    make -C "${freebsd_src}" -j"$(nproc)" \
         __MAKE_CONF="$target_confdir/$target_hostname-common-make.conf" \
         SRCCONF="$target_confdir/$target_hostname-jail-src.conf" \
-        SRC_ENV_CONF="$target_confdir/$target_hostname-src-env.conf" \
+        SRC_ENV_CONF="$target_confdir/$target_hostname-jail-src-env.conf" \
         buildworld
 
-    doas make -C /usr/src \
+    # TODO file upstream bug for PKG_VERSION issues
+    make -C "${freebsd_src}" \
         __MAKE_CONF="$target_confdir/$target_hostname-common-make.conf" \
         SRCCONF="$target_confdir/$target_hostname-jail-src.conf" \
-        SRC_ENV_CONF="$target_confdir/$target_hostname-src-env.conf" \
-        REPODIR="$poudriere_data/images/$jail_pkgbase_builder-repo" \
-        PKG_VERSION="$_pkgversion" \
-        stage-packages-world create-packages-world sign-packages
+        SRC_ENV_CONF="$target_confdir/$target_hostname-jail-src-env.conf" \
+        REPODIR="${repodir_prefix}-jail" \
+        PKG_VERSION="$freebsd_major_version.snap$(date -u +%Y%m%d%H%M%S)" \
+        stage-packages-world create-packages-world real-update-packages
 }
 
 poudriere_options() {
     pull_freebsd_ports
-    sync_confs
+    doas cp \
+        "$target_confdir/$target_hostname-common-make.conf" \
+        "$poudriere_etc/$target_hostname-make.conf"
+    doas cp \
+        "$target_confdir/$target_hostname-src-env.conf" \
+        "$poudriere_etc"
 
     if test ! -d "$poudriere_portoptions" && test -d "$my_portoptions"; then
         doas cp -R "$my_portoptions" "$poudriere_portoptions"
@@ -230,6 +231,8 @@ readonly freebsd_branch
 target_arch="$(uname -p)"
 readonly target_arch
 
+freebsd_src="$HOME/src/freebsd-src"
+
 target_abi="FreeBSD:$freebsd_major_version:$target_arch"
 readonly target_abi
 
@@ -280,20 +283,11 @@ else
 fi
 readonly ports_builder
 
-host_pkgbase_repo="$poudriere_data/images/$host_pkgbase_builder-repo/$target_abi/latest"
-readonly host_pkgbase_repo
-
-jail_pkgbase_repo="$poudriere_data/images/$jail_pkgbase_builder-repo/$target_abi/latest"
-readonly jail_pkgbase_repo
+repodir_prefix="${XDG_CACHE_HOME:-$HOME/.cache}/pkgbase_repos/${target_hostname}"
 
 ports_repo="$poudriere_data/packages/$ports_builder-$ports_tree-$target_hostname"
-readonly ports_repo
-
 poudriere_portoptions="$poudriere_etc/$ports_builder-$ports_tree-$target_hostname-options"
-readonly poudriere_portoptions
-
 my_portoptions="$target_confdir/portoptions"
-readonly my_portoptions
 
 case "$target_hostname" in
   beastie|n100m|x470)
@@ -342,12 +336,12 @@ case "$1" in
   host_pkgbase)
     build_host_pkgbase
     mkdir -p tarballs
-    tar -C "$host_pkgbase_repo" -cvf "tarballs/$target_hostname-host-pkgbase.tar.zst" --zstd --strip-components 1 .
+    tar -C "${repodir_prefix}-host/${target_abi}/latest" -cvf "tarballs/$target_hostname-host-pkgbase.tar.zst" --zstd --strip-components 1 .
     ;;
   jail_pkgbase)
     build_jail_pkgbase
     mkdir -p tarballs
-    tar -C "$jail_pkgbase_repo" -cvf "tarballs/$target_hostname-jail-pkgbase.tar.zst" --zstd --strip-components 1 .
+    tar -C "${repodir_prefix}-jail/${target_abi}/latest" -cvf "tarballs/$target_hostname-jail-pkgbase.tar.zst" --zstd --strip-components 1 .
     ;;
   options)
     poudriere_options
