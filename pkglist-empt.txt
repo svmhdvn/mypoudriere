@@ -1,4 +1,5 @@
-# EMPT packages
+# EMPT requirements
+net/rsync
 sysutils/empt-scripts
 
 # system hardware related stuff

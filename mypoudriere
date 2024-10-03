@@ -1,13 +1,14 @@
 #!/bin/sh
-set -ex
+set -eux
 
 to_kernconf() {
     awk '{printf("MY%s\n", toupper($1))}'
 }
 
 # TODO handle signatures on pkg repos
+# TODO fix this
 print_poudriere_repo_conf() {
-    printf 'poudriere_%s: {\n  url: "file://%s"\n  enabled: yes\n}\n' "$1" "$2"
+    printf '%s: {\n  url: "file://%s"\n  enabled: yes\n}\n' "$1" "$2"
 }
 
 print_freebsd_repo_conf() {
@@ -24,27 +25,24 @@ EOF
 
 pull_freebsd_src() {
     if test ! -d "${freebsd_src}/.git"; then
-        mkdir -p "${freebsd_src}"
-        git clone \
-            --origin upstream \
-            --branch "$freebsd_branch" \
-            https://git.freebsd.org/src.git "${freebsd_src}"
+        git clone git@github.com:svmhdvn/freebsd-src.git "${freebsd_src}"
+        git -C "${freebsd_src}" remote add upstream https://git.freebsd.org/src.git
     fi
-    git -C "${freebsd_src}" pull upstream "$freebsd_branch" --rebase --autostash
+    git -C "${freebsd_src}" pull upstream main --rebase --autostash
 }
 
 pull_freebsd_ports() {
     # TODO setup a downstream EMPT ports repo and rebase from upstream here
-    if test ! -d /usr/ports/.git; then
-        doas git clone \
+    if test ! -d "${freebsd_ports}/.git"; then
+        git clone \
             --origin mymirrors \
             --branch empt \
-            git@github.com:svmhdvn/freebsd-ports.git /usr/ports
-        doas git -C /usr/ports remote add upstream https://git.freebsd.org/ports.git
-        doas poudriere ports -c -p "$ports_tree" -m null -M /usr/ports
+            git@github.com:svmhdvn/freebsd-ports.git "${freebsd_ports}"
+        git -C "${freebsd_ports}" remote add upstream https://git.freebsd.org/ports.git
+        mkdir -p "${XDG_CACHE_HOME:-$HOME/.cache}/distfiles"
+        doas poudriere ports -c -p "$ports_tree" -m null -M "${freebsd_ports}"
     fi
-    doas git -C /usr/ports pull upstream main --autostash --rebase
-    doas mkdir -p /usr/ports/distfiles
+    git -C "${freebsd_ports}" pull upstream main --rebase --autostash
 }
 
 # TODO find a cleaner way to do this
@@ -53,13 +51,13 @@ local_pkgbase_upgrade() {
     # NOTE needs to maintain root for the entirety of this command to avoid
     # obliterating the /etc/passwd file
     doas sh -c "
-env ABI=$target_abi IGNORE_OSVERSION=yes pkg install -y -r poudriere_pkgbase -g 'FreeBSD-*'
+env ABI=${target_abi} IGNORE_OSVERSION=yes pkg install -y -r pkgbase -g 'FreeBSD-*'
 if test -r /etc/master.passwd.pkgsave || test -r /etc/group.pkgsave; then
     cp /etc/master.passwd.pkgsave /etc/master.passwd || true
     cp /etc/group.pkgsave /etc/group || true
     pwd_mkdb -p /etc/master.passwd
 fi
-cp /etc/sysctl.conf.pkgsave /etc/sysctl.conf || true
+test -r /etc/sysctl.conf.pkgsave || cp /etc/sysctl.conf.pkgsave /etc/sysctl.conf
 "
 
     doas find / -name '*.pkgsave' | \
@@ -122,9 +120,6 @@ poudriere_options() {
     doas cp \
         "$target_confdir/$target_hostname-common-make.conf" \
         "$poudriere_etc/$target_hostname-make.conf"
-    doas cp \
-        "$target_confdir/$target_hostname-src-env.conf" \
-        "$poudriere_etc"
 
     if test ! -d "$poudriere_portoptions" && test -d "$my_portoptions"; then
         doas cp -R "$my_portoptions" "$poudriere_portoptions"
@@ -224,14 +219,12 @@ readonly freebsd_major_version
 freebsd_minor_version=0
 readonly freebsd_minor_version
 
-freebsd_branch="main"
-readonly freebsd_branch
-
 # NOTE support other architectures when the need arises
 target_arch="$(uname -p)"
 readonly target_arch
 
 freebsd_src="$HOME/src/freebsd-src"
+freebsd_ports="$HOME/src/freebsd-ports"
 
 target_abi="FreeBSD:$freebsd_major_version:$target_arch"
 readonly target_abi
@@ -276,21 +269,16 @@ readonly jail_pkgbase_builder
 #builder_kernconf="$(echo "$builder_hostname" | to_kernconf)"
 #readonly builder_kernconf
 #ports_builder="poudriere_${freebsd_branch}_${builder_kernconf}"
-if test "$(hostname)" = "$target_hostname"; then
-    ports_builder="$host_pkgbase_builder"
-else
-    ports_builder="r${freebsd_major_version}${freebsd_minor_version}${target_arch}"
-fi
-readonly ports_builder
+ports_builder="r${freebsd_major_version}${freebsd_minor_version}${target_arch}"
 
 repodir_prefix="${XDG_CACHE_HOME:-$HOME/.cache}/pkgbase_repos/${target_hostname}"
-
 ports_repo="$poudriere_data/packages/$ports_builder-$ports_tree-$target_hostname"
+
 poudriere_portoptions="$poudriere_etc/$ports_builder-$ports_tree-$target_hostname-options"
 my_portoptions="$target_confdir/portoptions"
 
 case "$target_hostname" in
-  beastie|n100m|x470)
+  x470)
     ports_pkglist=pkglist-builder.txt
     ;;
   cl100|wyse*)
@@ -304,7 +292,6 @@ case "$target_hostname" in
     echo "usage: $0 <command> <hostname>" >&2
     exit 1
 esac
-readonly ports_pkglist
 
 case "$1" in
   bootstrap1)
@@ -320,18 +307,17 @@ case "$1" in
   upgrade2)
     poudriere_options
     poudriere_bulk
-    doas pkg upgrade -y -r poudriere_ports
+    doas pkg upgrade -y -r ports
     ;;
   upgrade_builder)
-    # TODO this comment doesn't make sense.
-    # If the jail already exists, upgrade to latest upstream image.
-    # Otherwise, create the jail.
-    if poudriere jail -l -n -q | grep -q "^${ports_builder}\$"; then
-        # TODO figure out the right builder jail update strategy
-        doas poudriere jail -y -d -j "$ports_builder"
-        #poudriere jail -u -j "$ports_builder"
+    if poudriere jail -i -j "${ports_builder}"; then
+        doas poudriere jail -u -j "$ports_builder"
+    else
+        # TODO
+        #doas poudriere jail -c -j "$ports_builder" \
+        #    -v "${freebsd_major_version}.${freebsd_minor_version}-CURRENT" \
+        #    -m pkgbase=
     fi
-    doas poudriere jail -c -j "$ports_builder" -v "${freebsd_major_version}.${freebsd_minor_version}-CURRENT"
     ;;
   host_pkgbase)
     build_host_pkgbase
@@ -350,17 +336,17 @@ case "$1" in
     poudriere_bulk
     ;;
   hostconfig)
-    make -C /usr/src \
+    make -C "${freebsd_src}" \
         __MAKE_CONF="$target_confdir/$target_hostname-common-make.conf" \
         SRCCONF="$target_confdir/$target_hostname-host-src.conf" \
-        SRC_ENV_CONF="$target_confdir/$target_hostname-src-env.conf" \
+        SRC_ENV_CONF="$target_confdir/$target_hostname-host-src-env.conf" \
         showconfig
     ;;
   jailconfig)
-    make -C /usr/src \
+    make -C "${freebsd_src}" \
         __MAKE_CONF="$target_confdir/$target_hostname-common-make.conf" \
         SRCCONF="$target_confdir/$target_hostname-jail-src.conf" \
-        SRC_ENV_CONF="$target_confdir/$target_hostname-src-env.conf" \
+        SRC_ENV_CONF="$target_confdir/$target_hostname-jail-src-env.conf" \
         showconfig
     ;;
   ports)
@@ -368,8 +354,6 @@ case "$1" in
     poudriere_bulk
     ;;
   destroy)
-    doas poudriere jail -d -j "$host_pkgbase_builder" -C all -y || true
-    doas poudriere jail -d -j "$jail_pkgbase_builder" -C all -y || true
     doas rm -f \
         "$poudriere_etc/$target_hostname"-*.conf \
         "$poudriere_etc/$ports_tree-$target_hostname"-*.conf \
