@@ -1,4 +1,5 @@
 # EMPT requirements
+net/dhcpcd
 net/rsync
 sysutils/empt-scripts
 

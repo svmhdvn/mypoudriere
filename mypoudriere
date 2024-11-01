@@ -57,7 +57,7 @@ if test -r /etc/master.passwd.pkgsave || test -r /etc/group.pkgsave; then
     cp /etc/group.pkgsave /etc/group || true
     pwd_mkdb -p /etc/master.passwd
 fi
-test -r /etc/sysctl.conf.pkgsave || cp /etc/sysctl.conf.pkgsave /etc/sysctl.conf
+test -r /etc/sysctl.conf.pkgsave && cp /etc/sysctl.conf.pkgsave /etc/sysctl.conf
 "
 
     doas find / -name '*.pkgsave' | \
@@ -278,19 +278,14 @@ poudriere_portoptions="$poudriere_etc/$ports_builder-$ports_tree-$target_hostnam
 my_portoptions="$target_confdir/portoptions"
 
 case "$target_hostname" in
-  x470)
-    ports_pkglist=pkglist-builder.txt
-    ;;
-  cl100|wyse*)
-    ports_pkglist=pkglist-empt.txt
-    ;;
-  arpvps)
-    ports_pkglist=pkglist-arpvps.txt
-    ;;
+  x470|n100m) ports_pkglist=pkglist-builder.txt ;;
+  cl100|wyse*) ports_pkglist=pkglist-empt.txt ;;
+  arpvps) ports_pkglist=pkglist-arpvps.txt ;;
   *)
     echo "unsupported target host: $target_hostname" >&2
     echo "usage: $0 <command> <hostname>" >&2
     exit 1
+    ;;
 esac
 
 case "$1" in
@@ -317,6 +312,7 @@ case "$1" in
         #doas poudriere jail -c -j "$ports_builder" \
         #    -v "${freebsd_major_version}.${freebsd_minor_version}-CURRENT" \
         #    -m pkgbase=
+        true
     fi
     ;;
   host_pkgbase)
@@ -328,6 +324,15 @@ case "$1" in
     build_jail_pkgbase
     mkdir -p tarballs
     tar -C "${repodir_prefix}-jail/${target_abi}/latest" -cvf "tarballs/$target_hostname-jail-pkgbase.tar.zst" --zstd --strip-components 1 .
+    ;;
+  update_remote_repos)
+    # NOTE:
+    # * the trailing slashes for rsync are required to update the directory contents
+    # * the target hostname MUST be set as an SSH host alias in ~/.ssh/config
+    # TODO turn all of these rsync calls into one call
+    rsync -Pacv --delete "${repodir_prefix}-host/${target_abi}/latest"/ "${target_hostname}:.cache/repos/host_pkgbase"/
+    rsync -Pacv --delete "${repodir_prefix}-jail/${target_abi}/latest"/ "${target_hostname}:.cache/repos/jail_pkgbase"/
+    rsync -Pacv --delete "$ports_repo/.latest"/ "${target_hostname}:.cache/repos/ports"/
     ;;
   options)
     poudriere_options
