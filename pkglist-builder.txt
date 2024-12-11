@@ -30,3 +30,7 @@ textproc/ripgrep
 
 # TODO add back once dependency on 'sudo' is removed
 #ports-mgmt/porttools
+
+# TODO tmp
+empt/empt-tmp-test
+#www/npm
