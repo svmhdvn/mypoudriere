@@ -142,8 +142,8 @@ poudriere_options() {
 poudriere_bulk() {
     doas poudriere bulk -j "$ports_builder" -p "$ports_tree" -z "$target_hostname" -f "$ports_pkglist"
     doas poudriere pkgclean -y -j "$ports_builder" -p "$ports_tree" -z "$target_hostname" -f "$ports_pkglist"
-    mkdir -p tarballs
-    tar -C "$ports_repo/.latest" -cvf "tarballs/${target_hostname}-ports.tar.zst" --zstd --strip-components 1 .
+    mkdir -p "${tarballs}"
+    tar -C "$ports_repo/.latest" -cvf "${tarballs}/${target_hostname}-ports.tar.zst" --zstd --strip-components 1 .
 }
 
 bootstrap_step1() {
@@ -271,11 +271,14 @@ readonly jail_pkgbase_builder
 #ports_builder="poudriere_${freebsd_branch}_${builder_kernconf}"
 ports_builder="r${freebsd_major_version}${freebsd_minor_version}${target_arch}"
 
+# TODO move to ~/.cache/mypoudriere
 repodir_prefix="${XDG_CACHE_HOME:-$HOME/.cache}/pkgbase_repos/${target_hostname}"
 ports_repo="$poudriere_data/packages/$ports_builder-$ports_tree-$target_hostname"
 
 poudriere_portoptions="$poudriere_etc/$ports_builder-$ports_tree-$target_hostname-options"
 my_portoptions="$target_confdir/portoptions"
+
+tarballs="${XDG_CACHE_HOME:-$HOME/.cache}/mypoudriere/tarballs"
 
 case "$target_hostname" in
   x470|n100m) ports_pkglist=pkglist-builder.txt ;;
@@ -317,13 +320,13 @@ case "$1" in
     ;;
   host_pkgbase)
     build_host_pkgbase
-    mkdir -p tarballs
-    tar -C "${repodir_prefix}-host/${target_abi}/latest" -cvf "tarballs/$target_hostname-host-pkgbase.tar.zst" --zstd --strip-components 1 .
+    mkdir -p "${tarballs}"
+    tar -C "${repodir_prefix}-host/${target_abi}/latest" -cvf "${tarballs}/${target_hostname}-host-pkgbase.tar.zst" --zstd --strip-components 1 .
     ;;
   jail_pkgbase)
     build_jail_pkgbase
-    mkdir -p tarballs
-    tar -C "${repodir_prefix}-jail/${target_abi}/latest" -cvf "tarballs/$target_hostname-jail-pkgbase.tar.zst" --zstd --strip-components 1 .
+    mkdir -p "${tarballs}"
+    tar -C "${repodir_prefix}-jail/${target_abi}/latest" -cvf "${tarballs}/${target_hostname}-jail-pkgbase.tar.zst" --zstd --strip-components 1 .
     ;;
   update_remote_repos)
     # NOTE:
@@ -370,7 +373,7 @@ case "$1" in
         "$poudriere_data/images/$host_pkgbase_builder-repo" \
         "$poudriere_data/images/$jail_pkgbase_builder-repo" \
         "$ports_repo"
-    rm -f tarballs/"$target_hostname"-*.tar.zst
+    rm -f "${tarballs}/${target_hostname}"-*.tar.zst
     ;;
   *)
     echo "unsupported command: $1" >&2
