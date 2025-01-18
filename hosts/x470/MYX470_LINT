@@ -92,11 +92,11 @@ ident		MYX470
 # The soft limits can be modified during normal system operation, but
 # the hard limits are set at boot time.  Their default values are
 # in sys/<arch>/include/vmparam.h.  There are two ways to change them:
-# 
+#
 # 1.  Set the values at kernel build time.  The options below are one
 #     way to allow that limit to grow to 1GB.  They can be increased
 #     further by changing the parameters:
-#	
+#
 # 2.  In /boot/loader.conf, set the tunables kern.maxswzone,
 #     kern.maxbcache, kern.maxtsiz, kern.dfldsiz, kern.maxdsiz,
 #     kern.dflssiz, kern.maxssiz and kern.sgrowsiz.
@@ -176,7 +176,7 @@ options 	GEOM_PART_MBR		# MBR partitioning
 #options 	GEOM_RAID3		# RAID3 functionality.
 #options 	GEOM_SHSEC		# Shared secret.
 options 	GEOM_STRIPE		# Disk striping.
-#options 	GEOM_UZIP		# Read-only compressed disks
+options 	GEOM_UZIP		# Read-only compressed disks
 #options 	GEOM_VINUM		# Vinum logical volume manager
 #options 	GEOM_VIRSTOR		# Virtual storage.
 #options 	GEOM_ZERO		# Performance testing helper.
@@ -202,7 +202,7 @@ options 	GEOM_STRIPE		# Disk striping.
 #
 # SCHED_ULE provides significant performance advantages over 4BSD on many
 # workloads on SMP machines.  It supports cpu-affinity, per-cpu runqueues
-# and scheduler locks.  It also has a stronger notion of interactivity 
+# and scheduler locks.  It also has a stronger notion of interactivity
 # which leads to better responsiveness even on uniprocessor machines.  This
 # is the default scheduler.
 #
@@ -296,7 +296,7 @@ options 	MAXMEMDOM=1
 #	  frequency.
 # TURNSTILE_PROFILING enables rudimentary profiling of the hash table
 #	  used to hold active lock queues.
-# UMTX_PROFILING enables rudimentary profiling of the hash table used 
+# UMTX_PROFILING enables rudimentary profiling of the hash table used
 #	  to hold active lock queues.
 # WITNESS enables the witness code which detects deadlocks and cycles
 #         during locking operations.
@@ -356,8 +356,7 @@ options 	MAXMEMDOM=1
 #options 	COMPAT_FREEBSD10
 
 # Enable FreeBSD11 compatibility syscalls
-# TODO SIVA waiting on https://github.com/rust-lang/rust/issues/89058
-options 	COMPAT_FREEBSD11
+#options 	COMPAT_FREEBSD11
 
 # Enable FreeBSD12 compatibility syscalls
 options 	COMPAT_FREEBSD12
@@ -682,11 +681,11 @@ options  	TCP_RFC7413		# TCP Fast Open
 
 options  	TCPHPTS
 
-# In order to enable IPSEC you MUST also add device crypto to 
+# In order to enable IPSEC you MUST also add device crypto to
 # your kernel configuration
 #options 	IPSEC			#IP security (requires device crypto)
 
-# Option IPSEC_SUPPORT does not enable IPsec, but makes it possible to 
+# Option IPSEC_SUPPORT does not enable IPsec, but makes it possible to
 # load it as a kernel module. You still MUST add device crypto to your kernel
 # configuration.
 #options 	IPSEC_SUPPORT
@@ -724,7 +723,7 @@ options 	LIBALIAS
 # and is quite well tested.
 #
 # Note YOU MUST have both INET and INET6 defined.
-# You don't have to enable V6, but SCTP is 
+# You don't have to enable V6, but SCTP is
 # dual stacked and so far we have not torn apart
 # the V6 and V4.. since an association can span
 # both a V6 and V4 address at the SAME time :-)
@@ -752,9 +751,9 @@ options 	LIBALIAS
 # All that options after that turn on specific types of
 # logging. You can monitor CWND growth, flight size
 # and all sorts of things. Go look at the code and
-# see. I have used this to produce interesting 
+# see. I have used this to produce interesting
 # charts and graphs as well :->
-# 
+#
 # I have not yet committed the tools to get and print
 # the logs, I will do that eventually .. before then
 # if you want them send me an email rrs@freebsd.org
@@ -875,8 +874,7 @@ device		ether
 
 #  The `vlan' device implements the VLAN tagging of Ethernet frames
 #  according to IEEE 802.1Q.
-# TODO SIVA do we need this?
-device		vlan
+#device		vlan
 
 # The `vxlan' device implements the VXLAN encapsulation of Ethernet
 # frames in UDP packets according to RFC7348.
@@ -1526,7 +1524,6 @@ device		pci
 #options 	KBD_DELAY1=200		# define initial key delay
 #options 	KBD_DELAY2=15		# define key delay
 
-# TODO SIVA do we need this?
 device		kbdmux			# keyboard multiplexer
 #options 	KBDMUX_DFLT_KEYMAP	# specify the built-in keymap
 #makeoptions	KBDMUX_DFLT_KEYMAP=it.iso
@@ -2360,7 +2357,7 @@ device		jedec_dimm
 #
 # etherswitch	The etherswitch(4) framework
 # miiproxy	Proxy device for miibus(4) functionality
-# 
+#
 # Switch hardware support:
 # arswitch	Atheros switches
 # ip17x 	IC+ 17x family switches
@@ -2595,7 +2592,7 @@ device		usbhid
 # Sierra USB wireless driver
 #device		usie
 
-# 
+#
 # debugging options for the USB subsystem
 #
 #options 	USB_DEBUG
@@ -3045,6 +3042,9 @@ device		acpi_wmi
 
 # ACPI Panasonic Extras (LCD backlight/brightness, video output, etc.)
 #device		acpi_panasonic
+
+# ACPI SBL Firmware Update
+#device		acpi_sbl_wmi
 
 # ACPI Sony extra (LCD brightness)
 #device		acpi_sony
