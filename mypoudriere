@@ -1,4 +1,5 @@
 #!/bin/sh
+
 set -eux
 
 to_kernconf() {
@@ -39,8 +40,8 @@ pull_freebsd_ports() {
             --branch empt \
             git@github.com:svmhdvn/freebsd-ports.git "${freebsd_ports}"
         git -C "${freebsd_ports}" remote add upstream https://git.freebsd.org/ports.git
-        mkdir -p "${XDG_CACHE_HOME:-$HOME/.cache}/distfiles"
-        doas poudriere ports -c -p "$ports_tree" -m null -M "${freebsd_ports}"
+        mkdir -p "${cache}/distfiles"
+        doas poudriere ports -c -p "${ports_tree}" -m null -M "${freebsd_ports}"
     fi
     git -C "${freebsd_ports}" pull upstream main --rebase --autostash
 }
@@ -69,25 +70,25 @@ test -r /etc/sysctl.conf.pkgsave && cp /etc/sysctl.conf.pkgsave /etc/sysctl.conf
 
 build_host_pkgbase() {
     pull_freebsd_src
-    grep '^[a-z]' "$target_confdir/${target_kernconf}_LINT" \
+    grep '^[a-z]' "${target_confdir}/${target_kernconf}_LINT" \
     	| sort -u \
-    	| tee "$target_confdir/$target_kernconf" "${freebsd_src}/sys/$target_arch/conf/$target_kernconf" > /dev/null
+    	| tee "${target_confdir}/${target_kernconf}" "${freebsd_src}/sys/${target_arch}/conf/${target_kernconf}" > /dev/null
 
-    make -C "${freebsd_src}" -j"$(nproc)" \
-        __MAKE_CONF="$target_confdir/$target_hostname-common-make.conf" \
-        SRCCONF="$target_confdir/$target_hostname-host-src.conf" \
-        SRC_ENV_CONF="$target_confdir/$target_hostname-host-src-env.conf" \
+    make -C "${freebsd_src}" -j"${nproc}" \
+        __MAKE_CONF="${target_confdir}/${target_hostname}-common-make.conf" \
+        SRCCONF="${target_confdir}/${target_hostname}-host-src.conf" \
+        SRC_ENV_CONF="${target_confdir}/${target_hostname}-host-src-env.conf" \
         KERNCONF="${target_kernconf}" \
         buildworld buildkernel
 
     # TODO file upstream bug for PKG_VERSION issues
     make -C "${freebsd_src}" \
-        __MAKE_CONF="$target_confdir/$target_hostname-common-make.conf" \
-        SRCCONF="$target_confdir/$target_hostname-host-src.conf" \
-        SRC_ENV_CONF="$target_confdir/$target_hostname-host-src-env.conf" \
+        __MAKE_CONF="${target_confdir}/${target_hostname}-common-make.conf" \
+        SRCCONF="${target_confdir}/${target_hostname}-host-src.conf" \
+        SRC_ENV_CONF="${target_confdir}/${target_hostname}-host-src-env.conf" \
         KERNCONF="${target_kernconf}" \
         REPODIR="${repodir_prefix}-host" \
-        PKG_VERSION="$freebsd_major_version.snap$(date -u +%Y%m%d%H%M%S)" \
+        PKG_VERSION="${pkgbase_version}" \
         stage-packages-world stage-packages-kernel \
         create-packages-world create-packages-kernel \
         real-update-packages
@@ -99,51 +100,51 @@ build_jail_pkgbase() {
     # TODO file upstream bug to figure out the order of target dependencies
     # between 'buildworld' and the stage/create/sign targets
     # For now, use two make invocations
-    make -C "${freebsd_src}" -j"$(nproc)" \
-        __MAKE_CONF="$target_confdir/$target_hostname-common-make.conf" \
-        SRCCONF="$target_confdir/$target_hostname-jail-src.conf" \
-        SRC_ENV_CONF="$target_confdir/$target_hostname-jail-src-env.conf" \
+    make -C "${freebsd_src}" -j"${nproc}" \
+        __MAKE_CONF="${target_confdir}/${target_hostname}-common-make.conf" \
+        SRCCONF="${target_confdir}/${target_hostname}-jail-src.conf" \
+        SRC_ENV_CONF="${target_confdir}/${target_hostname}-jail-src-env.conf" \
         buildworld
 
     # TODO file upstream bug for PKG_VERSION issues
     make -C "${freebsd_src}" \
-        __MAKE_CONF="$target_confdir/$target_hostname-common-make.conf" \
-        SRCCONF="$target_confdir/$target_hostname-jail-src.conf" \
-        SRC_ENV_CONF="$target_confdir/$target_hostname-jail-src-env.conf" \
+        __MAKE_CONF="${target_confdir}/${target_hostname}-common-make.conf" \
+        SRCCONF="${target_confdir}/${target_hostname}-jail-src.conf" \
+        SRC_ENV_CONF="${target_confdir}/${target_hostname}-jail-src-env.conf" \
         REPODIR="${repodir_prefix}-jail" \
-        PKG_VERSION="$freebsd_major_version.snap$(date -u +%Y%m%d%H%M%S)" \
+        PKG_VERSION="${pkgbase_version}" \
         stage-packages-world create-packages-world real-update-packages
 }
 
 poudriere_options() {
     pull_freebsd_ports
     doas cp \
-        "$target_confdir/$target_hostname-common-make.conf" \
-        "$poudriere_etc/$target_hostname-make.conf"
+        "${target_confdir}/${target_hostname}-common-make.conf" \
+        "${poudriere_etc}/${target_hostname}-make.conf"
 
-    if test ! -d "$poudriere_portoptions" && test -d "$my_portoptions"; then
-        doas cp -R "$my_portoptions" "$poudriere_portoptions"
+    if test ! -d "${poudriere_portoptions}" && test -d "${my_portoptions}"; then
+        doas cp -R "${my_portoptions}" "${poudriere_portoptions}"
     fi
 
     # Only use our portoptions make.conf for options directory creation. This
     # prevents the defaults from overriding the options directory during a
     # poudriere bulk run.
     doas cp \
-        "$target_confdir/$target_hostname-portoptions-make.conf" \
-        "$poudriere_etc/$ports_tree-$target_hostname-make.conf"
-    doas poudriere options -j "$ports_builder" -p "$ports_tree" -z "$target_hostname" -f "$ports_pkglist"
-    doas rm -f "$poudriere_etc/$ports_tree-$target_hostname-make.conf"
+        "${target_confdir}/${target_hostname}-portoptions-make.conf" \
+        "${poudriere_etc}/${ports_tree}-${target_hostname}-make.conf"
+    doas poudriere options -j "${ports_builder}" -p "${ports_tree}" -z "${target_hostname}" -f "${ports_pkglist}"
+    doas rm -f "${poudriere_etc}/${ports_tree}-${target_hostname}-make.conf"
 
     # Treat the poudriere_etc options directory as the ground truth.
-    rm -rf "$my_portoptions"
-    cp -R "$poudriere_portoptions" "$my_portoptions"
+    rm -rf "${my_portoptions}"
+    cp -R "${poudriere_portoptions}" "${my_portoptions}"
 }
 
 poudriere_bulk() {
-    doas poudriere bulk -j "$ports_builder" -p "$ports_tree" -z "$target_hostname" -f "$ports_pkglist"
-    doas poudriere pkgclean -y -j "$ports_builder" -p "$ports_tree" -z "$target_hostname" -f "$ports_pkglist"
+    doas poudriere bulk -j "${ports_builder}" -p "${ports_tree}" -z "${target_hostname}" -f "${ports_pkglist}"
+    doas poudriere pkgclean -y -j "${ports_builder}" -p "${ports_tree}" -z "${target_hostname}" -f "${ports_pkglist}"
     mkdir -p "${tarballs}"
-    tar -C "$ports_repo/.latest" -cvf "${tarballs}/${target_hostname}-ports.tar.zst" --zstd --strip-components 1 .
+    tar -C "${ports_repo}/.latest" -cvf "${tarballs}/${target_hostname}-ports.tar.zst" --zstd --strip-components 1 .
 }
 
 bootstrap_step1() {
@@ -192,7 +193,8 @@ bootstrap_step1() {
 
     # 4) convert system into a pkgbase installation
     doas mkdir -p /usr/local/etc/pkg/repos
-    print_poudriere_repo_conf pkgbase "$host_pkgbase_repo" | doas tee /usr/local/etc/pkg/repos/poudriere_pkgbase.conf > /dev/null
+    # TODO fix this undefined host_pkgbase_repo variable
+    print_poudriere_repo_conf pkgbase "${host_pkgbase_repo}" | doas tee /usr/local/etc/pkg/repos/poudriere_pkgbase.conf > /dev/null
 
     doas env ABI="${target_abi}" IGNORE_OSVERSION=yes pkg install -y -r poudriere_pkgbase -g 'FreeBSD-*'
     local_pkgbase_upgrade
@@ -204,59 +206,52 @@ bootstrap_step2() {
     poudriere_bulk
 
     # 6) reinstall all system pkgs with the new poudriere repo
-    print_poudriere_repo_conf ports "$ports_repo" | doas tee /usr/local/etc/pkg/repos/poudriere_ports.conf > /dev/null
+    print_poudriere_repo_conf ports "${ports_repo}" | doas tee /usr/local/etc/pkg/repos/poudriere_ports.conf > /dev/null
     print_freebsd_repo_conf | doas tee /usr/local/etc/pkg/repos/FreeBSD.conf > /dev/null
 
     doas pkg upgrade -y -r poudriere_ports -f
 }
 
-top="$(cd "$(dirname "$0")" && pwd)"
-readonly top
+target_hostname="$(hostname)"
+while getopts h: name
+do
+  case "${name}" in
+    h) target_hostname="${OPTARG}" ;;
+    ?)
+      echo "Usage: $0: [-h host] command" >&2
+      exit 64 # EX_USAGE
+      ;;
+    *) ;;
+  esac
+done
+shift $((OPTIND - 1))
 
-freebsd_major_version=15
-readonly freebsd_major_version
+realpath="$(realpath "$0")"
+top="$(dirname "${realpath}")"
+cache="${XDG_CACHE_HOME:-${HOME}/.cache}"
 
-freebsd_minor_version=0
-readonly freebsd_minor_version
-
-# NOTE support other architectures when the need arises
+# TODO support other architectures when the need arises
 target_arch="$(uname -p)"
-readonly target_arch
+freebsd_major_version=15
+freebsd_minor_version=0
+target_abi="FreeBSD:${freebsd_major_version}:${target_arch}"
 
-freebsd_src="$HOME/src/freebsd-src"
-freebsd_ports="$HOME/src/freebsd-ports"
-
-target_abi="FreeBSD:$freebsd_major_version:$target_arch"
-readonly target_abi
+freebsd_src="${HOME}/src/freebsd-src"
+freebsd_ports="${HOME}/src/freebsd-ports"
 
 # NOTE use this to determine a system's CPUTYPE, then add it to a make.conf
 # inside the hosts/ directory
 #cputype="$(cc -v -x c -E -march=native /dev/null 2>&1 | sed -n 's/.*-target-cpu *\([^ ]*\).*/\1/p')"
 
 poudriere_etc=/usr/local/etc/poudriere.d
-readonly poudriere_etc
-
 poudriere_data=/usr/local/poudriere/data
-readonly poudriere_data
 
 # TODO change to a more descriptive name, like "empt_ports" or something
 ports_tree=default
-readonly ports_tree
-
-target_hostname="${2:-$(hostname)}"
-readonly target_hostname
-
-target_confdir="$top/hosts/$target_hostname"
-readonly target_confdir
-
-target_kernconf="$(echo "$target_hostname" | to_kernconf)"
-readonly target_kernconf
-
+target_confdir="${top}/hosts/${target_hostname}"
+target_kernconf="$(echo "${target_hostname}" | to_kernconf)"
 host_pkgbase_builder="h${freebsd_major_version}${target_kernconf}"
-readonly host_pkgbase_builder
-
 jail_pkgbase_builder="j${freebsd_major_version}${target_kernconf}"
-readonly jail_pkgbase_builder
 
 # TODO pkg-static is unfortunately built as part of ports-mgmt/pkg. This means
 # that the builder jail's base system libraries get statically linked into
@@ -267,29 +262,21 @@ readonly jail_pkgbase_builder
 # jail instead of the custom host
 # jail (even though we really should build using the host jail for maximum building performance).
 #builder_kernconf="$(echo "$builder_hostname" | to_kernconf)"
-#readonly builder_kernconf
 #ports_builder="poudriere_${freebsd_branch}_${builder_kernconf}"
 ports_builder="r${freebsd_major_version}${freebsd_minor_version}${target_arch}"
 
 # TODO move to ~/.cache/mypoudriere
-repodir_prefix="${XDG_CACHE_HOME:-$HOME/.cache}/pkgbase_repos/${target_hostname}"
-ports_repo="$poudriere_data/packages/$ports_builder-$ports_tree-$target_hostname"
+repodir_prefix="${cache}/pkgbase_repos/${target_hostname}"
+ports_repo="${poudriere_data}/packages/${ports_builder}-${ports_tree}-${target_hostname}"
 
-poudriere_portoptions="$poudriere_etc/$ports_builder-$ports_tree-$target_hostname-options"
-my_portoptions="$target_confdir/portoptions"
+poudriere_portoptions="${poudriere_etc}/${ports_builder}-${ports_tree}-${target_hostname}-options"
+my_portoptions="${target_confdir}/portoptions"
 
-tarballs="${XDG_CACHE_HOME:-$HOME/.cache}/mypoudriere/tarballs"
+tarballs="${cache}/mypoudriere/tarballs"
+ports_pkglist="${top}/hosts/${target_hostname}/pkglist.txt"
 
-case "$target_hostname" in
-  x470|n100m) ports_pkglist=pkglist-builder.txt ;;
-  cl100|wyse*) ports_pkglist=pkglist-empt.txt ;;
-  arpvps) ports_pkglist=pkglist-arpvps.txt ;;
-  *)
-    echo "unsupported target host: $target_hostname" >&2
-    echo "usage: $0 <command> <hostname>" >&2
-    exit 1
-    ;;
-esac
+nproc="$(nproc)"
+pkgbase_version="${freebsd_major_version}.snap$(date -u +%Y%m%d%H%M%S)"
 
 case "$1" in
   bootstrap1)
@@ -309,10 +296,10 @@ case "$1" in
     ;;
   upgrade_builder)
     if poudriere jail -i -j "${ports_builder}"; then
-        doas poudriere jail -u -j "$ports_builder"
+        doas poudriere jail -u -j "${ports_builder}"
     else
         # TODO
-        #doas poudriere jail -c -j "$ports_builder" \
+        #doas poudriere jail -c -j "${ports_builder}" \
         #    -v "${freebsd_major_version}.${freebsd_minor_version}-CURRENT" \
         #    -m pkgbase=
         true
@@ -335,7 +322,7 @@ case "$1" in
     # TODO turn all of these rsync calls into one call
     rsync -Pacv --delete "${repodir_prefix}-host/${target_abi}/latest"/ "${target_hostname}:.cache/repos/host_pkgbase"/
     rsync -Pacv --delete "${repodir_prefix}-jail/${target_abi}/latest"/ "${target_hostname}:.cache/repos/jail_pkgbase"/
-    rsync -Pacv --delete "$ports_repo/.latest"/ "${target_hostname}:.cache/repos/ports"/
+    rsync -Pacv --delete "${ports_repo}/.latest"/ "${target_hostname}:.cache/repos/ports"/
     ;;
   options)
     poudriere_options
@@ -345,16 +332,16 @@ case "$1" in
     ;;
   hostconfig)
     make -C "${freebsd_src}" \
-        __MAKE_CONF="$target_confdir/$target_hostname-common-make.conf" \
-        SRCCONF="$target_confdir/$target_hostname-host-src.conf" \
-        SRC_ENV_CONF="$target_confdir/$target_hostname-host-src-env.conf" \
+        __MAKE_CONF="${target_confdir}/${target_hostname}-common-make.conf" \
+        SRCCONF="${target_confdir}/${target_hostname}-host-src.conf" \
+        SRC_ENV_CONF="${target_confdir}/${target_hostname}-host-src-env.conf" \
         showconfig
     ;;
   jailconfig)
     make -C "${freebsd_src}" \
-        __MAKE_CONF="$target_confdir/$target_hostname-common-make.conf" \
-        SRCCONF="$target_confdir/$target_hostname-jail-src.conf" \
-        SRC_ENV_CONF="$target_confdir/$target_hostname-jail-src-env.conf" \
+        __MAKE_CONF="${target_confdir}/${target_hostname}-common-make.conf" \
+        SRCCONF="${target_confdir}/${target_hostname}-jail-src.conf" \
+        SRC_ENV_CONF="${target_confdir}/${target_hostname}-jail-src-env.conf" \
         showconfig
     ;;
   ports)
@@ -363,20 +350,18 @@ case "$1" in
     ;;
   destroy)
     doas rm -f \
-        "$poudriere_etc/$target_hostname"-*.conf \
-        "$poudriere_etc/$ports_tree-$target_hostname"-*.conf \
-        "$poudriere_etc/$host_pkgbase_builder"-*.conf \
-        "$poudriere_etc/$jail_pkgbase_builder"-*.conf
-
-    doas rm -rf \
-        "$poudriere_portoptions" \
-        "$poudriere_data/images/$host_pkgbase_builder-repo" \
-        "$poudriere_data/images/$jail_pkgbase_builder-repo" \
-        "$ports_repo"
-    rm -f "${tarballs}/${target_hostname}"-*.tar.zst
+      "${poudriere_etc}/${target_hostname}"-*.conf \
+      "${poudriere_etc}/${ports_tree}-${target_hostname}"-*.conf \
+      "${poudriere_etc}/${host_pkgbase_builder}"-*.conf \
+      "${poudriere_etc}/${jail_pkgbase_builder}"-*.conf \
+      "${poudriere_portoptions}" \
+      "${poudriere_data}/images/${host_pkgbase_builder}-repo" \
+      "${poudriere_data}/images/${jail_pkgbase_builder}-repo" \
+      "${ports_repo}" \
+      "${tarballs}/${target_hostname}"-*.tar.zst
     ;;
   *)
-    echo "unsupported command: $1" >&2
-    exit 1
+    echo "unknown command: '$1'" >&2
+    exit 64 # EX_USAGE
     ;;
 esac

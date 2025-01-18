@@ -3,24 +3,23 @@ net/dhcpcd
 net/rsync
 
 # EMPT core packages
-empt/empt-acme
-empt/empt-base
+#empt/empt-acme
+#empt/empt-base
 #empt/empt-helpdesk
-empt/empt-host-cifs
-empt/empt-host-dns
-empt/empt-host-irc
-empt/empt-host-kerberos
-empt/empt-host-mail
-empt/empt-host-www
-empt/empt-jail-base
-empt/empt-jail-cifs
-empt/empt-jail-dns
-empt/empt-jail-irc
-empt/empt-jail-kerberos
-empt/empt-jail-mail
-empt/empt-jail-www
+#empt/empt-host-cifs
+#empt/empt-host-dns
+#empt/empt-host-irc
+#empt/empt-host-kerberos
+#empt/empt-host-mail
+#empt/empt-host-www
+#empt/empt-jail-base
+#empt/empt-jail-cifs
+#empt/empt-jail-dns
+#empt/empt-jail-irc
+#empt/empt-jail-kerberos
+#empt/empt-jail-mail
+#empt/empt-jail-www
 #empt/empt-scripts
-#empt/empt-tmp-test
 
 # system hardware related stuff
 sysutils/cpu-microcode

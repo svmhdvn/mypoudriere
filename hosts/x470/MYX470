@@ -96,6 +96,7 @@ options 	COMPAT_FREEBSD12
 options 	COMPAT_FREEBSD13
 options 	COMPAT_FREEBSD14
 options 	DEVICE_POLLING
+options 	DIRECTIO
 options 	EFIRT
 options 	FDESCFS			#File descriptor filesystem
 options 	FFS			#Fast filesystem
