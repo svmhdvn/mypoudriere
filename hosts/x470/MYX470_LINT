@@ -2738,7 +2738,7 @@ device		cryptodev	# /dev/crypto for access to h/w
 # file.  Both offset and length of the read operation must be
 # multiples of the physical media sector size.
 #
-#options 	DIRECTIO
+options 	DIRECTIO
 
 # Specify a lower limit for the number of swap I/O buffers.  They are
 # (among other things) used when bypassing the buffer cache due to

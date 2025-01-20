@@ -76,7 +76,6 @@ device		ums
 device		usb
 device		usbhid
 device		vga
-device		vlan
 device		vt
 device		vt_efifb	# EFI framebuffer
 device		vt_vbefb	# VBE framebuffer
@@ -91,7 +90,6 @@ options 	BPF_JITTER
 options 	CAPABILITIES	# fine-grained rights on file descriptors
 options 	CAPABILITY_MODE	# sandboxes with no global namespace access
 options 	CD9660			#ISO 9660 filesystem
-options 	COMPAT_FREEBSD11
 options 	COMPAT_FREEBSD12
 options 	COMPAT_FREEBSD13
 options 	COMPAT_FREEBSD14
@@ -107,6 +105,7 @@ options 	GEOM_PART_EBR		# Extended Boot Records
 options 	GEOM_PART_GPT		# GPT partitioning
 options 	GEOM_PART_MBR		# MBR partitioning
 options 	GEOM_STRIPE		# Disk striping.
+options 	GEOM_UZIP		# Read-only compressed disks
 options 	GZIO
 options 	INCLUDE_CONFIG_FILE     # Include this file in kernel
 options 	INET			#Internet communications protocols
