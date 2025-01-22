@@ -70,7 +70,6 @@ device		ums
 device		usb
 device		usbhid
 device		vga
-device		vlan
 device		vt
 device		vt_efifb	# EFI framebuffer
 device		vt_vbefb	# VBE framebuffer
@@ -85,7 +84,6 @@ options 	BPF_JITTER
 options 	CAPABILITIES	# fine-grained rights on file descriptors
 options 	CAPABILITY_MODE	# sandboxes with no global namespace access
 options 	CD9660			#ISO 9660 filesystem
-options 	COMPAT_FREEBSD11
 options 	COMPAT_FREEBSD12
 options 	COMPAT_FREEBSD13
 options 	COMPAT_FREEBSD14
@@ -94,15 +92,13 @@ options 	EFIRT
 options 	FDESCFS			#File descriptor filesystem
 options 	FFS			#Fast filesystem
 options 	GEOM_LABEL		# Providers labelization.
-options 	GEOM_MIRROR		# Disk mirroring.
 options 	GEOM_PART_BSD		# BSD disklabel
 options 	GEOM_PART_BSD64		# BSD disklabel64
 options 	GEOM_PART_EBR		# Extended Boot Records
 options 	GEOM_PART_GPT		# GPT partitioning
 options 	GEOM_PART_MBR		# MBR partitioning
-options 	GEOM_STRIPE		# Disk striping.
+options 	GEOM_UZIP		# Read-only compressed disks
 options 	GZIO
-options 	INCLUDE_CONFIG_FILE     # Include this file in kernel
 options 	INET			#Internet communications protocols
 options 	INET6			#IPv6 communications protocols
 options 	IOMMU			# Enable IOMMU support
@@ -116,6 +112,9 @@ options 	LIBICONV
 options 	LIBMCHAIN
 options 	MAXCPU=2
 options 	MAXMEMDOM=1
+options 	MD_ROOT
+options 	MD_ROOT_MEM
+options 	MD_ROOT_READONLY
 options 	MSDOSFS			#MS DOS File System (FAT, FAT32)
 options 	NETLINK
 options 	NULLFS			#NULL filesystem
@@ -131,6 +130,7 @@ options 	STATS
 options 	TCP_OFFLOAD		# TCP offload support.
 options 	TCP_RACK
 options 	TMPFS			#Efficient memory filesystem
+options 	UFS_DIRHASH
 options 	VESA
 options 	X86BIOS
 options 	ZFS

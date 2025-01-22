@@ -865,12 +865,12 @@ options 	LIBALIAS
 #
 # Network interfaces:
 #  The `loop' device is MANDATORY when networking is enabled.
-#device		loop
+device		loop
 
 #  The `ether' device provides generic code to handle
 #  Ethernets; it is MANDATORY when an Ethernet device driver is
 #  configured.
-#device		ether
+device		ether
 
 #  The `vlan' device implements the VLAN tagging of Ethernet frames
 #  according to IEEE 802.1Q.
@@ -1155,7 +1155,7 @@ options 	SOFTUPDATES
 
 # Directory hashing improves the speed of operations on very large
 # directories at the expense of some memory.
-#options 	UFS_DIRHASH
+options 	UFS_DIRHASH
 
 # Gjournal-based UFS journaling support.
 #options 	UFS_GJOURNAL

@@ -88,7 +88,12 @@ build_mfs_image() {
         SRC_ENV_CONF="${target_confdir}/${target_hostname}-host-src-env.conf" \
         KERNCONF="${target_kernconf}" \
         DESTDIR="${_worlddir}" \
-        installworld installkernel
+        BATCH_DELETE_OLD_FILES=YES \
+        installworld installkernel delete-old delete-old-libs distrib-dirs distribution
+
+    printf '/dev/ufs/%s / ufs ro,noatime 0 0\n#tmpfs /tmp tmpfs rw,mode=1777 0 0\n' "${_imagename}" | \
+        doas tee "${_worlddir}/etc/fstab"
+    doas sysrc -f "${_worlddir}/etc/rc.conf.local" root_rw_mount=NO
 }
 
 make_efi_image() {
@@ -114,21 +119,18 @@ make_efi_image() {
         -s 10m \
 	"${_efipart}" "${_efibootdir}"
 
-    printf '/dev/ufs/%s / ufs ro 0 0\ntmpfs /tmp tmpfs rw,mode=1777 0 0\n' "${_imagename}" | \
-        doas tee -a "${_worlddir}/etc/fstab"
-
     doas makefs -o label="${_imagename}" "${_mfsimg}" "${_worlddir}"
 
     doas rm -rf "${_ufsroot}"
     mkdir -p "${_ufsroot}"
     cp -R "${_worlddir}/boot" "${_mfsimg}" "${_ufsroot}/"
-    printf 'tmpfs_load=YES\nmfs_load=YES\nmfs_type=mfs_root\nmfs_name=/%s\nvfs.root.mountfrom="ufs:/dev/ufs/%s"\n' ${_imagename} ${_imagename} | \
+    printf 'tmpfs_load="YES"\nmfs_load="YES"\nmfs_type="mfs_root"\nmfs_name="/%s"\nvfs.root.mountfrom="ufs:/dev/ufs/%s"\n' ${_imagename} ${_imagename} | \
         tee -a "${_ufsroot}/boot/loader.conf"
     makefs "${_ufspart}" "${_ufsroot}"
 
     mkimg -s gpt \
-        -p efi:=${_efipart} \
-        -p freebsd-ufs:=${_ufspart} \
+        -p "efi:=${_efipart}" \
+        -p "freebsd-ufs:=${_ufspart}" \
         -o "${_finalimg}"
 }
 
@@ -182,7 +184,7 @@ build_jail_pkgbase() {
 
 poudriere_options() {
     pull_freebsd_ports
-    doas cp \
+    doas cp \ distrib-dirs distribution
         "${target_confdir}/${target_hostname}-common-make.conf" \
         "${poudriere_etc}/${target_hostname}-make.conf"
 
