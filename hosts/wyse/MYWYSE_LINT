@@ -1176,13 +1176,13 @@ options 	SOFTUPDATES
 
 # Make the md device a potential root device, either with preloaded
 # images of type mfs_root or md_root.
-#options 	MD_ROOT
+options 	MD_ROOT
 
 # Write-protect the md root device so that it may not be mounted writeable.
-#options 	MD_ROOT_READONLY
+options 	MD_ROOT_READONLY
 
 # Allow to read MD image from external memory regions
-#options 	MD_ROOT_MEM
+options 	MD_ROOT_MEM
 
 # Disk quotas are supported when this option is enabled.
 #options 	QUOTA			#enable disk quotas

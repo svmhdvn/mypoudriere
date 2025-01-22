@@ -68,6 +68,70 @@ test -r /etc/sysctl.conf.pkgsave && cp /etc/sysctl.conf.pkgsave /etc/sysctl.conf
     doas rm -f /boot/kernel/linker.hints
 }
 
+build_mfs_image() {
+    _worlddir="${HOME}/testworld"
+    pull_freebsd_src
+    grep '^[a-z]' "${target_confdir}/${target_kernconf}_LINT" \
+        | sort -u \
+        | tee "${target_confdir}/${target_kernconf}" "${freebsd_src}/sys/${target_arch}/conf/${target_kernconf}" > /dev/null
+
+    make -C "${freebsd_src}" -j"${nproc}" \
+        __MAKE_CONF="${target_confdir}/${target_hostname}-common-make.conf" \
+        SRCCONF="${target_confdir}/${target_hostname}-host-src.conf" \
+        SRC_ENV_CONF="${target_confdir}/${target_hostname}-host-src-env.conf" \
+        KERNCONF="${target_kernconf}" \
+        buildworld buildkernel
+
+    doas make -C "${freebsd_src}" -j"${nproc}" \
+        __MAKE_CONF="${target_confdir}/${target_hostname}-common-make.conf" \
+        SRCCONF="${target_confdir}/${target_hostname}-host-src.conf" \
+        SRC_ENV_CONF="${target_confdir}/${target_hostname}-host-src-env.conf" \
+        KERNCONF="${target_kernconf}" \
+        DESTDIR="${_worlddir}" \
+        installworld installkernel
+}
+
+make_efi_image() {
+    _imagename="testmfsimg"
+
+    _worlddir="${HOME}/testworld"
+    _efibootdir="${HOME}/testefidir"
+    _mfsimg="${HOME}/${_imagename}"
+    _ufsroot="${HOME}/testufsroot"
+
+    _efipart="${HOME}/testefipart"
+    _ufspart="${HOME}/testufspart"
+    _finalimg="${HOME}/testusb.img"
+
+    doas rm -rf "${_efibootdir}"
+    mkdir -p "${_efibootdir}/EFI/BOOT"
+    cp "${_worlddir}/boot/loader.efi" "${_efibootdir}/EFI/BOOT/BOOTX64.EFI"
+
+    #-o fat_type=16 \
+    #-o sectors_per_cluster=1 \
+    makefs -t msdos \
+	-o volume_label=EFISYS \
+        -s 10m \
+	"${_efipart}" "${_efibootdir}"
+
+    printf '/dev/ufs/%s / ufs ro 0 0\ntmpfs /tmp tmpfs rw,mode=1777 0 0\n' "${_imagename}" | \
+        doas tee -a "${_worlddir}/etc/fstab"
+
+    doas makefs -o label="${_imagename}" "${_mfsimg}" "${_worlddir}"
+
+    doas rm -rf "${_ufsroot}"
+    mkdir -p "${_ufsroot}"
+    cp -R "${_worlddir}/boot" "${_mfsimg}" "${_ufsroot}/"
+    printf 'tmpfs_load=YES\nmfs_load=YES\nmfs_type=mfs_root\nmfs_name=/%s\nvfs.root.mountfrom="ufs:/dev/ufs/%s"\n' ${_imagename} ${_imagename} | \
+        tee -a "${_ufsroot}/boot/loader.conf"
+    makefs "${_ufspart}" "${_ufsroot}"
+
+    mkimg -s gpt \
+        -p efi:=${_efipart} \
+        -p freebsd-ufs:=${_ufspart} \
+        -o "${_finalimg}"
+}
+
 build_host_pkgbase() {
     pull_freebsd_src
     grep '^[a-z]' "${target_confdir}/${target_kernconf}_LINT" \
@@ -329,6 +393,10 @@ case "$1" in
     ;;
   bulk)
     poudriere_bulk
+    ;;
+  mfs)
+    build_mfs_image
+    make_efi_image
     ;;
   hostconfig)
     make -C "${freebsd_src}" \
