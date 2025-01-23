@@ -91,7 +91,7 @@ build_mfs_image() {
         SRCCONF="${target_confdir}/${target_hostname}-host-src.conf" \
         SRC_ENV_CONF="${target_confdir}/${target_hostname}-host-src-env.conf" \
         KERNCONF="${target_kernconf}" \
-        buildworld buildkernel
+        buildkernel buildworld
 
     doas make -C "${freebsd_src}" -j"${nproc}" \
         __MAKE_CONF="${target_confdir}/${target_hostname}-common-make.conf" \
@@ -100,7 +100,7 @@ build_mfs_image() {
         KERNCONF="${target_kernconf}" \
         DESTDIR="${_worlddir}" \
         BATCH_DELETE_OLD_FILES=YES \
-        installworld installkernel delete-old delete-old-libs distrib-dirs distribution
+        installkernel installworld delete-old delete-old-libs distrib-dirs distribution
 
     # Build the mfs_root uzip image
     # TODO does this work without 'tmpfs /tmp tmpfs rw,mode=1777 0 0\n'?
@@ -118,9 +118,10 @@ build_mfs_image() {
     # Build the UFS partition image
     doas rm -rf "${_ufsroot}"
     mkdir -p "${_ufsroot}"
-    cp -R "${_worlddir}/boot" "${_mfsimg}.uzst" "${_ufsroot}/"
-    printf 'tmpfs_load="YES"\nmfs_load="YES"\nmfs_type="mfs_root"\nmfs_name="/%s.uzst"\nvfs.root.mountfrom="ufs:/dev/ufs/%s"\n' "${_imagename}" "${_imagename}" | \
-        tee -a "${_ufsroot}/boot/loader.conf"
+    cp -R "${_worlddir}/boot" "${_ufsroot}/boot"
+    #cp -R "${_worlddir}/boot" "${_mfsimg}.uzst" "${_ufsroot}/"
+    #printf 'tmpfs_load="YES"\nmfs_load="YES"\nmfs_type="mfs_root"\nmfs_name="/%s.uzst"\nvfs.root.mountfrom="ufs:/dev/ufs/%s"\n' "${_imagename}" "${_imagename}" | \
+    #    tee -a "${_ufsroot}/boot/loader.conf"
     makefs "${_ufspart}" "${_ufsroot}"
 
     # Build the final disk image

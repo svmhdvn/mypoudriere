@@ -80,6 +80,9 @@ device		zlib		# gzip/zlib compression/decompression library
 device  	mii		# Minimal MII support
 device  	mii_bitbang	# Common module for bit-bang'ing the MII
 ident		MYWYSE
+makeoptions	MFS_IMAGE=/home/siva/testmfsimg.uzst
+options		MD_ROOT
+options		ROOTDEVNAME=\"ufs:md0.uzip\"
 options 	BPF_JITTER
 options 	CAPABILITIES	# fine-grained rights on file descriptors
 options 	CAPABILITY_MODE	# sandboxes with no global namespace access
@@ -112,8 +115,6 @@ options 	LIBICONV
 options 	LIBMCHAIN
 options 	MAXCPU=2
 options 	MAXMEMDOM=1
-options 	MD_ROOT
-options 	MD_ROOT_MEM
 options 	MD_ROOT_READONLY
 options 	MSDOSFS			#MS DOS File System (FAT, FAT32)
 options 	NETLINK
