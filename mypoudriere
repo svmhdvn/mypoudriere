@@ -69,7 +69,18 @@ test -r /etc/sysctl.conf.pkgsave && cp /etc/sysctl.conf.pkgsave /etc/sysctl.conf
 }
 
 build_mfs_image() {
+    _imagename="testmfsimg"
+
     _worlddir="${HOME}/testworld"
+    _efibootdir="${HOME}/testefidir"
+    _mfsimg="${HOME}/${_imagename}"
+    _ufsroot="${HOME}/testufsroot"
+
+    _efipart="${HOME}/testefipart"
+    _ufspart="${HOME}/testufspart"
+    _finalimg="${HOME}/testusb.img"
+
+    # Build the world
     pull_freebsd_src
     grep '^[a-z]' "${target_confdir}/${target_kernconf}_LINT" \
         | sort -u \
@@ -91,43 +102,28 @@ build_mfs_image() {
         BATCH_DELETE_OLD_FILES=YES \
         installworld installkernel delete-old delete-old-libs distrib-dirs distribution
 
-    printf '/dev/ufs/%s / ufs ro,noatime 0 0\n#tmpfs /tmp tmpfs rw,mode=1777 0 0\n' "${_imagename}" | \
-        doas tee "${_worlddir}/etc/fstab"
+    # Build the mfs_root uzip image
+    # TODO does this work without 'tmpfs /tmp tmpfs rw,mode=1777 0 0\n'?
+    echo "/dev/ufs/${_imagename} / ufs ro,noatime 0 0" | doas tee "${_worlddir}/etc/fstab"
     doas sysrc -f "${_worlddir}/etc/rc.conf.local" root_rw_mount=NO
-}
+    doas makefs -o label="${_imagename}" "${_mfsimg}" "${_worlddir}"
+    mkuzip -A zstd -S "${_mfsimg}"
 
-make_efi_image() {
-    _imagename="testmfsimg"
-
-    _worlddir="${HOME}/testworld"
-    _efibootdir="${HOME}/testefidir"
-    _mfsimg="${HOME}/${_imagename}"
-    _ufsroot="${HOME}/testufsroot"
-
-    _efipart="${HOME}/testefipart"
-    _ufspart="${HOME}/testufspart"
-    _finalimg="${HOME}/testusb.img"
-
+    # Build the EFI partition image
     doas rm -rf "${_efibootdir}"
     mkdir -p "${_efibootdir}/EFI/BOOT"
     cp "${_worlddir}/boot/loader.efi" "${_efibootdir}/EFI/BOOT/BOOTX64.EFI"
+    makefs -t msdos -o volume_label=EFISYS -s 10m "${_efipart}" "${_efibootdir}"
 
-    #-o fat_type=16 \
-    #-o sectors_per_cluster=1 \
-    makefs -t msdos \
-	-o volume_label=EFISYS \
-        -s 10m \
-	"${_efipart}" "${_efibootdir}"
-
-    doas makefs -o label="${_imagename}" "${_mfsimg}" "${_worlddir}"
-
+    # Build the UFS partition image
     doas rm -rf "${_ufsroot}"
     mkdir -p "${_ufsroot}"
-    cp -R "${_worlddir}/boot" "${_mfsimg}" "${_ufsroot}/"
-    printf 'tmpfs_load="YES"\nmfs_load="YES"\nmfs_type="mfs_root"\nmfs_name="/%s"\nvfs.root.mountfrom="ufs:/dev/ufs/%s"\n' ${_imagename} ${_imagename} | \
+    cp -R "${_worlddir}/boot" "${_mfsimg}.uzst" "${_ufsroot}/"
+    printf 'tmpfs_load="YES"\nmfs_load="YES"\nmfs_type="mfs_root"\nmfs_name="/%s.uzst"\nvfs.root.mountfrom="ufs:/dev/ufs/%s"\n' "${_imagename}" "${_imagename}" | \
         tee -a "${_ufsroot}/boot/loader.conf"
     makefs "${_ufspart}" "${_ufsroot}"
 
+    # Build the final disk image
     mkimg -s gpt \
         -p "efi:=${_efipart}" \
         -p "freebsd-ufs:=${_ufspart}" \
@@ -398,7 +394,6 @@ case "$1" in
     ;;
   mfs)
     build_mfs_image
-    make_efi_image
     ;;
   hostconfig)
     make -C "${freebsd_src}" \
