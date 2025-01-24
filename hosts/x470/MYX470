@@ -86,10 +86,14 @@ device		zlib		# gzip/zlib compression/decompression library
 device  	mii		# Minimal MII support
 device  	mii_bitbang	# Common module for bit-bang'ing the MII
 ident		MYX470
+makeoptions	MFS_IMAGE=/home/siva/.cache/mypoudriere/mfs/x470/testmfs_x470.img.uzst
+options		MD_ROOT
+options		ROOTDEVNAME=\"ufs:md0.uzip\"
 options 	BPF_JITTER
 options 	CAPABILITIES	# fine-grained rights on file descriptors
 options 	CAPABILITY_MODE	# sandboxes with no global namespace access
 options 	CD9660			#ISO 9660 filesystem
+options 	COMPAT_FREEBSD11
 options 	COMPAT_FREEBSD12
 options 	COMPAT_FREEBSD13
 options 	COMPAT_FREEBSD14
@@ -117,6 +121,7 @@ options 	LIBICONV
 options 	LIBMCHAIN
 options 	MAXCPU=12
 options 	MAXMEMDOM=1
+options 	MD_ROOT_READONLY
 options 	MSDOSFS			#MS DOS File System (FAT, FAT32)
 options 	NETLINK
 options 	NULLFS			#NULL filesystem

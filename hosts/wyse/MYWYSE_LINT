@@ -356,7 +356,8 @@ options 	MAXMEMDOM=1
 #options 	COMPAT_FREEBSD10
 
 # Enable FreeBSD11 compatibility syscalls
-#options 	COMPAT_FREEBSD11
+# TODO waiting on https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=284298
+options 	COMPAT_FREEBSD11
 
 # Enable FreeBSD12 compatibility syscalls
 options 	COMPAT_FREEBSD12

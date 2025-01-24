@@ -69,19 +69,43 @@ test -r /etc/sysctl.conf.pkgsave && cp /etc/sysctl.conf.pkgsave /etc/sysctl.conf
 }
 
 build_mfs_image() {
-    _imagename="testmfsimg"
+    _artifacts="${cache}/mfs/${target_hostname}"
+    _imagename="testmfs_${target_hostname}"
 
-    _worlddir="${HOME}/testworld"
-    _efibootdir="${HOME}/testefidir"
-    _mfsimg="${HOME}/${_imagename}"
-    _ufsroot="${HOME}/testufsroot"
+    _worlddir="${_artifacts}/world"
+    _efiout="${_artifacts}/efiout"
+    _mfsimg="${_artifacts}/${_imagename}.img"
+    _ufsout="${_artifacts}/ufsout"
 
-    _efipart="${HOME}/testefipart"
-    _ufspart="${HOME}/testufspart"
-    _finalimg="${HOME}/testusb.img"
+    _efipart="${_artifacts}/efi.part"
+    _ufspart="${_artifacts}/ufs.part"
+    _finalimg="${_artifacts}/disk.img"
 
-    # Build the world
+    # Build the world first so its mfs image can be statically built into the kernel
     pull_freebsd_src
+    make -C "${freebsd_src}" -j"${nproc}" \
+        __MAKE_CONF="${target_confdir}/${target_hostname}-common-make.conf" \
+        SRCCONF="${target_confdir}/${target_hostname}-host-src.conf" \
+        SRC_ENV_CONF="${target_confdir}/${target_hostname}-host-src-env.conf" \
+        buildworld
+    mkdir -p "${_worlddir}"
+    doas make -C "${freebsd_src}" -j"${nproc}" \
+        __MAKE_CONF="${target_confdir}/${target_hostname}-common-make.conf" \
+        SRCCONF="${target_confdir}/${target_hostname}-host-src.conf" \
+        SRC_ENV_CONF="${target_confdir}/${target_hostname}-host-src-env.conf" \
+        DESTDIR="${_worlddir}" \
+        BATCH_DELETE_OLD_FILES=YES \
+        installworld delete-old delete-old-libs distrib-dirs distribution
+    # TODO does this work without 'tmpfs /tmp tmpfs rw,mode=1777 0 0\n'?
+    printf '/dev/ufs/%s / ufs ro,noatime 0 0\n' "${_imagename}" | doas tee "${_worlddir}/etc/fstab"
+    doas sysrc -f "${_worlddir}/etc/rc.conf.local" root_rw_mount=NO
+    grep '^\s*\w' "${ports_pkglist}" | xargs doas pkg -r "${_worlddir}" install -y -r ports
+
+    # Build the mfs_root uzip image
+    doas makefs -o label="${_imagename}" "${_mfsimg}" "${_worlddir}"
+    mkuzip -A zstd -S "${_mfsimg}"
+
+    # Build the kernel which embeds the newly built mfsroot uzip image
     grep '^[a-z]' "${target_confdir}/${target_kernconf}_LINT" \
         | sort -u \
         | tee "${target_confdir}/${target_kernconf}" "${freebsd_src}/sys/${target_arch}/conf/${target_kernconf}" > /dev/null
@@ -91,7 +115,7 @@ build_mfs_image() {
         SRCCONF="${target_confdir}/${target_hostname}-host-src.conf" \
         SRC_ENV_CONF="${target_confdir}/${target_hostname}-host-src-env.conf" \
         KERNCONF="${target_kernconf}" \
-        buildkernel buildworld
+        buildkernel
 
     doas make -C "${freebsd_src}" -j"${nproc}" \
         __MAKE_CONF="${target_confdir}/${target_hostname}-common-make.conf" \
@@ -100,35 +124,27 @@ build_mfs_image() {
         KERNCONF="${target_kernconf}" \
         DESTDIR="${_worlddir}" \
         BATCH_DELETE_OLD_FILES=YES \
-        installkernel installworld delete-old delete-old-libs distrib-dirs distribution
-
-    # Build the mfs_root uzip image
-    # TODO does this work without 'tmpfs /tmp tmpfs rw,mode=1777 0 0\n'?
-    echo "/dev/ufs/${_imagename} / ufs ro,noatime 0 0" | doas tee "${_worlddir}/etc/fstab"
-    doas sysrc -f "${_worlddir}/etc/rc.conf.local" root_rw_mount=NO
-    doas makefs -o label="${_imagename}" "${_mfsimg}" "${_worlddir}"
-    mkuzip -A zstd -S "${_mfsimg}"
+        installkernel
 
     # Build the EFI partition image
-    doas rm -rf "${_efibootdir}"
-    mkdir -p "${_efibootdir}/EFI/BOOT"
-    cp "${_worlddir}/boot/loader.efi" "${_efibootdir}/EFI/BOOT/BOOTX64.EFI"
-    makefs -t msdos -o volume_label=EFISYS -s 10m "${_efipart}" "${_efibootdir}"
+    doas rm -rf "${_efiout}"
+    mkdir -p "${_efiout}/EFI/BOOT"
+    cp "${_worlddir}/boot/loader.efi" "${_efiout}/EFI/BOOT/BOOTX64.EFI"
+    makefs -t msdos -o volume_label=EFISYS -s 10m "${_efipart}" "${_efiout}"
 
     # Build the UFS partition image
-    doas rm -rf "${_ufsroot}"
-    mkdir -p "${_ufsroot}"
-    cp -R "${_worlddir}/boot" "${_ufsroot}/boot"
-    #cp -R "${_worlddir}/boot" "${_mfsimg}.uzst" "${_ufsroot}/"
-    #printf 'tmpfs_load="YES"\nmfs_load="YES"\nmfs_type="mfs_root"\nmfs_name="/%s.uzst"\nvfs.root.mountfrom="ufs:/dev/ufs/%s"\n' "${_imagename}" "${_imagename}" | \
-    #    tee -a "${_ufsroot}/boot/loader.conf"
-    makefs "${_ufspart}" "${_ufsroot}"
+    doas rm -rf "${_ufsout}"
+    mkdir -p "${_ufsout}"
+    cp -R "${_worlddir}/boot" "${_ufsout}/boot"
+    makefs "${_ufspart}" "${_ufsout}"
 
     # Build the final disk image
     mkimg -s gpt \
         -p "efi:=${_efipart}" \
         -p "freebsd-ufs:=${_ufspart}" \
         -o "${_finalimg}"
+
+    ls -alh "${_artifacts}"
 }
 
 build_host_pkgbase() {
@@ -181,7 +197,7 @@ build_jail_pkgbase() {
 
 poudriere_options() {
     pull_freebsd_ports
-    doas cp \ distrib-dirs distribution
+    doas cp \
         "${target_confdir}/${target_hostname}-common-make.conf" \
         "${poudriere_etc}/${target_hostname}-make.conf"
 
@@ -291,9 +307,9 @@ shift $((OPTIND - 1))
 
 realpath="$(realpath "$0")"
 top="$(dirname "${realpath}")"
-cache="${XDG_CACHE_HOME:-${HOME}/.cache}"
+cache="${XDG_CACHE_HOME:-${HOME}/.cache}/mypoudriere"
 
-# TODO support other architectures when the need arises
+# NOTE support other architectures when the need arises
 target_arch="$(uname -p)"
 freebsd_major_version=15
 freebsd_minor_version=0
@@ -328,14 +344,13 @@ jail_pkgbase_builder="j${freebsd_major_version}${target_kernconf}"
 #ports_builder="poudriere_${freebsd_branch}_${builder_kernconf}"
 ports_builder="r${freebsd_major_version}${freebsd_minor_version}${target_arch}"
 
-# TODO move to ~/.cache/mypoudriere
 repodir_prefix="${cache}/pkgbase_repos/${target_hostname}"
 ports_repo="${poudriere_data}/packages/${ports_builder}-${ports_tree}-${target_hostname}"
 
 poudriere_portoptions="${poudriere_etc}/${ports_builder}-${ports_tree}-${target_hostname}-options"
 my_portoptions="${target_confdir}/portoptions"
 
-tarballs="${cache}/mypoudriere/tarballs"
+tarballs="${cache}/tarballs"
 ports_pkglist="${top}/hosts/${target_hostname}/pkglist.txt"
 
 nproc="$(nproc)"
@@ -361,11 +376,10 @@ case "$1" in
     if poudriere jail -i -j "${ports_builder}"; then
         doas poudriere jail -u -j "${ports_builder}"
     else
-        # TODO
-        #doas poudriere jail -c -j "${ports_builder}" \
-        #    -v "${freebsd_major_version}.${freebsd_minor_version}-CURRENT" \
-        #    -m pkgbase=
-        true
+        doas poudriere jail -c -j "${ports_builder}" \
+            -v 15 \
+            -m pkgbase=base_latest \
+            -U 'https://pkg.freebsd.org'
     fi
     ;;
   host_pkgbase)

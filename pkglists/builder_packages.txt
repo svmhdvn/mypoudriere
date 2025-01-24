@@ -1,4 +1,3 @@
-benchmarks/iperf3
 devel/ccache
 devel/git
 devel/hs-ShellCheck
@@ -15,7 +14,6 @@ ports-mgmt/poudriere-devel
 security/doas
 shells/fish
 sysutils/cpu-microcode
-sysutils/duf
 sysutils/fd
 sysutils/htop
 sysutils/smartmontools
@@ -23,8 +21,6 @@ sysutils/tmux
 sysutils/tree
 sysutils/x86info
 textproc/bat
-textproc/fzf
-textproc/jq
 textproc/ripgrep
 
 # TODO add back once dependency on 'sudo' is removed

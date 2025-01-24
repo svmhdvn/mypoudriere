@@ -356,7 +356,8 @@ options 	MAXMEMDOM=1
 #options 	COMPAT_FREEBSD10
 
 # Enable FreeBSD11 compatibility syscalls
-#options 	COMPAT_FREEBSD11
+# TODO waiting on https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=284298
+options 	COMPAT_FREEBSD11
 
 # Enable FreeBSD12 compatibility syscalls
 options 	COMPAT_FREEBSD12
@@ -1174,10 +1175,12 @@ options 	SOFTUPDATES
 
 # Make the md device a potential root device, either with preloaded
 # images of type mfs_root or md_root.
-#options 	MD_ROOT
+options		MD_ROOT
+makeoptions	MFS_IMAGE=/home/siva/.cache/mypoudriere/mfs/x470/testmfs_x470.img.uzst
+options		ROOTDEVNAME=\"ufs:md0.uzip\"
 
 # Write-protect the md root device so that it may not be mounted writeable.
-#options 	MD_ROOT_READONLY
+options 	MD_ROOT_READONLY
 
 # Allow to read MD image from external memory regions
 #options 	MD_ROOT_MEM

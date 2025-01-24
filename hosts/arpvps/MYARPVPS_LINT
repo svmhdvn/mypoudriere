@@ -355,8 +355,8 @@ options 	PREEMPTION
 # Enable FreeBSD10 compatibility syscalls
 #options 	COMPAT_FREEBSD10
 
-# TODO rust depends on 11+ currently
 # Enable FreeBSD11 compatibility syscalls
+# TODO waiting on https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=284298
 options 	COMPAT_FREEBSD11
 
 # Enable FreeBSD12 compatibility syscalls
