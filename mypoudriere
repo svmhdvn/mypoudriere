@@ -81,25 +81,25 @@ build_mfs_image() {
     _ufspart="${_artifacts}/ufs.part"
     _finalimg="${_artifacts}/disk.img"
 
-    # Build the world first so its mfs image can be statically built into the kernel
+    # Build the world
     pull_freebsd_src
     make -C "${freebsd_src}" -j"${nproc}" \
         __MAKE_CONF="${target_confdir}/${target_hostname}-common-make.conf" \
         SRCCONF="${target_confdir}/${target_hostname}-host-src.conf" \
         SRC_ENV_CONF="${target_confdir}/${target_hostname}-host-src-env.conf" \
         buildworld
-    mkdir -p "${_worlddir}"
+
+    # install the world first so its mfs image can be statically built into the kernel
+    doas chflags -R noschg "${_worlddir}"
+    doas rm -rf "${_worlddir}"
     doas make -C "${freebsd_src}" -j"${nproc}" \
         __MAKE_CONF="${target_confdir}/${target_hostname}-common-make.conf" \
         SRCCONF="${target_confdir}/${target_hostname}-host-src.conf" \
         SRC_ENV_CONF="${target_confdir}/${target_hostname}-host-src-env.conf" \
         DESTDIR="${_worlddir}" \
-        BATCH_DELETE_OLD_FILES=YES \
-        installworld delete-old delete-old-libs distrib-dirs distribution
-    # TODO does this work without 'tmpfs /tmp tmpfs rw,mode=1777 0 0\n'?
-    printf '/dev/ufs/%s / ufs ro,noatime 0 0\n' "${_imagename}" | doas tee "${_worlddir}/etc/fstab"
-    doas sysrc -f "${_worlddir}/etc/rc.conf.local" root_rw_mount=NO
+        installworld distrib-dirs distribution
     grep '^\s*\w' "${ports_pkglist}" | xargs doas pkg -r "${_worlddir}" install -y -r ports
+    doas cp -R "${target_confdir}/mfsroot/" "${_worlddir}/"
 
     # Build the mfs_root uzip image
     doas makefs -o label="${_imagename}" "${_mfsimg}" "${_worlddir}"
