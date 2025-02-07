@@ -1,0 +1,3 @@
+# TODO enable once jails are ready
+# daily attempt to renew tls certs
+#7 4 * * * root -n -q /usr/local/sbin/acme.sh --cron --home /var/db/acme2

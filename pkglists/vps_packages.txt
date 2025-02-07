@@ -2,30 +2,22 @@
 sysutils/x86info
 
 # jail services
-databases/redis
 dns/unbound
 mail/cyrus-imapd310
 mail/opensmtpd
-mail/opensmtpd-filter-rspamd
-mail/rspamd
+mail/opensmtpd-filter-dkimsign
 security/acme.sh
 
 # debug, testing, and development stuff
-devel/git
-editors/kakoune
+#devel/git
 ftp/curl
 net/rsync
+ports-mgmt/pkg
 security/doas
 shells/fish
 sysutils/htop
 sysutils/tmux
 sysutils/tree
 
-# I don't need these nicer utilities for now, but add them back
-# if I do a lot of development on arpvps.
-#sysutils/fd
-#textproc/bat
-#textproc/ripgrep
-
-# TODO only needed for primary-secondary DNS configuration
+# TODO needed for primary-secondary DNS configuration when the time comes
 #dns/nsd

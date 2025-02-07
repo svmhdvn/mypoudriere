@@ -1,0 +1,7 @@
+# TODO enable once jails are ready
+# TODO fix the ordering
+#fe80:2::aaaa:1 diary.svmhdvn.name mail
+#fe80:2::aaaa:3 unbound
+
+127.0.0.1 localhost
+::1 localhost

@@ -76,6 +76,7 @@ build_mfs_image() {
     _efiout="${_artifacts}/efiout"
     _mfsimg="${_artifacts}/${_imagename}.img"
     _ufsout="${_artifacts}/ufsout"
+    _pkg_repos="${_artifacts}/pkg_repos"
 
     _efipart="${_artifacts}/efi.part"
     _ufspart="${_artifacts}/ufs.part"
@@ -83,14 +84,17 @@ build_mfs_image() {
 
     # Build the world
     pull_freebsd_src
+
+    ## install the world first so its mfs image can be statically built into the kernel
+    mkdir -p "${_artifacts}"
     make -C "${freebsd_src}" -j"${nproc}" \
         __MAKE_CONF="${target_confdir}/${target_hostname}-common-make.conf" \
         SRCCONF="${target_confdir}/${target_hostname}-host-src.conf" \
         SRC_ENV_CONF="${target_confdir}/${target_hostname}-host-src-env.conf" \
+        DESTDIR="${_worlddir}" \
         buildworld
 
-    # install the world first so its mfs image can be statically built into the kernel
-    doas chflags -R noschg "${_worlddir}"
+    doas chflags -Rf noschg "${_worlddir}" || true
     doas rm -rf "${_worlddir}"
     doas make -C "${freebsd_src}" -j"${nproc}" \
         __MAKE_CONF="${target_confdir}/${target_hostname}-common-make.conf" \
@@ -98,8 +102,20 @@ build_mfs_image() {
         SRC_ENV_CONF="${target_confdir}/${target_hostname}-host-src-env.conf" \
         DESTDIR="${_worlddir}" \
         installworld distrib-dirs distribution
-    grep '^\s*\w' "${ports_pkglist}" | xargs doas pkg -r "${_worlddir}" install -y -r ports
+
+    mkdir -p "${_pkg_repos}"
+    cat > "${_pkg_repos}/repo.conf" <<EOF
+ports: {
+  url: "file://${ports_repo}",
+  enabled: yes
+}
+EOF
+    grep '^\s*\w' "${ports_pkglist}" | xargs doas pkg -R "${_pkg_repos}" -r "${_worlddir}" install -y -r ports
     doas cp -R "${target_confdir}/mfsroot/" "${_worlddir}/"
+    echo '$6$08uINbEFl9EsRCzR$xokWgZnmzYW9Jyf3bqaq.TE.vbBZK8RBu50aKyLsGmeBxL63cShRbaoiBDJjEbOaFfZ4W.tvy/pdes9DbOKnC1' | \
+        doas pw -R "${_worlddir}" usermod root -H 0
+    echo '$6$602qzC8bCbJebi3L$5xf2vXluEZmZOx7a.aJ5/NzyAyurl6wC1ZTpvYB76QeAabWFPBICyl4TAa8UZ86x8tAfl2prc2992U1enWgCM0' | \
+        doas pw -R "${_worlddir}" useradd -n siva -c "Siva Mahadevan" -G wheel -H 0
 
     # Build the mfs_root uzip image
     doas makefs -o label="${_imagename}" "${_mfsimg}" "${_worlddir}"
@@ -199,7 +215,7 @@ poudriere_options() {
     pull_freebsd_ports
     doas cp \
         "${target_confdir}/${target_hostname}-common-make.conf" \
-        "${poudriere_etc}/${target_hostname}-make.conf"
+        "${poudriere_d}/${target_hostname}-make.conf"
 
     if test ! -d "${poudriere_portoptions}" && test -d "${my_portoptions}"; then
         doas cp -R "${my_portoptions}" "${poudriere_portoptions}"
@@ -210,20 +226,21 @@ poudriere_options() {
     # poudriere bulk run.
     doas cp \
         "${target_confdir}/${target_hostname}-portoptions-make.conf" \
-        "${poudriere_etc}/${ports_tree}-${target_hostname}-make.conf"
-    doas poudriere options -j "${ports_builder}" -p "${ports_tree}" -z "${target_hostname}" -f "${ports_pkglist}"
-    doas rm -f "${poudriere_etc}/${ports_tree}-${target_hostname}-make.conf"
+        "${poudriere_d}/${ports_tree}-${target_hostname}-make.conf"
+    doas ${POUDRIERE_CMD} options -j "${ports_builder}" -p "${ports_tree}" -z "${target_hostname}" -f "${ports_pkglist}"
+    doas rm -f "${poudriere_d}/${ports_tree}-${target_hostname}-make.conf"
 
-    # Treat the poudriere_etc options directory as the ground truth.
+    # Treat the poudriere_d options directory as the ground truth.
     rm -rf "${my_portoptions}"
     cp -R "${poudriere_portoptions}" "${my_portoptions}"
 }
 
 poudriere_bulk() {
-    doas poudriere bulk -j "${ports_builder}" -p "${ports_tree}" -z "${target_hostname}" -f "${ports_pkglist}"
-    doas poudriere pkgclean -y -j "${ports_builder}" -p "${ports_tree}" -z "${target_hostname}" -f "${ports_pkglist}"
-    mkdir -p "${tarballs}"
-    tar -C "${ports_repo}/.latest" -cvf "${tarballs}/${target_hostname}-ports.tar.zst" --zstd --strip-components 1 .
+    doas ${POUDRIERE_CMD} bulk -j "${ports_builder}" -p "${ports_tree}" -z "${target_hostname}" -f "${ports_pkglist}"
+    doas ${POUDRIERE_CMD} pkgclean -y -j "${ports_builder}" -p "${ports_tree}" -z "${target_hostname}" -f "${ports_pkglist}"
+    # TODO I probably don't need to build tarballs anymore due to mfs_root right?
+    #mkdir -p "${tarballs}"
+    #tar -C "${ports_repo}/.latest" -cvf "${tarballs}/${target_hostname}-ports.tar.zst" --zstd --strip-components 1 .
 }
 
 bootstrap_step1() {
@@ -322,8 +339,10 @@ freebsd_ports="${HOME}/src/freebsd-ports"
 # inside the hosts/ directory
 #cputype="$(cc -v -x c -E -march=native /dev/null 2>&1 | sed -n 's/.*-target-cpu *\([^ ]*\).*/\1/p')"
 
-poudriere_etc=/usr/local/etc/poudriere.d
-poudriere_data=/usr/local/poudriere/data
+poudriere_etc=/media/poudriere_etc
+poudriere_d="${poudriere_etc}/poudriere.d"
+POUDRIERE_CMD="poudriere -e ${poudriere_etc}"
+poudriere_data=/media/poudriere_basefs/data
 
 # TODO change to a more descriptive name, like "empt_ports" or something
 ports_tree=default
@@ -347,7 +366,7 @@ ports_builder="r${freebsd_major_version}${freebsd_minor_version}${target_arch}"
 repodir_prefix="${cache}/pkgbase_repos/${target_hostname}"
 ports_repo="${poudriere_data}/packages/${ports_builder}-${ports_tree}-${target_hostname}"
 
-poudriere_portoptions="${poudriere_etc}/${ports_builder}-${ports_tree}-${target_hostname}-options"
+poudriere_portoptions="${poudriere_d}/${ports_builder}-${ports_tree}-${target_hostname}-options"
 my_portoptions="${target_confdir}/portoptions"
 
 tarballs="${cache}/tarballs"
@@ -373,30 +392,26 @@ case "$1" in
     doas pkg upgrade -y -r ports
     ;;
   upgrade_builder)
-    if poudriere jail -i -j "${ports_builder}"; then
-        doas poudriere jail -u -j "${ports_builder}"
+    if ${POUDRIERE_CMD} jail -i -j "${ports_builder}"; then
+        doas ${POUDRIERE_CMD} jail -u -j "${ports_builder}"
     else
-        doas poudriere jail -c -j "${ports_builder}" \
-            -v 15 \
-            -m pkgbase=base_latest \
-            -U 'https://pkg.freebsd.org'
+        doas ${POUDRIERE_CMD} jail -c -j "${ports_builder}" -v '15.0-CURRENT'
     fi
     ;;
   host_pkgbase)
     build_host_pkgbase
-    mkdir -p "${tarballs}"
-    tar -C "${repodir_prefix}-host/${target_abi}/latest" -cvf "${tarballs}/${target_hostname}-host-pkgbase.tar.zst" --zstd --strip-components 1 .
+    #mkdir -p "${tarballs}"
+    #tar -C "${repodir_prefix}-host/${target_abi}/latest" -cvf "${tarballs}/${target_hostname}-host-pkgbase.tar.zst" --zstd --strip-components 1 .
     ;;
   jail_pkgbase)
     build_jail_pkgbase
-    mkdir -p "${tarballs}"
-    tar -C "${repodir_prefix}-jail/${target_abi}/latest" -cvf "${tarballs}/${target_hostname}-jail-pkgbase.tar.zst" --zstd --strip-components 1 .
+    #mkdir -p "${tarballs}"
+    #tar -C "${repodir_prefix}-jail/${target_abi}/latest" -cvf "${tarballs}/${target_hostname}-jail-pkgbase.tar.zst" --zstd --strip-components 1 .
     ;;
   update_remote_repos)
     # NOTE:
     # * the trailing slashes for rsync are required to update the directory contents
     # * the target hostname MUST be set as an SSH host alias in ~/.ssh/config
-    # TODO turn all of these rsync calls into one call
     rsync -Pacv --delete "${repodir_prefix}-host/${target_abi}/latest"/ "${target_hostname}:.cache/repos/host_pkgbase"/
     rsync -Pacv --delete "${repodir_prefix}-jail/${target_abi}/latest"/ "${target_hostname}:.cache/repos/jail_pkgbase"/
     rsync -Pacv --delete "${ports_repo}/.latest"/ "${target_hostname}:.cache/repos/ports"/
@@ -430,10 +445,10 @@ case "$1" in
     ;;
   destroy)
     doas rm -f \
-      "${poudriere_etc}/${target_hostname}"-*.conf \
-      "${poudriere_etc}/${ports_tree}-${target_hostname}"-*.conf \
-      "${poudriere_etc}/${host_pkgbase_builder}"-*.conf \
-      "${poudriere_etc}/${jail_pkgbase_builder}"-*.conf \
+      "${poudriere_d}/${target_hostname}"-*.conf \
+      "${poudriere_d}/${ports_tree}-${target_hostname}"-*.conf \
+      "${poudriere_d}/${host_pkgbase_builder}"-*.conf \
+      "${poudriere_d}/${jail_pkgbase_builder}"-*.conf \
       "${poudriere_portoptions}" \
       "${poudriere_data}/images/${host_pkgbase_builder}-repo" \
       "${poudriere_data}/images/${jail_pkgbase_builder}-repo" \
