@@ -1176,7 +1176,7 @@ options 	UFS_DIRHASH
 # Make the md device a potential root device, either with preloaded
 # images of type mfs_root or md_root.
 options		MD_ROOT
-makeoptions	MFS_IMAGE=/home/siva/testmfsimg.uzst
+makeoptions	MFS_IMAGE=/home/siva/.cache/mypoudriere/mfs/wyse/testmfs_wyse.img.uzst
 options		ROOTDEVNAME=\"ufs:md0.uzip\"
 
 # Write-protect the md root device so that it may not be mounted writeable.

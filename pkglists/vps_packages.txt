@@ -1,5 +1,7 @@
+ports-mgmt/pkg
+
 # system hardware related stuff
-sysutils/x86info
+#sysutils/x86info
 
 # jail services
 dns/unbound
@@ -7,14 +9,12 @@ mail/cyrus-imapd310
 mail/opensmtpd
 mail/opensmtpd-filter-dkimsign
 security/acme.sh
+www/dokuwiki
+www/nginx-lite
 
 # debug, testing, and development stuff
-#devel/git
-ftp/curl
 net/rsync
-ports-mgmt/pkg
 security/doas
-shells/fish
 sysutils/htop
 sysutils/tmux
 sysutils/tree
