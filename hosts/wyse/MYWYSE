@@ -80,13 +80,14 @@ device		zlib		# gzip/zlib compression/decompression library
 device  	mii		# Minimal MII support
 device  	mii_bitbang	# Common module for bit-bang'ing the MII
 ident		MYWYSE
-makeoptions	MFS_IMAGE=/home/siva/testmfsimg.uzst
+makeoptions	MFS_IMAGE=/home/siva/.cache/mypoudriere/mfs/wyse/testmfs_wyse.img.uzst
 options		MD_ROOT
 options		ROOTDEVNAME=\"ufs:md0.uzip\"
 options 	BPF_JITTER
 options 	CAPABILITIES	# fine-grained rights on file descriptors
 options 	CAPABILITY_MODE	# sandboxes with no global namespace access
 options 	CD9660			#ISO 9660 filesystem
+options 	COMPAT_FREEBSD11
 options 	COMPAT_FREEBSD12
 options 	COMPAT_FREEBSD13
 options 	COMPAT_FREEBSD14

@@ -70,6 +70,8 @@ test -r /etc/sysctl.conf.pkgsave && cp /etc/sysctl.conf.pkgsave /etc/sysctl.conf
 
 build_mfs_image() {
     _artifacts="${cache}/mfs/${target_hostname}"
+    mkdir -p "${_artifacts}"
+
     _imagename="testmfs_${target_hostname}"
 
     _worlddir="${_artifacts}/world"
@@ -82,11 +84,8 @@ build_mfs_image() {
     _ufspart="${_artifacts}/ufs.part"
     _finalimg="${_artifacts}/disk.img"
 
-    # Build the world
+    # Build the host and jail worlds
     pull_freebsd_src
-
-    ## install the world first so its mfs image can be statically built into the kernel
-    mkdir -p "${_artifacts}"
     make -C "${freebsd_src}" -j"${nproc}" \
         __MAKE_CONF="${target_confdir}/${target_hostname}-common-make.conf" \
         SRCCONF="${target_confdir}/${target_hostname}-host-src.conf" \
@@ -94,6 +93,7 @@ build_mfs_image() {
         DESTDIR="${_worlddir}" \
         buildworld
 
+    ## install the world first so its mfs image can be statically built into the kernel
     doas chflags -Rf noschg "${_worlddir}" || true
     doas rm -rf "${_worlddir}"
     doas make -C "${freebsd_src}" -j"${nproc}" \
@@ -103,21 +103,25 @@ build_mfs_image() {
         DESTDIR="${_worlddir}" \
         installworld distrib-dirs distribution
 
+    # install the desired packages to the world
     mkdir -p "${_pkg_repos}"
-    cat > "${_pkg_repos}/repo.conf" <<EOF
+    cat > "${_pkg_repos}/repos.conf" <<EOF
+jail_pkgbase: {
+  url: "file://${jail_pkgbase_repo}",
+  enabled: yes
+}
 ports: {
   url: "file://${ports_repo}",
   enabled: yes
 }
 EOF
-    grep '^\s*\w' "${ports_pkglist}" | xargs doas pkg -R "${_pkg_repos}" -r "${_worlddir}" install -y -r ports
-    doas cp -R "${target_confdir}/mfsroot/" "${_worlddir}/"
-    echo '$6$08uINbEFl9EsRCzR$xokWgZnmzYW9Jyf3bqaq.TE.vbBZK8RBu50aKyLsGmeBxL63cShRbaoiBDJjEbOaFfZ4W.tvy/pdes9DbOKnC1' | \
-        doas pw -R "${_worlddir}" usermod root -H 0
-    echo '$6$602qzC8bCbJebi3L$5xf2vXluEZmZOx7a.aJ5/NzyAyurl6wC1ZTpvYB76QeAabWFPBICyl4TAa8UZ86x8tAfl2prc2992U1enWgCM0' | \
-        doas pw -R "${_worlddir}" useradd -n siva -c "Siva Mahadevan" -G wheel -H 0
 
-    # Build the mfs_root uzip image
+    # copy world overlay and run custom configuration script
+    doas cp -R "${target_confdir}/mfsroot/" "${_worlddir}/"
+    . "${target_confdir}/mfs_setup.sh"
+    _host_specific_setup
+
+    # Build the world mfs_root uzip image
     doas makefs -o label="${_imagename}" "${_mfsimg}" "${_worlddir}"
     mkuzip -A zstd -S "${_mfsimg}"
 
@@ -364,6 +368,8 @@ jail_pkgbase_builder="j${freebsd_major_version}${target_kernconf}"
 ports_builder="r${freebsd_major_version}${freebsd_minor_version}${target_arch}"
 
 repodir_prefix="${cache}/pkgbase_repos/${target_hostname}"
+host_pkgbase_repo="${repodir_prefix}-host/${target_abi}/latest"
+jail_pkgbase_repo="${repodir_prefix}-jail/${target_abi}/latest"
 ports_repo="${poudriere_data}/packages/${ports_builder}-${ports_tree}-${target_hostname}"
 
 poudriere_portoptions="${poudriere_d}/${ports_builder}-${ports_tree}-${target_hostname}-options"
@@ -401,20 +407,20 @@ case "$1" in
   host_pkgbase)
     build_host_pkgbase
     #mkdir -p "${tarballs}"
-    #tar -C "${repodir_prefix}-host/${target_abi}/latest" -cvf "${tarballs}/${target_hostname}-host-pkgbase.tar.zst" --zstd --strip-components 1 .
+    #tar -C "${host_pkgbase_repo}" -cvf "${tarballs}/${target_hostname}-host-pkgbase.tar.zst" --zstd --strip-components 1 .
     ;;
   jail_pkgbase)
     build_jail_pkgbase
     #mkdir -p "${tarballs}"
-    #tar -C "${repodir_prefix}-jail/${target_abi}/latest" -cvf "${tarballs}/${target_hostname}-jail-pkgbase.tar.zst" --zstd --strip-components 1 .
+    #tar -C "${jail_pkgbase_repo}" -cvf "${tarballs}/${target_hostname}-jail-pkgbase.tar.zst" --zstd --strip-components 1 .
     ;;
   update_remote_repos)
     # NOTE:
     # * the trailing slashes for rsync are required to update the directory contents
     # * the target hostname MUST be set as an SSH host alias in ~/.ssh/config
-    rsync -Pacv --delete "${repodir_prefix}-host/${target_abi}/latest"/ "${target_hostname}:.cache/repos/host_pkgbase"/
-    rsync -Pacv --delete "${repodir_prefix}-jail/${target_abi}/latest"/ "${target_hostname}:.cache/repos/jail_pkgbase"/
-    rsync -Pacv --delete "${ports_repo}/.latest"/ "${target_hostname}:.cache/repos/ports"/
+    rsync -Pacv --delete "${host_pkgbase_repo}/" "${target_hostname}:.cache/repos/host_pkgbase/"
+    rsync -Pacv --delete "${jail_pkgbase_repo}/" "${target_hostname}:.cache/repos/jail_pkgbase/"
+    rsync -Pacv --delete "${ports_repo}/.latest/" "${target_hostname}:.cache/repos/ports/"
     ;;
   options)
     poudriere_options
