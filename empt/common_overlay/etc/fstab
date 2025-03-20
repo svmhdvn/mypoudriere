@@ -1,0 +1,3 @@
+/dev/gpt/empt_efiboot /boot/efi msdosfs rw,noatime 2 2
+/dev/gpt/empt_swap none swap sw 0 0
+tmpfs /tmp tmpfs rw,noatime,noexec,nosuid 0 0

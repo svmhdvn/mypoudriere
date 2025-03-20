@@ -1,2 +1,0 @@
-# name  getty                           type    status          comments
-ttyv0   "/usr/libexec/getty Pc"         xterm   onifexists secure

@@ -2,6 +2,7 @@ devel/ccache
 devel/git
 devel/hs-ShellCheck
 devel/universal-ctags
+editors/micro
 editors/kakoune
 ftp/curl
 net/mosh

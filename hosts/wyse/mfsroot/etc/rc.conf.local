@@ -1,0 +1,16 @@
+hostname="emptinstaller"
+root_rw_mount=NO
+keymap="colemak.acc.kbd"
+
+sshd_enable=YES
+sshd_rsa_enable=NO
+sshd_dsa_enable=NO
+sshd_ecdsa_enable=NO
+sshd_ed25519_enable=NO
+
+syslogd_enable=YES
+syslogd_flags="-8HNnss -O rfc5424"
+
+dumpdev=NO
+moused_nondefault_enable=NO
+powerd_enable=YES

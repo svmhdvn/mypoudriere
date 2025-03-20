@@ -1,3 +1,4 @@
 /dev/md0.uzip / ufs ro,noatime 0 0
-tmpfs /tmp tmpfs rw 0 0
-tmpfs /var tmpfs rw 0 0
+/dev/ufs/MFS /media/mfs ufs rw,noatime 0 0
+tmpfs /tmp tmpfs rw,noatime,noexec,nosuid 0 0
+tmpfs /var tmpfs rw,noatime 0 0

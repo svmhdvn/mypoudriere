@@ -80,9 +80,6 @@ device		zlib		# gzip/zlib compression/decompression library
 device  	mii		# Minimal MII support
 device  	mii_bitbang	# Common module for bit-bang'ing the MII
 ident		MYWYSE
-makeoptions	MFS_IMAGE=/home/siva/.cache/mypoudriere/mfs/wyse/testmfs_wyse.img.uzst
-options		MD_ROOT
-options		ROOTDEVNAME=\"ufs:md0.uzip\"
 options 	BPF_JITTER
 options 	CAPABILITIES	# fine-grained rights on file descriptors
 options 	CAPABILITY_MODE	# sandboxes with no global namespace access
@@ -101,7 +98,6 @@ options 	GEOM_PART_BSD64		# BSD disklabel64
 options 	GEOM_PART_EBR		# Extended Boot Records
 options 	GEOM_PART_GPT		# GPT partitioning
 options 	GEOM_PART_MBR		# MBR partitioning
-options 	GEOM_UZIP		# Read-only compressed disks
 options 	GZIO
 options 	INET			#Internet communications protocols
 options 	INET6			#IPv6 communications protocols
@@ -116,7 +112,6 @@ options 	LIBICONV
 options 	LIBMCHAIN
 options 	MAXCPU=2
 options 	MAXMEMDOM=1
-options 	MD_ROOT_READONLY
 options 	MSDOSFS			#MS DOS File System (FAT, FAT32)
 options 	NETLINK
 options 	NULLFS			#NULL filesystem

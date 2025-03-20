@@ -1176,7 +1176,7 @@ options 	SOFTUPDATES
 # Make the md device a potential root device, either with preloaded
 # images of type mfs_root or md_root.
 options		MD_ROOT
-makeoptions	MFS_IMAGE=/home/siva/.cache/mypoudriere/mfs/x470/testmfs_x470.img.uzst
+makeoptions	MFS_IMAGE=/home/siva/.cache/mypoudriere/mfs/x470/mfsroot.img.uzst
 options		ROOTDEVNAME=\"ufs:md0.uzip\"
 
 # Write-protect the md root device so that it may not be mounted writeable.

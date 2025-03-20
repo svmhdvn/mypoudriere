@@ -86,7 +86,7 @@ device		zlib		# gzip/zlib compression/decompression library
 device  	mii		# Minimal MII support
 device  	mii_bitbang	# Common module for bit-bang'ing the MII
 ident		MYX470
-makeoptions	MFS_IMAGE=/home/siva/.cache/mypoudriere/mfs/x470/testmfs_x470.img.uzst
+makeoptions	MFS_IMAGE=/home/siva/.cache/mypoudriere/mfs/x470/mfsroot.img.uzst
 options		MD_ROOT
 options		ROOTDEVNAME=\"ufs:md0.uzip\"
 options 	BPF_JITTER

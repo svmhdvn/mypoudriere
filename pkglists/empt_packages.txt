@@ -12,8 +12,9 @@ security/acme.sh
 mail/fdm
 
 # DNS deps
-dns/nsd
-dns/unbound
+# TODO using local unbound for now, remove once tested
+#dns/nsd
+#dns/unbound
 
 # mail deps
 databases/redis
@@ -25,7 +26,9 @@ security/cyrus-sasl2-gssapi
 security/cyrus-sasl2-saslauthd
 
 # cifs deps
+# TODO needs file conflict fixing
 net/samba419
+#net/samba420
 
 # IRC deps
 irc/ngircd
