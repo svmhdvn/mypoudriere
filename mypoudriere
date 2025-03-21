@@ -68,46 +68,22 @@ test -r /etc/sysctl.conf.pkgsave && cp /etc/sysctl.conf.pkgsave /etc/sysctl.conf
     doas rm -f /boot/kernel/linker.hints
 }
 
-build_mfs_image() {
-    _artifacts="${cache}/mfs/${target_hostname}"
-    mkdir -p "${_artifacts}"
+# Sets up the MFS world
+_mfs_pre() {
+  _artifacts="${cache}/mfs/${target_hostname}"
+  _worlddir="${_artifacts}/world"
+  _pkg_repos="${_artifacts}/pkg_repos"
 
-    _imagename="testmfs_${target_hostname}"
+  ## install the world first so its mfs image can be statically built into the kernel
+  doas chflags -Rf noschg "${_worlddir}" || true
+  doas rm -rf "${_worlddir}"
+  mkdir -p "${_worlddir}"
 
-    _worlddir="${_artifacts}/world"
-    _efiout="${_artifacts}/efiout"
-    _mfsimg="${_artifacts}/${_imagename}.img"
-    _ufsout="${_artifacts}/ufsout"
-    _pkg_repos="${_artifacts}/pkg_repos"
-
-    _efipart="${_artifacts}/efi.part"
-    _ufspart="${_artifacts}/ufs.part"
-    _finalimg="${_artifacts}/disk.img"
-
-    # Build the host and jail worlds
-    pull_freebsd_src
-    make -C "${freebsd_src}" -j"${nproc}" \
-        __MAKE_CONF="${target_confdir}/${target_hostname}-common-make.conf" \
-        SRCCONF="${target_confdir}/${target_hostname}-host-src.conf" \
-        SRC_ENV_CONF="${target_confdir}/${target_hostname}-host-src-env.conf" \
-        DESTDIR="${_worlddir}" \
-        buildworld
-
-    ## install the world first so its mfs image can be statically built into the kernel
-    doas chflags -Rf noschg "${_worlddir}" || true
-    doas rm -rf "${_worlddir}"
-    doas make -C "${freebsd_src}" -j"${nproc}" \
-        __MAKE_CONF="${target_confdir}/${target_hostname}-common-make.conf" \
-        SRCCONF="${target_confdir}/${target_hostname}-host-src.conf" \
-        SRC_ENV_CONF="${target_confdir}/${target_hostname}-host-src-env.conf" \
-        DESTDIR="${_worlddir}" \
-        installworld distrib-dirs distribution
-
-    # install the desired packages to the world
-    mkdir -p "${_pkg_repos}"
-    cat > "${_pkg_repos}/repos.conf" <<EOF
-jail_pkgbase: {
-  url: "file://${jail_pkgbase_repo}",
+  # install the desired packages to the world
+  mkdir -p "${_pkg_repos}"
+  cat > "${_pkg_repos}/repos.conf" <<EOF
+pkgbase: {
+  url: "file://${host_pkgbase_repo}",
   enabled: yes
 }
 ports: {
@@ -115,56 +91,78 @@ ports: {
   enabled: yes
 }
 EOF
+  doas pkg -r "${_worlddir}" -R "${_pkg_repos}" install -y -r pkgbase -g 'FreeBSD-*'
 
-    # copy world overlay and run custom configuration script
-    doas cp -R "${target_confdir}/mfsroot/" "${_worlddir}/"
-    . "${target_confdir}/mfs_setup.sh"
-    _host_specific_setup
+  # copy world overlay and run custom configuration script
+  doas cp -R "${target_confdir}/mfsroot/" "${_worlddir}/"
+  (. "${target_confdir}/mfs_setup.sh" && _host_specific_setup)
+}
 
-    # Build the world mfs_root uzip image
-    doas makefs -o label="${_imagename}" "${_mfsimg}" "${_worlddir}"
-    mkuzip -A zstd -S "${_mfsimg}"
+# Finalizes the MFS image build after customizing the world
+_mfs_post() {
+  _imagename="mfsroot"
+  _efiout="${_artifacts}/efiout"
+  _mfsimg="${_artifacts}/${_imagename}.img"
+  _ufsout="${_artifacts}/ufsout"
+  _efipart="${_artifacts}/efi.part"
+  _ufspart="${_artifacts}/ufs.part"
+  _finalimg="${_artifacts}/disk.img"
 
-    # Build the kernel which embeds the newly built mfsroot uzip image
-    grep '^[a-z]' "${target_confdir}/${target_kernconf}_LINT" \
-        | sort -u \
-        | tee "${target_confdir}/${target_kernconf}" "${freebsd_src}/sys/${target_arch}/conf/${target_kernconf}" > /dev/null
+  # Build the UFS partition image
+  doas rm -rf "${_ufsout}"
+  mkdir -p "${_ufsout}"
+  cp -R "${_worlddir}/boot" "${_ufsout}/boot"
 
-    make -C "${freebsd_src}" -j"${nproc}" \
-        __MAKE_CONF="${target_confdir}/${target_hostname}-common-make.conf" \
-        SRCCONF="${target_confdir}/${target_hostname}-host-src.conf" \
-        SRC_ENV_CONF="${target_confdir}/${target_hostname}-host-src-env.conf" \
-        KERNCONF="${target_kernconf}" \
-        buildkernel
+  doas rm -rf "${_worlddir}/boot"
+  doas ln -s /media/mfs/boot "${_worlddir}/boot"
 
-    doas make -C "${freebsd_src}" -j"${nproc}" \
-        __MAKE_CONF="${target_confdir}/${target_hostname}-common-make.conf" \
-        SRCCONF="${target_confdir}/${target_hostname}-host-src.conf" \
-        SRC_ENV_CONF="${target_confdir}/${target_hostname}-host-src-env.conf" \
-        KERNCONF="${target_kernconf}" \
-        DESTDIR="${_worlddir}" \
-        BATCH_DELETE_OLD_FILES=YES \
-        installkernel
+  # Build the world mfs_root uzip image
+  doas makefs -o label="${_imagename}" "${_mfsimg}" "${_worlddir}"
+  mkuzip -A zstd -S "${_mfsimg}"
 
-    # Build the EFI partition image
-    doas rm -rf "${_efiout}"
-    mkdir -p "${_efiout}/EFI/BOOT"
-    cp "${_worlddir}/boot/loader.efi" "${_efiout}/EFI/BOOT/BOOTX64.EFI"
-    makefs -t msdos -o volume_label=EFISYS -s 10m "${_efipart}" "${_efiout}"
+  # Build the kernel which embeds the newly built mfsroot uzip image
+  grep '^[a-z]' "${target_confdir}/${target_kernconf}_LINT" \
+    | sort -u \
+    | tee "${target_confdir}/${target_kernconf}" "${freebsd_src}/sys/${target_arch}/conf/${target_kernconf}" > /dev/null
+  cat > "${freebsd_src}/sys/${target_arch}/conf/${target_kernconf}_MFS" <<EOF
+include		${target_kernconf}
+options 	GEOM_UZIP
+options		MD_ROOT
+makeoptions	MFS_IMAGE=${_mfsimg}.uzst
+options		ROOTDEVNAME=\"ufs:md0.uzip\"
+options 	MD_ROOT_READONLY
+EOF
 
-    # Build the UFS partition image
-    doas rm -rf "${_ufsout}"
-    mkdir -p "${_ufsout}"
-    cp -R "${_worlddir}/boot" "${_ufsout}/boot"
-    makefs "${_ufspart}" "${_ufsout}"
+  make -C "${freebsd_src}" -j"${nproc}" \
+    __MAKE_CONF="${target_confdir}/${target_hostname}-common-make.conf" \
+    SRCCONF="${target_confdir}/${target_hostname}-host-src.conf" \
+    SRC_ENV_CONF="${target_confdir}/${target_hostname}-host-src-env.conf" \
+    KERNCONF="${target_kernconf}_MFS" \
+    buildkernel
 
-    # Build the final disk image
-    mkimg -s gpt \
-        -p "efi:=${_efipart}" \
-        -p "freebsd-ufs:=${_ufspart}" \
-        -o "${_finalimg}"
+  doas make -C "${freebsd_src}" -j"${nproc}" \
+    __MAKE_CONF="${target_confdir}/${target_hostname}-common-make.conf" \
+    SRCCONF="${target_confdir}/${target_hostname}-host-src.conf" \
+    SRC_ENV_CONF="${target_confdir}/${target_hostname}-host-src-env.conf" \
+    KERNCONF="${target_kernconf}_MFS" \
+    DESTDIR="${_ufsout}" \
+    BATCH_DELETE_OLD_FILES=YES \
+    installkernel
+  makefs -o label=MFSBOOT "${_ufspart}" "${_ufsout}"
 
-    ls -alh "${_artifacts}"
+  # Build the EFI partition image
+  doas rm -rf "${_efiout}"
+  mkdir -p "${_efiout}/EFI/BOOT"
+  cp "${_ufsout}/boot/loader.efi" "${_efiout}/EFI/BOOT/BOOTX64.EFI"
+  makefs -t msdos -o volume_label=EFISYS -s 10m "${_efipart}" "${_efiout}"
+
+  # Build the final disk image
+  mkimg -s gpt \
+    -p "efi:=${_efipart}" \
+    -p "freebsd-ufs:=${_ufspart}" \
+    -o "${_finalimg}"
+
+  ls -alh "${_artifacts}"
 }
 
 build_host_pkgbase() {
@@ -429,7 +427,13 @@ case "$1" in
     poudriere_bulk
     ;;
   mfs)
-    build_mfs_image
+    _mfs_pre
+    _mfs_post
+    ;;
+  empt)
+    _mfs_pre
+    _mfs_empt
+    _mfs_post
     ;;
   hostconfig)
     make -C "${freebsd_src}" \
