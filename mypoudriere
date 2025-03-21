@@ -92,6 +92,7 @@ ports: {
 }
 EOF
   doas pkg -r "${_worlddir}" -R "${_pkg_repos}" install -y -r pkgbase -g 'FreeBSD-*'
+  doas pkg -r "${_worlddir}" -R "${_pkg_repos}" install -y -r ports pkg
 
   # copy world overlay and run custom configuration script
   doas cp -R "${target_confdir}/mfsroot/" "${_worlddir}/"
@@ -163,6 +164,14 @@ EOF
     -o "${_finalimg}"
 
   ls -alh "${_artifacts}"
+}
+
+_mfs_empt() {
+  doas cp -R "${top}/empt" "${_worlddir}/empt"
+  doas mkdir -p "${_worlddir}/empt/repos"
+  doas cp -R "${host_pkgbase_repo}/" "${_worlddir}/empt/repos/pkgbase"
+  doas cp -R "${ports_repo}/" "${_worlddir}/empt/repos/ports"
+  doas cp "${ports_pkglist}" "${_worlddir}/empt/pkglist.txt"
 }
 
 build_host_pkgbase() {

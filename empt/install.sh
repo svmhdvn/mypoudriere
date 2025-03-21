@@ -30,7 +30,7 @@ gpart bootcode -b /boot/pmbr -p /boot/gptzfsboot -i 2 "${vdev}"
 gpart add -a 1m -l empt_swap -t freebsd-swap -s 2g "${vdev}"
 
 gpart add -a 1m -l empt_zfs -t freebsd-zfs "${vdev}"
-zpool labelclear -f /dev/gpt/empt_zfs
+zpool labelclear -f /dev/gpt/empt_zfs || true
 
 ##### POPULATE ZPOOL #####
 
@@ -65,7 +65,7 @@ zpool set bootfs=zroot/ROOT/default zroot
 
 ##### INSTALL WORLD #####
 
-cat > repos.conf <<EOF
+cat > /tmp/repos.conf <<EOF
 pkgbase: {
   url: "file://${PWD}/repos/pkgbase",
   enabled: yes
@@ -75,7 +75,7 @@ ports: {
   enabled: yes
 }
 EOF
-_pkg_cmd="env ABI=FreeBSD:15:amd64 pkg -o REPOS_DIR=${PWD} -o ASSUME_ALWAYS_YES=yes -r /mnt/empt"
+_pkg_cmd="env ABI=FreeBSD:15:amd64 pkg -o REPOS_DIR=/tmp -o ASSUME_ALWAYS_YES=yes -r /mnt/empt"
 ${_pkg_cmd} install -y -r pkgbase -g 'FreeBSD-*'
 grep '^\s*\w' pkglist.txt | xargs ${_pkg_cmd} install -y -r ports
 
@@ -97,23 +97,24 @@ umount /mnt/empt/boot/efi
 ##### SETUP EMPT INSIDE CHROOT #####
 
 # copy world overlay and run custom configuration script
-#cp -R common_overlay/ /mnt/empt/
-#chroot /mnt/empt /bin/sh <<EOF
-#
-## Setup ACME for automatic TLS cert renewal
-## TODO replace with production once working
+cp -R common_overlay/ /mnt/empt/
+chroot /mnt/empt /bin/sh <<EOF
+
+# Setup ACME for automatic TLS cert renewal
+# TODO setup acme with katcheri.org once everything else is done
+# TODO replace with production once working
 #acme.sh --home /var/db/acme --set-default-ca --server letsencrypt_test
 #acme.sh --home /var/db/acme --issue --standalone -d 'empt.${org_domain}'
 #acme.sh --install-cert -d example.com \
 #  --fullchain-file /etc/ssl/empt.${org_domain}.crt.pem \
 #  --key-file       /etc/ssl/empt.${org_domain}.key.pem  \
 #  --reloadcmd     'service nginx force-reload'
-#
-## TODO setup NFS
-## Set permissions on the EMPT hierarchy
-## TODO tighten up permissions
-#
-#install -d -o root -g wheel -m 1755 /empt/groups
-#install -d -o soju -g soju -m 0755 /empt/sojudb
-#
-#EOF
+
+# TODO setup NFS
+# Set permissions on the EMPT hierarchy
+# TODO tighten up permissions
+
+install -d -o root -g wheel -m 1755 /empt/groups
+install -d -o soju -g soju -m 0755 /empt/sojudb
+
+EOF

@@ -2,3 +2,4 @@
 /dev/ufs/MFSBOOT /media/mfs ufs rw,noatime 0 0
 tmpfs /tmp tmpfs rw,noexec,nosuid 0 0
 tmpfs /var tmpfs rw 0 0
+tmpfs /mnt tmpfs rw 0 0
