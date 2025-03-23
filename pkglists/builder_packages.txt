@@ -5,6 +5,7 @@ devel/universal-ctags
 editors/micro
 editors/kakoune
 ftp/curl
+lang/rust
 net/mosh
 net/rsync
 net/syncthing

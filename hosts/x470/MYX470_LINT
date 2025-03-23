@@ -176,7 +176,7 @@ options 	GEOM_PART_MBR		# MBR partitioning
 #options 	GEOM_RAID3		# RAID3 functionality.
 #options 	GEOM_SHSEC		# Shared secret.
 options 	GEOM_STRIPE		# Disk striping.
-options 	GEOM_UZIP		# Read-only compressed disks
+#options 	GEOM_UZIP		# Read-only compressed disks
 #options 	GEOM_VINUM		# Vinum logical volume manager
 #options 	GEOM_VIRSTOR		# Virtual storage.
 #options 	GEOM_ZERO		# Performance testing helper.
@@ -1175,12 +1175,12 @@ options 	SOFTUPDATES
 
 # Make the md device a potential root device, either with preloaded
 # images of type mfs_root or md_root.
-options		MD_ROOT
-makeoptions	MFS_IMAGE=/home/siva/.cache/mypoudriere/mfs/x470/mfsroot.img.uzst
-options		ROOTDEVNAME=\"ufs:md0.uzip\"
+#options		MD_ROOT
+#makeoptions	MFS_IMAGE=/home/siva/.cache/mypoudriere/mfs/x470/mfsroot.img.uzst
+#options		ROOTDEVNAME=\"ufs:md0.uzip\"
 
 # Write-protect the md root device so that it may not be mounted writeable.
-options 	MD_ROOT_READONLY
+#options 	MD_ROOT_READONLY
 
 # Allow to read MD image from external memory regions
 #options 	MD_ROOT_MEM
