@@ -1,3 +1,4 @@
+converters/dos2unix
 devel/ccache
 devel/git
 devel/hs-ShellCheck

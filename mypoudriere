@@ -115,6 +115,12 @@ _mfs_post() {
   cp -R "${_worlddir}/boot" "${_ufsout}/boot"
 
   doas rm -rf "${_worlddir}/boot"
+  doas mkdir -p \
+    "${_worlddir}/home" \
+    "${_worlddir}/media/mfs" \
+    "${_worlddir}/mnt" \
+    "${_worlddir}/root"
+
   doas ln -s /media/mfs/boot "${_worlddir}/boot"
 
   # Build the world mfs_root uzip image

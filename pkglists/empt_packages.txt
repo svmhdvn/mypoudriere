@@ -20,15 +20,15 @@ mail/fdm
 databases/redis
 mail/cyrus-imapd310
 mail/mlmmj
-mail/postfix
+#mail/postfix
 mail/rspamd
 security/cyrus-sasl2-gssapi
 security/cyrus-sasl2-saslauthd
 
 # cifs deps
 # TODO needs file conflict fixing
-net/samba419
-#net/samba420
+#net/samba419
+net/samba420
 
 # IRC deps
 irc/ngircd

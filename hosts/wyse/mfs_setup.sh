@@ -1,16 +1,15 @@
+# TODO do a final grep to ensure that no files contain
+# any templating artifacts like %%EMPT_XXX%%
 _host_specific_setup() {
-  #echo '$6$Zkev60CweKRVaFcr$lMpMUp06d.10Vdg9iuM3qzCVZa1dBoyAwxD6TRRPpxsShl4dU8/uzdzB50N9PRv34QoTlvTcKou//pPuqcU6W0' | \
-  #  doas pw -R "${_worlddir}" usermod root -H 0
-  doas cp -R "${top}/empt" "${_worlddir}/empt"
+  # environment:
+  : ${EMPT_ORG_DOMAIN:=empt.test}
 
-  doas mkdir -p \
-    "${_worlddir}/home" \
-    "${_worlddir}/media/mfs" \
-    "${_worlddir}/mnt" \
-    "${_worlddir}/root" \
-    "${_worlddir}/empt/repos"
+  echo '$6$lNfYRw2DzRqbPccf$gH0wn2hv64/QIPtNDRazNok7IdySenCyhYFTUyyZoRXkABvhJnpeUdYSX2PMguUfCvVQ0hTsbDOo5Nd45Ki010' | \
+    doas pw -R "${_worlddir}" usermod root -H 0
+  doas pw -R "${_worlddir}" useradd mlmmj -c 'mlmmj manager' -d /var/spool/mlmmj -s /usr/sbin/nologin -h -
+  sysrc -f "${_worlddir}/etc/rc.conf.local" hostname="it.${EMPT_ORG_DOMAIN}"
 
-  doas cp -R "${host_pkgbase_repo}/" "${_worlddir}/empt/repos/pkgbase"
-  doas cp -R "${ports_repo}/" "${_worlddir}/empt/repos/ports"
-  doas cp "${ports_pkglist}" "${_worlddir}/empt/pkglist.txt"
+  sed -i'' \
+    -e "s,%%EMPT_ORG_DOMAIN%%,${EMPT_ORG_DOMAIN},g" \
+    "${_worlddir}/usr/local/etc/smb4.conf"
 }

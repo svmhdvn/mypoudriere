@@ -1,4 +1,7 @@
 compatibility_level = 4.7
+
+queue_directory = /empt/postfix_queue
+
 myorigin = $mydomain
 mydestination = $myhostname, mail.home.arpa, localhost
 mynetworks_style = host

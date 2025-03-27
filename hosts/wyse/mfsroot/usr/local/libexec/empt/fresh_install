@@ -1,0 +1,90 @@
+#!/bin/sh
+set -eu
+
+# TODO ask for the org_domain while generating the MFS image
+while getopts d:v: name
+do
+  case "${name}" in
+    v) vdev="${OPTARG}" ;;
+    ?)
+      echo "Usage: $0 -d <org domain name> -v <storage vdev>" >&2
+      exit 64 # EX_USAGE
+      ;;
+    *) ;;
+  esac
+done
+shift $((OPTIND - 1))
+
+fqdn="$(hostname)"
+org_domain="$(hostname -d)"
+REALM="$(echo "${org_domain}" | tr '[:lower:]' '[:upper:]')"
+SERVICE_PRINCIPALS='cifs smtp imap HTTP host'
+
+# TODO see if compression=on (lz4) offers better performance
+zpool create -f \
+  -O setuid=off \
+  -O exec=off \
+  -O atime=off \
+  -O compression=zstd \
+  empt "${vdev}"
+
+zfs create -o exec=on empt/postfix_queue
+zfs create -o mountpoint=/var/heimdal empt/krb5
+
+# TODO move all the permissions stuff to an mtree file
+# =================================
+zfs create empt/mlmmj_queue
+install -d -o mlmmj -g mlmmj -m 0755 /empt/mlmmj_queue
+zfs create empt/users
+install -d -o root -g wheel -m 1755 /empt/users
+zfs create empt/groups
+install -d -o root -g wheel -m 1755 /empt/groups
+
+install -d -o root -g mail -m 0755 /empt/postfix_etc
+install -d -o cyrus -g mail -m 0755 \
+  /var/run/cyrusimap \
+  /empt/cyrusimap/db \
+  /empt/cyrusimap/spool \
+install -d -o soju -g soju -m 0755 /empt/sojudb
+install -d -o root -g wheel -m 0755 /empt/yp
+# =================================
+
+# TODO can this be generated into the MFS image as RO by using
+# a builder host-side krb5 installation?
+# TODO extract keytabs into their own service directories chowned
+# properly
+# =================================
+kstash --random-key
+kadmin -l init \
+  --realm-max-renewable-life=1w \
+  --realm-max-ticket-life=1w \
+  "${REALM}"
+for p in ${SERVICE_PRINCIPALS}; do
+  kadmin -l add --random-key --use-defaults "${p}/${fqdn}"
+done
+kadmin -l ext_keytab --keytab=/empt/krb5.keytab "*/${fqdn}"
+# =================================
+
+touch \
+  /empt/postfix_etc/mlmmj_aliases \
+  /empt/postfix_etc/mlmmj_transport
+postmap empt/postfix_etc/mlmmj_aliases
+postmap empt/postfix_etc/mlmmj_transport
+postalias cdb:/etc/mail/aliases
+postfix set-permissions
+
+/usr/local/cyrus/sbin/mkimap
+
+# TODO setup NFS
+# Set permissions on the EMPT hierarchy
+# TODO tighten up permissions
+
+# Setup ACME for automatic TLS cert renewal
+# TODO setup acme with katcheri.org once everything else is done
+# TODO replace with production once working
+#acme.sh --home /var/db/acme --set-default-ca --server letsencrypt_test
+#acme.sh --home /var/db/acme --issue --standalone -d 'empt.${org_domain}'
+#acme.sh --install-cert -d example.com \
+#  --fullchain-file /etc/ssl/empt.${org_domain}.crt.pem \
+#  --key-file       /etc/ssl/empt.${org_domain}.key.pem  \
+#  --reloadcmd     'service nginx force-reload'

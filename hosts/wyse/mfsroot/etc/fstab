@@ -1,5 +1,3 @@
-/dev/md0.uzip / ufs ro,noatime 0 0
-/dev/ufs/MFSBOOT /media/mfs ufs rw,noatime 0 0
-tmpfs /tmp tmpfs rw,noexec,nosuid 0 0
-tmpfs /var tmpfs rw 0 0
-tmpfs /mnt tmpfs rw 0 0
+/dev/gpt/empt_efiboot /boot/efi msdosfs rw,noatime 2 2
+/dev/gpt/empt_swap none swap sw 0 0
+tmpfs /tmp tmpfs rw,noatime,noexec,nosuid 0 0
