@@ -5,7 +5,6 @@ net/rsync
 # system hardware related stuff
 sysutils/cpu-microcode
 sysutils/smartmontools
-sysutils/x86info
 
 # cronjob deps
 security/acme.sh

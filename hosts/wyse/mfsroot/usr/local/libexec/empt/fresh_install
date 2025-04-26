@@ -2,12 +2,12 @@
 set -eu
 
 # TODO ask for the org_domain while generating the MFS image
-while getopts d:v: name
+while getopts v: name
 do
   case "${name}" in
     v) vdev="${OPTARG}" ;;
     ?)
-      echo "Usage: $0 -d <org domain name> -v <storage vdev>" >&2
+      echo "Usage: $0 -v <storage vdev>" >&2
       exit 64 # EX_USAGE
       ;;
     *) ;;
@@ -15,9 +15,6 @@ do
 done
 shift $((OPTIND - 1))
 
-fqdn="$(hostname)"
-org_domain="$(hostname -d)"
-REALM="$(echo "${org_domain}" | tr '[:lower:]' '[:upper:]')"
 SERVICE_PRINCIPALS='cifs smtp imap HTTP host'
 
 # TODO see if compression=on (lz4) offers better performance
@@ -44,9 +41,16 @@ install -d -o root -g mail -m 0755 /empt/postfix_etc
 install -d -o cyrus -g mail -m 0755 \
   /var/run/cyrusimap \
   /empt/cyrusimap/db \
-  /empt/cyrusimap/spool \
+  /empt/cyrusimap/spool
 install -d -o soju -g soju -m 0755 /empt/sojudb
 install -d -o root -g wheel -m 0755 /empt/yp
+install -d -o rspamd -g rspamd -m 0755 /var/db/opendkim
+install -d -o redis -g redis \
+  /var/log/redis \
+  /var/db/redis \
+  /var/run/redis
+install -d -o redis -g rspamd -m 0775 /var/run/redis-rspamd
+install -d -o rspamd -g rspamd -m 0700 /var/db/opendkim
 # =================================
 
 # TODO can this be generated into the MFS image as RO by using
@@ -58,22 +62,30 @@ kstash --random-key
 kadmin -l init \
   --realm-max-renewable-life=1w \
   --realm-max-ticket-life=1w \
-  "${REALM}"
+  '%%EMPT_REALM%%'
 for p in ${SERVICE_PRINCIPALS}; do
-  kadmin -l add --random-key --use-defaults "${p}/${fqdn}"
+  kadmin -l add --random-key --use-defaults "${p}/empt.%%EMPT_ORG_DOMAIN%%"
 done
-kadmin -l ext_keytab --keytab=/empt/krb5.keytab "*/${fqdn}"
+kadmin -l ext_keytab --keytab=/empt/krb5.keytab "*/empt.%%EMPT_ORG_DOMAIN%%"
 # =================================
 
 touch \
   /empt/postfix_etc/mlmmj_aliases \
   /empt/postfix_etc/mlmmj_transport
-postmap empt/postfix_etc/mlmmj_aliases
-postmap empt/postfix_etc/mlmmj_transport
+postmap /empt/postfix_etc/mlmmj_aliases
+postmap /empt/postfix_etc/mlmmj_transport
 postalias cdb:/etc/mail/aliases
 postfix set-permissions
 
 /usr/local/cyrus/sbin/mkimap
+
+# TODO reenable once testing is done with FreeDNS DKIM keys
+# =========================================================
+# TODO change to ed25519 keys once every major provider supports verification
+#rspamadm dkim_keygen -s key1 -d "${ORG_DOMAIN}" -b 2048 \
+#  -k "/var/db/opendkim/${ORG_DOMAIN}/key1.private" \
+#  > "/empt/jails/mail/var/db/opendkim/${ORG_DOMAIN}/key1.txt"
+# =========================================================
 
 # TODO setup NFS
 # Set permissions on the EMPT hierarchy

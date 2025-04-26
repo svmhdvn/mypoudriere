@@ -36,6 +36,7 @@ device		hidraw		# Raw access driver
 device		hkbd		# HID keyboard
 device		hms		# HID mouse
 device		hsctrl		# System controls
+device		hwpmc			# Driver (also a loadable module)
 device		ichwd
 device		intpm
 device		ipmi
@@ -85,7 +86,10 @@ device		xz		# xz_embedded LZMA de-compression library
 device		zlib		# gzip/zlib compression/decompression library
 device  	mii		# Minimal MII support
 device  	mii_bitbang	# Common module for bit-bang'ing the MII
+envvar hint.acpi_throttle.0.disabled="1"
+envvar hint.p4tcc.0.disabled="1"
 ident		MYX470
+options		RACCT_DEFAULT_TO_DISABLED
 options 	BPF_JITTER
 options 	CAPABILITIES	# fine-grained rights on file descriptors
 options 	CAPABILITY_MODE	# sandboxes with no global namespace access
@@ -94,11 +98,10 @@ options 	COMPAT_FREEBSD11
 options 	COMPAT_FREEBSD12
 options 	COMPAT_FREEBSD13
 options 	COMPAT_FREEBSD14
-options 	DEVICE_POLLING
-options 	DIRECTIO
 options 	EFIRT
 options 	FDESCFS			#File descriptor filesystem
 options 	FFS			#Fast filesystem
+options 	FUSEFS			#FUSEFS support module
 options 	GEOM_LABEL		# Providers labelization.
 options 	GEOM_PART_BSD		# BSD disklabel
 options 	GEOM_PART_BSD64		# BSD disklabel64
@@ -107,6 +110,8 @@ options 	GEOM_PART_GPT		# GPT partitioning
 options 	GEOM_PART_MBR		# MBR partitioning
 options 	GEOM_STRIPE		# Disk striping.
 options 	GZIO
+options 	HWPMC_HOOKS		# Other necessary kernel hooks
+options 	HZ=100
 options 	INCLUDE_CONFIG_FILE     # Include this file in kernel
 options 	INET			#Internet communications protocols
 options 	INET6			#IPv6 communications protocols
@@ -115,23 +120,31 @@ options 	KERN_TLS		# TLS transmit and receive offload
 options 	LIBALIAS
 options 	LIBICONV
 options 	LIBMCHAIN
-options 	MAXCPU=12
+options 	MAXCPU=16
 options 	MAXMEMDOM=1
 options 	MSDOSFS			#MS DOS File System (FAT, FAT32)
 options 	NETLINK
 options 	NULLFS			#NULL filesystem
+options 	PCI_HP			# PCI-Express native HotPlug
+options 	PCI_IOV			# PCI SR-IOV support
+options 	PREEMPTION
 options 	PROCFS			#Process filesystem (requires PSEUDOFS)
 options 	PSEUDOFS		#Pseudo-filesystem framework
 options 	RACCT
 options 	RATELIMIT		# TX rate limiting support
 options 	RCTL
 options 	SCHED_ULE
+options 	SCSI_DELAY=5000	# Be pessimistic about Joe SCSI device
 options 	SMP			# Symmetric MultiProcessor Kernel
 options 	SOFTUPDATES
 options 	STATS
+options 	SYSVMSG
+options 	SYSVSEM
+options 	SYSVSHM
 options 	TCP_OFFLOAD		# TCP offload support.
 options 	TCP_RACK
 options 	TMPFS			#Efficient memory filesystem
+options 	UFS_DIRHASH
 options 	VESA
 options 	X86BIOS
 options 	ZFS

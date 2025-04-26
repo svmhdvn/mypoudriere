@@ -1,26 +1,26 @@
 # ===== OUTPUT SETUP =====
 
-minutely_output='it@%%ORG_DOMAIN%%'
+minutely_output='it@%%EMPT_ORG_DOMAIN%%'
 minutely_show_success=NO
 minutely_show_info=YES
 minutely_show_badconfig=YES
 
-hourly_output='it@%%ORG_DOMAIN%%'
+hourly_output='it@%%EMPT_ORG_DOMAIN%%'
 hourly_show_success=NO
 hourly_show_info=YES
 hourly_show_badconfig=YES
 
-daily_output='it@%%ORG_DOMAIN%%'
+daily_output='it@%%EMPT_ORG_DOMAIN%%'
 daily_show_success=NO
 daily_show_info=YES
 daily_show_badconfig=YES
 
-weekly_output='it@%%ORG_DOMAIN%%'
+weekly_output='it@%%EMPT_ORG_DOMAIN%%'
 weekly_show_success=NO
 weekly_show_info=YES
 weekly_show_badconfig=YES
 
-monthly_output='it@%%ORG_DOMAIN%%'
+monthly_output='it@%%EMPT_ORG_DOMAIN%%'
 monthly_show_success=NO
 monthly_show_info=YES
 monthly_show_badconfig=YES

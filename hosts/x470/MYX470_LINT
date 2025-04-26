@@ -229,7 +229,7 @@ options 	SMP			# Symmetric MultiProcessor Kernel
 
 # MAXCPU defines the maximum number of CPUs that can boot in the system.
 # A default value should be already present, for every architecture.
-options 	MAXCPU=12
+options 	MAXCPU=16
 
 # NUMA enables use of Non-Uniform Memory Access policies in various kernel
 # subsystems.
@@ -304,7 +304,7 @@ options 	MAXMEMDOM=1
 #	  a lock hierarchy violation occurs or if locks are held when going to
 #	  sleep.
 # WITNESS_SKIPSPIN disables the witness checks on spin mutexes.
-#options 	PREEMPTION
+options 	PREEMPTION
 #options 	FULL_PREEMPTION
 #options 	WITNESS
 #options 	WITNESS_KDB
@@ -376,9 +376,9 @@ options 	COMPAT_FREEBSD14
 # Definition-style interprocess communication, in the form of shared
 # memory, semaphores, and message queues, respectively.
 #
-#options 	SYSVSHM
-#options 	SYSVSEM
-#options 	SYSVMSG
+options 	SYSVSHM
+options 	SYSVSEM
+options 	SYSVMSG
 
 
 #####################################################################
@@ -639,9 +639,9 @@ options 	COMPAT_FREEBSD14
 # Additional configuration options may be required on specific architectures,
 # please see hwpmc(4).
 
-#device		hwpmc			# Driver (also a loadable module)
+device		hwpmc			# Driver (also a loadable module)
 #options 	HWPMC_DEBUG
-#options 	HWPMC_HOOKS		# Other necessary kernel hooks
+options 	HWPMC_HOOKS		# Other necessary kernel hooks
 
 
 #####################################################################
@@ -1120,7 +1120,7 @@ options 	FFS			#Fast filesystem
 #options 	AUTOFS			#Automounter filesystem
 options 	CD9660			#ISO 9660 filesystem
 options 	FDESCFS			#File descriptor filesystem
-#options 	FUSEFS			#FUSEFS support module
+options 	FUSEFS			#FUSEFS support module
 options 	MSDOSFS			#MS DOS File System (FAT, FAT32)
 #options 	NFSLOCKD		#Network Lock Manager
 #options 	NFSD			#Network Filesystem Server
@@ -1156,7 +1156,7 @@ options 	SOFTUPDATES
 
 # Directory hashing improves the speed of operations on very large
 # directories at the expense of some memory.
-#options 	UFS_DIRHASH
+options 	UFS_DIRHASH
 
 # Gjournal-based UFS journaling support.
 #options 	UFS_GJOURNAL
@@ -1288,7 +1288,7 @@ options 	CAPABILITY_MODE	# sandboxes with no global namespace access
 # use a value of 100. Lower values may lower overhead at the expense of accuracy
 # of scheduling, though the adaptive tick code reduces that overhead.
 
-#options 	HZ=100
+options 	HZ=100
 
 # Enable support for the kernel PLL to use an external PPS signal,
 # under supervision of [x]ntpd(8)
@@ -1428,7 +1428,7 @@ device		ctl		#CAM Target Layer
 #options 	CAM_MAX_HIGHPOWER=4
 #options 	SCSI_NO_SENSE_STRINGS
 #options 	SCSI_NO_OP_STRINGS
-#options 	SCSI_DELAY=5000	# Be pessimistic about Joe SCSI device
+options 	SCSI_DELAY=5000	# Be pessimistic about Joe SCSI device
 #options 	CAM_IOSCHED_DYNAMIC
 #options 	CAM_IO_STATS
 #options 	CAM_TEST_FAILURE
@@ -1504,8 +1504,8 @@ options 	LIBICONV
 # PCI bus & PCI options:
 #
 device		pci
-#options 	PCI_HP			# PCI-Express native HotPlug
-#options 	PCI_IOV			# PCI SR-IOV support
+options 	PCI_HP			# PCI-Express native HotPlug
+options 	PCI_IOV			# PCI SR-IOV support
 
 
 #####################################################################
@@ -2741,7 +2741,7 @@ device		cryptodev	# /dev/crypto for access to h/w
 # file.  Both offset and length of the read operation must be
 # multiples of the physical media sector size.
 #
-options 	DIRECTIO
+#options 	DIRECTIO
 
 # Specify a lower limit for the number of swap I/O buffers.  They are
 # (among other things) used when bypassing the buffer cache due to
@@ -2791,6 +2791,7 @@ options 	DIRECTIO
 
 # Resource Accounting
 options 	RACCT
+options		RACCT_DEFAULT_TO_DISABLED
 
 # Resource Limits
 options 	RCTL
@@ -2945,7 +2946,7 @@ device		filemon		# file monitoring for make(1) meta-mode
 # Not all device drivers support this mode of operation at the time of
 # this writing.  See polling(4) for more details.
 
-options 	DEVICE_POLLING
+#options 	DEVICE_POLLING
 
 # BPF_JITTER adds support for BPF just-in-time compiler.
 
@@ -3685,3 +3686,6 @@ options 	ZFS
 #options	KASAN			# Kernel Address Sanitizer
 #options	KCSAN			# Kernel Concurrency Sanitizer
 #options	KMSAN			# Kernel Memory Sanitizer
+
+envvar hint.acpi_throttle.0.disabled="1"
+envvar hint.p4tcc.0.disabled="1"

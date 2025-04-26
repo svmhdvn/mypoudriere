@@ -1,8 +1,5 @@
 ports-mgmt/pkg
 
-# system hardware related stuff
-#sysutils/x86info
-
 # jail services
 dns/unbound
 mail/cyrus-imapd310

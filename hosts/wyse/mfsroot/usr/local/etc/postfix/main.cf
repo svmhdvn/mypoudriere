@@ -18,8 +18,8 @@ strict_rfc821_envelopes = yes
 
 smtpd_tls_auth_only = yes
 smtpd_tls_received_header = yes
-smtpd_tls_cert_file = /usr/local/etc/ssl/certs/mail.%%ORG_DOMAIN%%.crt.pem
-smtpd_tls_key_file = /usr/local/etc/ssl/certs/mail.%%ORG_DOMAIN%%.key.pem
+smtpd_tls_cert_file = /usr/local/etc/ssl/certs/mail.%%EMPT_ORG_DOMAIN%%.crt.pem
+smtpd_tls_key_file = /usr/local/etc/ssl/certs/mail.%%EMPT_ORG_DOMAIN%%.key.pem
 smtpd_tls_received_header = yes
 
 # TODO change if some desired TLS implementations don't support 1.3
@@ -30,7 +30,7 @@ smtpd_sasl_security_options = noanonymous, noplaintext
 # but plaintext auth is fine when using TLS
 smtpd_sasl_tls_security_options = noanonymous
 
-virtual_mailbox_domains = %%ORG_DOMAIN%%
+virtual_mailbox_domains = %%EMPT_ORG_DOMAIN%%
 virtual_transport = lmtp:unix:/var/run/cyrusimap/lmtp.sock
 virtual_mailbox_maps = socketmap:unix:/var/run/cyrusimap/smmap.sock:smmapd
 virtual_destination_concurrency_limit = 300

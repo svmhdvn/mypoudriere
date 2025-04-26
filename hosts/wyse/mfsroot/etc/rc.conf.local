@@ -1,4 +1,4 @@
-hostname="jailhost1"
+hostname="empt.%%EMPT_ORG_DOMAIN%%"
 # TODO remove once done testing
 keymap="colemak.acc.kbd"
 
@@ -31,6 +31,8 @@ zfs_enable=YES
 local_unbound_enable=YES
 
 # krb5
+kdc_enable=YES
+kpasswdd_enable=YES
 
 # cifs
 nmbd_enable=NO

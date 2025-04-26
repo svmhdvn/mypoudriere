@@ -25,25 +25,24 @@ EOF
 }
 
 pull_freebsd_src() {
-    if test ! -d "${freebsd_src}/.git"; then
-        git clone git@github.com:svmhdvn/freebsd-src.git "${freebsd_src}"
-        git -C "${freebsd_src}" remote add upstream https://git.freebsd.org/src.git
+    if test ! -d "${freebsd_src}/.jj"; then
+        myjj clone_fork https://github.com/freebsd/freebsd-src.git
     fi
-    git -C "${freebsd_src}" pull upstream main --rebase --autostash
+    jj --repository "${freebsd_src}" git fetch --branch main
+    jj --repository "${freebsd_src}" rebase --skip-emptied -b 'all:main@origin+' -d main
+    jj --repository "${freebsd_src}" git push --remote origin --branch main
 }
 
 pull_freebsd_ports() {
     # TODO setup a downstream EMPT ports repo and rebase from upstream here
-    if test ! -d "${freebsd_ports}/.git"; then
-        git clone \
-            --origin mymirrors \
-            --branch empt \
-            git@github.com:svmhdvn/freebsd-ports.git "${freebsd_ports}"
-        git -C "${freebsd_ports}" remote add upstream https://git.freebsd.org/ports.git
+    if test ! -d "${freebsd_ports}/.jj"; then
+        myjj clone_fork https://github.com/freebsd/freebsd-ports.git
         mkdir -p "${cache}/distfiles"
         doas poudriere ports -c -p "${ports_tree}" -m null -M "${freebsd_ports}"
     fi
-    git -C "${freebsd_ports}" pull upstream main --rebase --autostash
+    jj --repository "${freebsd_ports}" git fetch --branch main
+    jj --repository "${freebsd_ports}" rebase --skip-emptied -b 'all:main@origin+' -d main
+    jj --repository "${freebsd_ports}" git push --remote origin --branch main
 }
 
 # TODO find a cleaner way to do this
@@ -114,14 +113,11 @@ _mfs_post() {
   mkdir -p "${_ufsout}"
   cp -R "${_worlddir}/boot" "${_ufsout}/boot"
 
-  doas rm -rf "${_worlddir}/boot"
   doas mkdir -p \
     "${_worlddir}/home" \
-    "${_worlddir}/media/mfs" \
+    "${_worlddir}/media" \
     "${_worlddir}/mnt" \
     "${_worlddir}/root"
-
-  doas ln -s /media/mfs/boot "${_worlddir}/boot"
 
   # Build the world mfs_root uzip image
   doas makefs -o label="${_imagename}" "${_mfsimg}" "${_worlddir}"
@@ -317,6 +313,7 @@ bootstrap_step2() {
     doas pkg upgrade -y -r poudriere_ports -f
 }
 
+_hostname="$(hostname)"
 target_hostname="$(hostname)"
 while getopts h: name
 do
@@ -357,8 +354,6 @@ poudriere_data=/media/poudriere_basefs/data
 ports_tree=default
 target_confdir="${top}/hosts/${target_hostname}"
 target_kernconf="$(echo "${target_hostname}" | to_kernconf)"
-host_pkgbase_builder="h${freebsd_major_version}${target_kernconf}"
-jail_pkgbase_builder="j${freebsd_major_version}${target_kernconf}"
 
 # TODO pkg-static is unfortunately built as part of ports-mgmt/pkg. This means
 # that the builder jail's base system libraries get statically linked into
@@ -370,7 +365,11 @@ jail_pkgbase_builder="j${freebsd_major_version}${target_kernconf}"
 # jail (even though we really should build using the host jail for maximum building performance).
 #builder_kernconf="$(echo "$builder_hostname" | to_kernconf)"
 #ports_builder="poudriere_${freebsd_branch}_${builder_kernconf}"
-ports_builder="r${freebsd_major_version}${freebsd_minor_version}${target_arch}"
+if test "${target_hostname}" = "${_hostname}"; then
+  ports_builder="my${target_hostname}"
+else
+  ports_builder="r${freebsd_major_version}${freebsd_minor_version}${target_arch}"
+fi
 
 repodir_prefix="${cache}/pkgbase_repos/${target_hostname}"
 host_pkgbase_repo="${repodir_prefix}-host/${target_abi}/latest"
@@ -460,11 +459,7 @@ case "$1" in
     doas rm -f \
       "${poudriere_d}/${target_hostname}"-*.conf \
       "${poudriere_d}/${ports_tree}-${target_hostname}"-*.conf \
-      "${poudriere_d}/${host_pkgbase_builder}"-*.conf \
-      "${poudriere_d}/${jail_pkgbase_builder}"-*.conf \
       "${poudriere_portoptions}" \
-      "${poudriere_data}/images/${host_pkgbase_builder}-repo" \
-      "${poudriere_data}/images/${jail_pkgbase_builder}-repo" \
       "${ports_repo}" \
       "${tarballs}/${target_hostname}"-*.tar.zst
     ;;

@@ -1,12 +1,14 @@
 converters/dos2unix
 devel/ccache
 devel/git
+devel/gmake
 devel/hs-ShellCheck
+devel/jujutsu
 devel/universal-ctags
-editors/micro
 editors/kakoune
+editors/micro
+filesystems/exfat
 ftp/curl
-lang/rust
 net/mosh
 net/rsync
 net/syncthing
@@ -23,7 +25,6 @@ sysutils/htop
 sysutils/smartmontools
 sysutils/tmux
 sysutils/tree
-sysutils/x86info
 textproc/bat
 textproc/ripgrep
 
