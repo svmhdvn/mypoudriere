@@ -455,6 +455,9 @@ case "$1" in
     poudriere_options
     poudriere_bulk
     ;;
+  testport)
+    doas ${POUDRIERE_CMD} testport -j "${ports_builder}" -p "${ports_tree}" -z "${target_hostname}" -NN -i "$2"
+    ;;
   destroy)
     doas rm -f \
       "${poudriere_d}/${target_hostname}"-*.conf \

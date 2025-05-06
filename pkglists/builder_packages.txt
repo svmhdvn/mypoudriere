@@ -3,12 +3,14 @@ devel/ccache
 devel/git
 devel/gmake
 devel/hs-ShellCheck
+#devel/include-what-you-use
 devel/jujutsu
 devel/universal-ctags
 editors/kakoune
 editors/micro
 filesystems/exfat
 ftp/curl
+lang/go
 net/mosh
 net/rsync
 net/syncthing
