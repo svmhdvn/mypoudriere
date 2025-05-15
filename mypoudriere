@@ -217,32 +217,34 @@ build_jail_pkgbase() {
 }
 
 poudriere_options() {
-    pull_freebsd_ports
-    doas cp \
-        "${target_confdir}/${target_hostname}-common-make.conf" \
-        "${poudriere_d}/${target_hostname}-make.conf"
+  # upgrade jail to latest release if needed
+  doas poudriere jail -u -j "${ports_builder}" -t "${freebsd_version}"
+  pull_freebsd_ports
+  doas cp \
+      "${target_confdir}/${target_hostname}-common-make.conf" \
+      "${poudriere_d}/${target_hostname}-make.conf"
 
-    if test ! -d "${poudriere_portoptions}" && test -d "${my_portoptions}"; then
-        doas cp -R "${my_portoptions}" "${poudriere_portoptions}"
-    fi
+  if test ! -d "${poudriere_portoptions}" && test -d "${my_portoptions}"; then
+      doas cp -R "${my_portoptions}" "${poudriere_portoptions}"
+  fi
 
-    # Only use our portoptions make.conf for options directory creation. This
-    # prevents the defaults from overriding the options directory during a
-    # poudriere bulk run.
-    doas cp \
-        "${target_confdir}/${target_hostname}-portoptions-make.conf" \
-        "${poudriere_d}/${ports_tree}-${target_hostname}-make.conf"
-    doas ${POUDRIERE_CMD} options -j "${ports_builder}" -p "${ports_tree}" -z "${target_hostname}" -f "${ports_pkglist}"
-    doas rm -f "${poudriere_d}/${ports_tree}-${target_hostname}-make.conf"
+  # Only use our portoptions make.conf for options directory creation. This
+  # prevents the defaults from overriding the options directory during a
+  # poudriere bulk run.
+  doas cp \
+      "${target_confdir}/${target_hostname}-portoptions-make.conf" \
+      "${poudriere_d}/${ports_tree}-${target_hostname}-make.conf"
+  doas poudriere options -j "${ports_builder}" -p "${ports_tree}" -z "${target_hostname}" -f "${ports_pkglist}"
+  doas rm -f "${poudriere_d}/${ports_tree}-${target_hostname}-make.conf"
 
-    # Treat the poudriere_d options directory as the ground truth.
-    rm -rf "${my_portoptions}"
-    cp -R "${poudriere_portoptions}" "${my_portoptions}"
+  # Treat the poudriere_d options directory as the ground truth.
+  rm -rf "${my_portoptions}"
+  cp -R "${poudriere_portoptions}" "${my_portoptions}"
 }
 
 poudriere_bulk() {
-    doas ${POUDRIERE_CMD} bulk -j "${ports_builder}" -p "${ports_tree}" -z "${target_hostname}" -f "${ports_pkglist}"
-    doas ${POUDRIERE_CMD} pkgclean -y -j "${ports_builder}" -p "${ports_tree}" -z "${target_hostname}" -f "${ports_pkglist}"
+    doas poudriere bulk -j "${ports_builder}" -p "${ports_tree}" -z "${target_hostname}" -f "${ports_pkglist}"
+    doas poudriere pkgclean -y -j "${ports_builder}" -p "${ports_tree}" -z "${target_hostname}" -f "${ports_pkglist}"
     # TODO I probably don't need to build tarballs anymore due to mfs_root right?
     #mkdir -p "${tarballs}"
     #tar -C "${ports_repo}/.latest" -cvf "${tarballs}/${target_hostname}-ports.tar.zst" --zstd --strip-components 1 .
@@ -334,9 +336,8 @@ cache="${XDG_CACHE_HOME:-${HOME}/.cache}/mypoudriere"
 
 # NOTE support other architectures when the need arises
 target_arch="$(uname -p)"
-freebsd_major_version=15
-freebsd_minor_version=0
-target_abi="FreeBSD:${freebsd_major_version}:${target_arch}"
+freebsd_version="$(freebsd-version | grep -o '.*-RELEASE')"
+target_abi="FreeBSD:${freebsd_version%%.*}:${target_arch}"
 
 freebsd_src="${HOME}/src/freebsd-src"
 freebsd_ports="${HOME}/src/freebsd-ports"
@@ -362,19 +363,12 @@ target_kernconf="$(echo "${target_hostname}" | to_kernconf)"
 # properly.
 # NOTE to avoid this, we build all packages using the default upstream RELEASE
 # jail instead of the custom host
-# jail (even though we really should build using the host jail for maximum building performance).
-#builder_kernconf="$(echo "$builder_hostname" | to_kernconf)"
-#ports_builder="poudriere_${freebsd_branch}_${builder_kernconf}"
-if test "${target_hostname}" = "${_hostname}"; then
-  ports_builder="my${target_hostname}"
-else
-  ports_builder="r${freebsd_major_version}${freebsd_minor_version}${target_arch}"
-fi
+ports_builder="pb"
 
 repodir_prefix="${cache}/pkgbase_repos/${target_hostname}"
 host_pkgbase_repo="${repodir_prefix}-host/${target_abi}/latest"
 jail_pkgbase_repo="${repodir_prefix}-jail/${target_abi}/latest"
-ports_repo="${poudriere_data}/packages/${ports_builder}-${ports_tree}-${target_hostname}"
+ports_repo="/usr/local/poudriere/data/packages/${ports_builder}-${ports_tree}-${target_hostname}"
 
 poudriere_portoptions="${poudriere_d}/${ports_builder}-${ports_tree}-${target_hostname}-options"
 my_portoptions="${target_confdir}/portoptions"
@@ -401,13 +395,6 @@ case "$1" in
     poudriere_bulk
     doas pkg upgrade -y -r ports
     ;;
-  upgrade_builder)
-    if ${POUDRIERE_CMD} jail -i -j "${ports_builder}"; then
-        doas ${POUDRIERE_CMD} jail -u -j "${ports_builder}"
-    else
-        doas ${POUDRIERE_CMD} jail -c -j "${ports_builder}" -v '15.0-CURRENT'
-    fi
-    ;;
   host_pkgbase)
     build_host_pkgbase
     #mkdir -p "${tarballs}"
@@ -432,6 +419,10 @@ case "$1" in
   bulk)
     poudriere_bulk
     ;;
+  ports)
+    poudriere_options
+    poudriere_bulk
+    ;;
   mfs)
     _mfs_pre
     (. "${target_confdir}/mfs_setup.sh" && _host_specific_setup)
@@ -451,12 +442,8 @@ case "$1" in
         SRC_ENV_CONF="${target_confdir}/${target_hostname}-jail-src-env.conf" \
         showconfig
     ;;
-  ports)
-    poudriere_options
-    poudriere_bulk
-    ;;
   testport)
-    doas ${POUDRIERE_CMD} testport -j "${ports_builder}" -p "${ports_tree}" -z "${target_hostname}" -NN -i "$2"
+    doas poudriere testport -j "${ports_builder}" -p "${ports_tree}" -z "${target_hostname}" -NN -i "$2"
     ;;
   destroy)
     doas rm -f \
