@@ -346,10 +346,7 @@ freebsd_ports="${HOME}/src/freebsd-ports"
 # inside the hosts/ directory
 #cputype="$(cc -v -x c -E -march=native /dev/null 2>&1 | sed -n 's/.*-target-cpu *\([^ ]*\).*/\1/p')"
 
-poudriere_etc=/media/poudriere_etc
-poudriere_d="${poudriere_etc}/poudriere.d"
-POUDRIERE_CMD="poudriere -e ${poudriere_etc}"
-poudriere_data=/media/poudriere_basefs/data
+poudriere_d="/usr/local/etc/poudriere.d"
 
 # TODO change to a more descriptive name, like "empt_ports" or something
 ports_tree=default
@@ -377,6 +374,7 @@ tarballs="${cache}/tarballs"
 ports_pkglist="${top}/hosts/${target_hostname}/pkglist.txt"
 
 nproc="$(nproc)"
+freebsd_major_version=15
 pkgbase_version="${freebsd_major_version}.snap$(date -u +%Y%m%d%H%M%S)"
 
 case "$1" in
