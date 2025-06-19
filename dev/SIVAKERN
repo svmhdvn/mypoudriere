@@ -1,5 +1,5 @@
 include GENERIC
 
-device pmspcv
+options IPFILTER
 
 ident   SIVA

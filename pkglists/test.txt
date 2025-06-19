@@ -1,0 +1,3 @@
+editors/kakoune
+sysutils/tmux
+sysutils/tree
