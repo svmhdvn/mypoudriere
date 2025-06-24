@@ -5,7 +5,7 @@ set -eu
 latest_release_version=14.3-RELEASE
 
 _usage() {
-  cat >&2 <<EOF
+  cat <<EOF
 usage:
   myreprobuild setup
   myreprobuild bulk <-a | -f pkglist.txt | origin...>
@@ -21,16 +21,16 @@ setup_system() {
 bulk_check_reproducibility() {
   #_tmpdir="$(mktemp -d)"
   _tmpdir="${HOME}/.cache/myreprobuildtest"
-  rm -rf "${_tmpdir}"/*
+  rm -rf "${_tmpdir:?}"/*
   mkdir -p \
     "${_tmpdir}/pkgs/left" \
     "${_tmpdir}/pkgs/right" \
     "${_tmpdir}/logs"
   tmux new-session -d -c "${PWD}" -s myreprobuild -n bulk \
-    "doas poudriere bulk -CNN -j rb1 $* | tee '${_tmpdir}/logs/rb1.log'"
-  sleep 1 # introduce at least one second between the two runs
+    "doas poudriere bulk -CNN -j rb1 $* 2>&1 | tee '${_tmpdir}/logs/rb1.log'"
+  sleep 2 # put at least two seconds between the two runs to check for timestamp reproducibility
   tmux split-window -c "${PWD}" -t myreprobuild:bulk \
-    "doas poudriere bulk -CNN -j rb2 $* | tee '${_tmpdir}/logs/rb2.log'"
+    "doas poudriere bulk -CNN -j rb2 $* 2>&1 | tee '${_tmpdir}/logs/rb2.log'"
   env -u TMUX tmux attach-session -t myreprobuild > /dev/null
 
   (
@@ -52,13 +52,13 @@ bulk_check_reproducibility() {
     /usr/local/poudriere/data/packages/rb2-default/.building/logs/logs/built \
     "${_tmpdir}/logs/right"
 
-  echo 'TAP version 14' | tee "${_tmpdir}/results.tap" >&2
+  echo TAP version 14 | tee "${_tmpdir}/results.tap" >&2
   (
     cd "${_tmpdir}/pkgs/left"
     _i=0
     for _p in *.pkg; do
       _i=$((_i + 1))
-      cmp "${_p}" "../right/${_p}" || printf 'not ' | tee -a "${_tmpdir}/results.tap" >&2
+      cmp -s "${_p}" "../right/${_p}" || printf 'not ' | tee -a "${_tmpdir}/results.tap" >&2
       printf 'ok %d - %s\n' "${_i}" "${_p}" | tee -a "${_tmpdir}/results.tap" >&2
     done
     printf '1..%d\n' "${_i}" | tee -a "${_tmpdir}/results.tap" >&2
@@ -79,5 +79,5 @@ case "${cmd}" in
   bulk) bulk_check_reproducibility "$@" ;;
   *)
       echo "ERROR: unrecognized command '${cmd}'" >&2
-      _usage
+      _usage >&2
 esac

@@ -4,7 +4,7 @@ ports-mgmt/pkg
 dns/unbound
 mail/cyrus-imapd310
 mail/opensmtpd
-mail/opensmtpd-filter-dkimsign
+#mail/opensmtpd-filter-dkimsign
 security/acme.sh
 www/dokuwiki
 www/nginx-lite
