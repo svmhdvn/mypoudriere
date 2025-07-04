@@ -5,42 +5,43 @@ set -eux
 _usage() {
   cat >&2 <<EOF
 usage:
-  myfreebsd bktags
   myfreebsd bkdev
+  myfreebsd ci
 EOF
   exit 64 # EX_USAGE
 }
 
-# TODO doesn't work yet for some reason
-buildkernel_tags() {
-  make -C "${src}" __MAKE_CONF="${top}/dev/make.conf" SRCCONF="${top}/dev/src.conf" SRC_ENV_CONF="${top}/dev/src-env.conf" CTAGS=ctags tags
-}
-
 buildworld_dev() {
   # NOTE rebuilding world without ccache takes a while, so uncomment this only if you need it.
-  #make -C "${src}" __MAKE_CONF="${top}/dev/make.conf" SRCCONF="${top}/dev/src.conf" SRC_ENV_CONF="${top}/dev/src-env.conf" cleanworld
-  make -C "${src}" -j"${j}" __MAKE_CONF="${top}/dev/make.conf" SRCCONF="${top}/dev/src.conf" SRC_ENV_CONF="${top}/dev/src-env.conf" buildworld
+  #make -C "${src}" ${_make_args} cleanworld
+  make -C "${src}" -j"${j}" ${_make_args} buildworld
 }
 
 buildkernel_parallel() {
-  make -C "${src}" __MAKE_CONF="${top}/dev/make.conf" SRCCONF="${top}/dev/src.conf" SRC_ENV_CONF="${top}/dev/src-env.conf" KERNCONF=SIVAKERN cleankernel
-  make -C "${src}" -j"${j}" -k __MAKE_CONF="${top}/dev/make.conf" SRCCONF="${top}/dev/src.conf" SRC_ENV_CONF="${top}/dev/src-env.conf" KERNCONF=SIVAKERN buildkernel
+  make -C "${src}" ${_make_args} KERNCONF=SIVAKERN cleankernel
+  make -C "${src}" -j"${j}" -k ${_make_args} KERNCONF=SIVAKERN buildkernel
 }
 
 buildkernel_dev_single() {
-  make -C "${src}" -j1 __MAKE_CONF="${top}/dev/make.conf" SRCCONF="${top}/dev/src.conf" SRC_ENV_CONF="${top}/dev/src-env.conf" KERNCONF=SIVAKERN buildkernel
+  make -C "${src}" -j1 ${_make_args} KERNCONF=SIVAKERN buildkernel
+}
+
+ci_full() {
+  #doas make -C "${src}/tests/ci" -j"${j}" ${_make_args} CITYPE=full ci
+  doas make -C "/home/siva/src/fbsdsrcgit/tests/ci" -j"${j}" ${_make_args} CITYPE=full ci
 }
 
 realpath="$(realpath "$0")"
 top="$(dirname "${realpath}")"
 src="${HOME}/src/freebsd-src"
 j="${J:-$(nproc)}"
+_make_args="__MAKE_CONF=${top}/dev/make.conf SRCCONF=${top}/dev/src.conf SRC_ENV_CONF=${top}/dev/src-env.conf"
 
 case "$1" in
   bwdev) buildworld_dev ;;
   bk) buildkernel_parallel ;;
   bkdev) buildkernel_dev_single ;;
-  bktags) buildkernel_tags ;;
+  ci) ci_full ;;
   *)
       echo "ERROR: unrecognized command '$1'" >&2
       _usage
