@@ -26,23 +26,19 @@ EOF
 
 pull_freebsd_src() {
     if test ! -d "${freebsd_src}/.jj"; then
-        myjj clone_fork https://github.com/freebsd/freebsd-src.git
+        myjj clone_fork 'https://github.com/freebsd/freebsd-src.git'
     fi
-    jj --repository "${freebsd_src}" git fetch --branch main
-    jj --repository "${freebsd_src}" rebase --skip-emptied -b 'all:main@origin+' -d main
-    jj --repository "${freebsd_src}" git push --remote origin --branch main
+    (cd "${freebsd_src}" && myjj sync_fork)
 }
 
 pull_freebsd_ports() {
     # TODO setup a downstream EMPT ports repo and rebase from upstream here
     if test ! -d "${freebsd_ports}/.jj"; then
-        myjj clone_fork https://github.com/freebsd/freebsd-ports.git
+        myjj clone_fork 'https://github.com/freebsd/freebsd-ports.git'
         mkdir -p "${cache}/distfiles"
         doas poudriere ports -c -p "${ports_tree}" -m null -M "${freebsd_ports}"
     fi
-    jj --repository "${freebsd_ports}" git fetch --branch main
-    jj --repository "${freebsd_ports}" rebase --skip-emptied -b 'all:main@origin+' -d main
-    jj --repository "${freebsd_ports}" git push --remote origin --branch main
+    (cd "${freebsd_ports}" && myjj sync_fork)
 }
 
 # TODO find a cleaner way to do this
@@ -51,7 +47,7 @@ local_pkgbase_upgrade() {
     # NOTE needs to maintain root for the entirety of this command to avoid
     # obliterating the /etc/passwd file
     doas sh -c "
-env ABI=${target_abi} IGNORE_OSVERSION=yes pkg install -y -r pkgbase -g 'FreeBSD-*'
+env ABI=${target_abi} IGNORE_OSVERSION=yes pkg-static install -y -r sivapkgbase -g 'FreeBSD-*'
 if test -r /etc/master.passwd.pkgsave || test -r /etc/group.pkgsave; then
     cp /etc/master.passwd.pkgsave /etc/master.passwd || true
     cp /etc/group.pkgsave /etc/group || true
@@ -60,11 +56,11 @@ fi
 test -r /etc/sysctl.conf.pkgsave && cp /etc/sysctl.conf.pkgsave /etc/sysctl.conf
 "
 
-    doas find / -name '*.pkgsave' | \
-        sort | \
-    	awk 'BEGIN {print "Leftover .pkgsave files (delete after double checking):"} {print}' | \
-    	less
     doas rm -f /boot/kernel/linker.hints
+    #doas find / -name '*.pkgsave' | \
+    #    sort | \
+    #	awk 'BEGIN {print "Leftover .pkgsave files (delete after double checking):"} {print}' | \
+    #	less
 }
 
 # Sets up the MFS world
@@ -81,12 +77,12 @@ _mfs_pre() {
 
   # install the desired packages to the world
   mkdir -p "${_pkg_repos}"
-  cat > "${_pkg_repos}/repos.conf" <<EOF
-pkgbase: {
+  cat > "${_pkg_repos}/siva.conf" <<EOF
+sivapkgbase: {
   url: "file://${host_pkgbase_repo}",
   enabled: yes
 }
-ports: {
+sivaports: {
   url: "file://${ports_repo}",
   enabled: yes
 }
@@ -171,13 +167,13 @@ EOF
 build_host_pkgbase() {
     pull_freebsd_src
     grep '^[a-z]' "${target_confdir}/${target_kernconf}_LINT" \
-    	| sort -u \
-    	| tee "${target_confdir}/${target_kernconf}" "${freebsd_src}/sys/${target_arch}/conf/${target_kernconf}" > /dev/null
+    	| sort -u > "${target_confdir}/${target_kernconf}"
 
     make -C "${freebsd_src}" -j"${nproc}" \
         __MAKE_CONF="${target_confdir}/${target_hostname}-common-make.conf" \
         SRCCONF="${target_confdir}/${target_hostname}-host-src.conf" \
         SRC_ENV_CONF="${target_confdir}/${target_hostname}-host-src-env.conf" \
+        KERNCONFDIR="${target_confdir}" \
         KERNCONF="${target_kernconf}" \
         buildworld buildkernel
 
@@ -186,12 +182,11 @@ build_host_pkgbase() {
         __MAKE_CONF="${target_confdir}/${target_hostname}-common-make.conf" \
         SRCCONF="${target_confdir}/${target_hostname}-host-src.conf" \
         SRC_ENV_CONF="${target_confdir}/${target_hostname}-host-src-env.conf" \
+        KERNCONFDIR="${target_confdir}" \
         KERNCONF="${target_kernconf}" \
         REPODIR="${repodir_prefix}-host" \
         PKG_VERSION="${pkgbase_version}" \
-        stage-packages-world stage-packages-kernel \
-        create-packages-world create-packages-kernel \
-        real-update-packages
+        update-packages
 }
 
 build_jail_pkgbase() {
@@ -218,7 +213,7 @@ build_jail_pkgbase() {
 
 poudriere_options() {
   # upgrade jail to latest release if needed
-  doas poudriere jail -u -j "${ports_builder}" -t "${freebsd_version}"
+  doas poudriere jail -u -j "${ports_builder}"
   pull_freebsd_ports
   doas cp \
       "${target_confdir}/${target_hostname}-common-make.conf" \
@@ -336,7 +331,7 @@ cache="${XDG_CACHE_HOME:-${HOME}/.cache}/mypoudriere"
 
 # NOTE support other architectures when the need arises
 target_arch="$(uname -p)"
-freebsd_version="$(freebsd-version | grep -o '.*-RELEASE')"
+freebsd_version="$(freebsd-version)"
 target_abi="FreeBSD:${freebsd_version%%.*}:${target_arch}"
 
 freebsd_src="${HOME}/src/freebsd-src"
@@ -360,7 +355,8 @@ target_kernconf="$(echo "${target_hostname}" | to_kernconf)"
 # properly.
 # NOTE to avoid this, we build all packages using the default upstream RELEASE
 # jail instead of the custom host
-ports_builder="pb"
+#ports_builder="pb"
+ports_builder="pb${target_hostname}"
 
 repodir_prefix="${cache}/pkgbase_repos/${target_hostname}"
 host_pkgbase_repo="${repodir_prefix}-host/${target_abi}/latest"
@@ -385,13 +381,13 @@ case "$1" in
     bootstrap_step2
     ;;
   upgrade1)
-    build_host_pkgbase
+    #build_host_pkgbase
     local_pkgbase_upgrade
     ;;
   upgrade2)
     poudriere_options
     poudriere_bulk
-    doas pkg upgrade -y -r ports
+    doas pkg upgrade -y -r sivaports
     ;;
   host_pkgbase)
     build_host_pkgbase
