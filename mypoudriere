@@ -381,7 +381,7 @@ case "$1" in
     bootstrap_step2
     ;;
   upgrade1)
-    #build_host_pkgbase
+    build_host_pkgbase
     local_pkgbase_upgrade
     ;;
   upgrade2)

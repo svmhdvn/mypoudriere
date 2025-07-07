@@ -77,10 +77,21 @@ device		ums
 device		usb
 device		usbhid
 device		vga
+device		virtio		# Generic VirtIO bus (required)
+device		virtio_balloon	# VirtIO Memory Balloon device
+device		virtio_blk	# VirtIO Block device
+device		virtio_console	# VirtIO Console device
+device		virtio_gpu	# VirtIO GPU device
+device		virtio_mmio	# VirtIO MMIO Interface
+device		virtio_pci	# VirtIO PCI Interface
+device		virtio_random	# VirtIO Entropy device
+device		virtio_scmi	# VirtIO SCMI device
+device		virtio_scsi	# VirtIO SCSI device
 device		vt
 device		vt_efifb	# EFI framebuffer
 device		vt_vbefb	# VBE framebuffer
 device		vt_vga		# VGA
+device		vtnet		# VirtIO Ethernet device
 device		xhci
 device		xz		# xz_embedded LZMA de-compression library
 device		zlib		# gzip/zlib compression/decompression library
@@ -127,7 +138,6 @@ options 	NETLINK
 options 	NULLFS			#NULL filesystem
 options 	PCI_HP			# PCI-Express native HotPlug
 options 	PCI_IOV			# PCI SR-IOV support
-options 	PREEMPTION
 options 	PROCFS			#Process filesystem (requires PSEUDOFS)
 options 	PSEUDOFS		#Pseudo-filesystem framework
 options 	RACCT

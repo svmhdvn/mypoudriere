@@ -1,4 +1,4 @@
-#devel/include-what-you-use
+# stuff that I need
 converters/dos2unix
 devel/ccache
 devel/git
@@ -8,6 +8,7 @@ devel/jujutsu
 devel/pkgconf
 devel/universal-ctags
 editors/kakoune
+emulators/qemu@nox11
 emulators/qemu-user-static
 filesystems/exfat
 ftp/curl
@@ -15,7 +16,7 @@ ftp/wget
 lang/expect
 lang/go
 lang/lua54
-lang/python312
+lang/python
 net/libslirp
 net/mosh
 net/rsync
@@ -29,7 +30,7 @@ security/doas
 shells/fish
 sysutils/cpu-microcode
 sysutils/dmidecode
-sysutils/edk2
+sysutils/edk2@bhyve
 sysutils/fd
 sysutils/htop
 sysutils/py-diffoscope
@@ -38,5 +39,25 @@ sysutils/tmux
 sysutils/tree
 sysutils/u-boot-qemu-arm64
 sysutils/xxd
+sysutils/zellij
 textproc/bat
 textproc/ripgrep
+
+# needed for CI testing (e.g. Bricoler, tests/ci, jenkins)
+devel/gdb
+devel/py-pytest
+lang/perl5.40 # TODO upgrade to 5.42
+lang/python
+net/py-dpkt
+net/scapy
+net/tcptestsuite
+security/nist-kat
+security/nmap
+security/sudo
+shells/ksh93
+sysutils/coreutils
+sysutils/porch
+textproc/jq
+
+# nice to have, but not right now
+#devel/include-what-you-use

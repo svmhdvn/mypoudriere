@@ -1,3 +1,5 @@
 include GENERIC
 
+device ath
+
 ident   SIVA

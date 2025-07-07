@@ -5,6 +5,8 @@ set -eux
 _usage() {
   cat >&2 <<EOF
 usage:
+  myfreebsd bwdev
+  myfreebsd bk
   myfreebsd bkdev
   myfreebsd ci
 EOF
@@ -14,35 +16,55 @@ EOF
 buildworld_dev() {
   # NOTE rebuilding world without ccache takes a while, so uncomment this only if you need it.
   #make -C "${src}" ${_make_args} cleanworld
-  make -C "${src}" -j"${j}" ${_make_args} buildworld
+  make -C "${src}" -j"${parallelism}" ${_make_args} buildworld
 }
 
 buildkernel_parallel() {
   make -C "${src}" ${_make_args} KERNCONF=SIVAKERN cleankernel
-  make -C "${src}" -j"${j}" -k ${_make_args} KERNCONF=SIVAKERN buildkernel
+  make -C "${src}" -j"${parallelism}" -k ${_make_args} KERNCONF=SIVAKERN buildkernel
 }
 
 buildkernel_dev_single() {
   make -C "${src}" -j1 ${_make_args} KERNCONF=SIVAKERN buildkernel
 }
 
-ci_full() {
-  #doas make -C "${src}/tests/ci" -j"${j}" ${_make_args} CITYPE=full ci
-  doas make -C "/home/siva/src/fbsdsrcgit/tests/ci" -j"${j}" ${_make_args} CITYPE=full ci
+_ci() {
+  doas make -C "${src}/tests/ci" ${_make_args} clean || true
+  make -C "${src}/tests/ci" ${_make_args} \
+    -DNO_ROOT \
+    TIMEOUT_MS="16200000" \
+    "$@" \
+    ci
 }
 
 realpath="$(realpath "$0")"
 top="$(dirname "${realpath}")"
 src="${HOME}/src/freebsd-src"
-j="${J:-$(nproc)}"
 _make_args="__MAKE_CONF=${top}/dev/make.conf SRCCONF=${top}/dev/src.conf SRC_ENV_CONF=${top}/dev/src-env.conf"
 
-case "$1" in
+while getopts j: name
+do
+  case "${name}" in
+    j) parallelism="${OPTARG}" ;;
+    ?)
+      echo "Usage: $0: [-j numjobs] command" >&2
+      exit 64 # EX_USAGE
+      ;;
+    *) ;;
+  esac
+done
+shift $((OPTIND - 1))
+: "${parallelism:=$(nproc)}"
+
+cmd="$1"
+shift
+
+case "${cmd}" in
   bwdev) buildworld_dev ;;
   bk) buildkernel_parallel ;;
   bkdev) buildkernel_dev_single ;;
-  ci) ci_full ;;
+  ci) _ci "$@" ;;
   *)
-      echo "ERROR: unrecognized command '$1'" >&2
+      echo "ERROR: unrecognized command '${cmd}'" >&2
       _usage
 esac
