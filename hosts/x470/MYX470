@@ -131,7 +131,7 @@ options 	KERN_TLS		# TLS transmit and receive offload
 options 	LIBALIAS
 options 	LIBICONV
 options 	LIBMCHAIN
-options 	MAXCPU=16
+options 	MAXCPU=32
 options 	MAXMEMDOM=1
 options 	MSDOSFS			#MS DOS File System (FAT, FAT32)
 options 	NETLINK

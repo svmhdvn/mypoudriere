@@ -1,6 +1,6 @@
 #!/bin/sh
 
-set -eux
+set -eu
 
 _usage() {
   cat >&2 <<EOF
@@ -30,11 +30,12 @@ buildkernel_dev_single() {
 
 _ci() {
   doas make -C "${src}/tests/ci" ${_make_args} clean || true
-  make -C "${src}/tests/ci" ${_make_args} \
-    -DNO_ROOT \
-    TIMEOUT_MS="16200000" \
-    "$@" \
-    ci
+  doas make -C "${src}/tests/ci" ${_make_args} "$@" ci
+  #make -C "${src}/tests/ci" ${_make_args} \
+  #  -DNO_ROOT \
+  #  TIMEOUT_MS="16200000" \
+  #  "$@" \
+  #  ci
 }
 
 realpath="$(realpath "$0")"

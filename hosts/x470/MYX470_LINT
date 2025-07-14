@@ -229,15 +229,15 @@ options 	SMP			# Symmetric MultiProcessor Kernel
 
 # MAXCPU defines the maximum number of CPUs that can boot in the system.
 # A default value should be already present, for every architecture.
-options 	MAXCPU=16
+options 	MAXCPU=32
 
 # NUMA enables use of Non-Uniform Memory Access policies in various kernel
 # subsystems.
-#options 	NUMA
+options 	NUMA
 
 # MAXMEMDOM defines the maximum number of memory domains that can boot in the
 # system.  A default value should already be defined by every architecture.
-options 	MAXMEMDOM=1
+#options 	MAXMEMDOM=2
 
 # ADAPTIVE_MUTEXES changes the behavior of blocking mutexes to spin
 # if the thread that currently owns the mutex is executing on another
@@ -304,7 +304,7 @@ options 	MAXMEMDOM=1
 #	  a lock hierarchy violation occurs or if locks are held when going to
 #	  sleep.
 # WITNESS_SKIPSPIN disables the witness checks on spin mutexes.
-#options 	PREEMPTION
+options 	PREEMPTION
 #options 	FULL_PREEMPTION
 #options 	WITNESS
 #options 	WITNESS_KDB
@@ -1694,8 +1694,8 @@ device		nvme		# PCI-express NVMe host driver
 #device		nvmf		# NVMeoF host driver
 #device		nvmft		# NVMeoF ctl(4) frontend
 #device		nvmf_tcp	# NVMeoF TCP transport
-device		nda		# NVMe direct access devices (aka disks)
-#device		nvd		# expose NVMe namespaces as disks, depends on nvme
+#device		nda		# NVMe direct access devices (aka disks)
+device		nvd		# expose NVMe namespaces as disks, depends on nvme
 
 #
 # Serial ATA host controllers:
@@ -3012,7 +3012,7 @@ device		isa
 
 #
 # AGP GART support
-#device		agp
+device		agp
 
 # AGP debugging.
 #options 	AGP_DEBUG
@@ -3085,7 +3085,7 @@ device		sc
 #options 	SC_DISABLE_REBOOT	# disable reboot key sequence
 #options 	SC_HISTORY_SIZE=200	# number of history buffer lines
 #options 	SC_MOUSE_CHAR=0x3	# char code for text mode mouse cursor
-#options 	SC_PIXEL_MODE		# add support for the raster text mode
+options 	SC_PIXEL_MODE		# add support for the raster text mode
 
 # The following options will let you change the default colors of syscons.
 #options 	SC_NORM_ATTR=(FG_GREEN|BG_BLACK)
@@ -3120,7 +3120,7 @@ device		sc
 #	0x100	Probe for a keyboard device periodically if one is not present
 
 # Splash screen and screen saver support
-#device		splash
+device		splash
 
 # Various screen savers.
 #device		blank_saver
@@ -3686,9 +3686,6 @@ options 	ZFS
 #options	KASAN			# Kernel Address Sanitizer
 #options	KCSAN			# Kernel Concurrency Sanitizer
 #options	KMSAN			# Kernel Memory Sanitizer
-
-envvar hint.acpi_throttle.0.disabled="1"
-envvar hint.p4tcc.0.disabled="1"
 
 #####################################################################
 # SIVA STUFF

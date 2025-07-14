@@ -1,5 +1,6 @@
 # stuff that I need
 converters/dos2unix
+devel/arcanist
 devel/ccache
 devel/git
 devel/gmake
@@ -44,20 +45,21 @@ textproc/bat
 textproc/ripgrep
 
 # needed for CI testing (e.g. Bricoler, tests/ci, jenkins)
-devel/gdb
-devel/py-pytest
-lang/perl5.40 # TODO upgrade to 5.42
-lang/python
-net/py-dpkt
-net/scapy
-net/tcptestsuite
-security/nist-kat
-security/nmap
-security/sudo
-shells/ksh93
-sysutils/coreutils
-sysutils/porch
-textproc/jq
+#devel/gdb
+#devel/py-pytest
+#lang/perl5.40 # TODO upgrade to 5.42
+#lang/python
+#net/py-dpkt
+#net/scapy
+#net/tcptestsuite
+#security/nist-kat
+#security/nmap
+#security/sudo
+#shells/ksh93
+#sysutils/coreutils
+#sysutils/porch
+#textproc/jq
 
 # nice to have, but not right now
 #devel/include-what-you-use
+#www/varnish7
