@@ -233,7 +233,7 @@ options 	MAXCPU=32
 
 # NUMA enables use of Non-Uniform Memory Access policies in various kernel
 # subsystems.
-options 	NUMA
+#options 	NUMA
 
 # MAXMEMDOM defines the maximum number of memory domains that can boot in the
 # system.  A default value should already be defined by every architecture.
@@ -304,7 +304,7 @@ options 	NUMA
 #	  a lock hierarchy violation occurs or if locks are held when going to
 #	  sleep.
 # WITNESS_SKIPSPIN disables the witness checks on spin mutexes.
-options 	PREEMPTION
+#options 	PREEMPTION
 #options 	FULL_PREEMPTION
 #options 	WITNESS
 #options 	WITNESS_KDB

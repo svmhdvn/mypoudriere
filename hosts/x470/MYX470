@@ -4,6 +4,7 @@ device		acpi_video
 device		acpi_wmi
 device		ada		# ATA/SATA direct access devices (aka disks)
 device		aesni		# AES-NI OpenCrypto module
+device		agp
 device		ahci		# AHCI-compatible SATA controllers
 device		amdpm
 device		amdsbwd
@@ -45,8 +46,8 @@ device		jedec_dimm
 device		kbdmux			# keyboard multiplexer
 device		loop
 device		md		#Memory/malloc disk
-device		nda		# NVMe direct access devices (aka disks)
 device		netmap
+device		nvd		# expose NVMe namespaces as disks, depends on nvme
 device		nvme		# PCI-express NVMe host driver
 device		ohci
 device		ossl		# OpenSSL OpenCrypto module
@@ -63,6 +64,7 @@ device		smb
 device		smbios
 device		smbus		# Bus support, required for smb below.
 device		spibus		# Bus support.
+device		splash
 device		targ		#SCSI Target Mode Code
 device		targbh		#SCSI Target Mode Blackhole Device
 device		tpm
@@ -97,8 +99,6 @@ device		xz		# xz_embedded LZMA de-compression library
 device		zlib		# gzip/zlib compression/decompression library
 device  	mii		# Minimal MII support
 device  	mii_bitbang	# Common module for bit-bang'ing the MII
-envvar hint.acpi_throttle.0.disabled="1"
-envvar hint.p4tcc.0.disabled="1"
 ident		MYX470
 options		RACCT_DEFAULT_TO_DISABLED
 options 	BPF_JITTER
@@ -132,7 +132,6 @@ options 	LIBALIAS
 options 	LIBICONV
 options 	LIBMCHAIN
 options 	MAXCPU=32
-options 	MAXMEMDOM=1
 options 	MSDOSFS			#MS DOS File System (FAT, FAT32)
 options 	NETLINK
 options 	NULLFS			#NULL filesystem
@@ -145,6 +144,7 @@ options 	RATELIMIT		# TX rate limiting support
 options 	RCTL
 options 	SCHED_ULE
 options 	SCSI_DELAY=5000	# Be pessimistic about Joe SCSI device
+options 	SC_PIXEL_MODE		# add support for the raster text mode
 options 	SMP			# Symmetric MultiProcessor Kernel
 options 	SOFTUPDATES
 options 	STATS

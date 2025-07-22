@@ -29,7 +29,7 @@ buildkernel_dev_single() {
 }
 
 _ci() {
-  doas make -C "${src}/tests/ci" ${_make_args} clean || true
+  doas make -C "${src}/tests/ci" ${_make_args} "$@" clean || true
   doas make -C "${src}/tests/ci" ${_make_args} "$@" ci
   #make -C "${src}/tests/ci" ${_make_args} \
   #  -DNO_ROOT \
