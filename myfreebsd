@@ -9,6 +9,7 @@ usage:
   myfreebsd bk
   myfreebsd bkdev
   myfreebsd ci
+  myfreebsd dirdeps
 EOF
   exit 64 # EX_USAGE
 }
@@ -26,6 +27,15 @@ buildkernel_parallel() {
 
 buildkernel_dev_single() {
   make -C "${src}" -j1 ${_make_args} KERNCONF=SIVAKERN buildkernel
+}
+
+dirdeps_build() {
+  make -C "${src}" -j"${parallelism}" \
+    __MAKE_CONF=${top}/dev/make.conf \
+    SRCCONF=${top}/dev/src.conf \
+    SRC_ENV_CONF=${top}/dev/dirdeps_src-env.conf \
+    WITH_DIRDEPS_BUILD= \
+    the-lot
 }
 
 _ci() {
@@ -64,6 +74,7 @@ case "${cmd}" in
   bwdev) buildworld_dev ;;
   bk) buildkernel_parallel ;;
   bkdev) buildkernel_dev_single ;;
+  dirdeps) dirdeps_build ;;
   ci) _ci "$@" ;;
   *)
       echo "ERROR: unrecognized command '${cmd}'" >&2
