@@ -51,7 +51,7 @@ _ci() {
 realpath="$(realpath "$0")"
 top="$(dirname "${realpath}")"
 src="${HOME}/src/freebsd-src"
-_make_args="__MAKE_CONF=${top}/dev/make.conf SRCCONF=${top}/dev/src.conf SRC_ENV_CONF=${top}/dev/src-env.conf"
+_make_args="__MAKE_CONF=${top}/dev/make.conf MAKECONF=${top}/dev/make.conf SRCCONF=${top}/dev/src.conf SRC_ENV_CONF=${top}/dev/src-env.conf"
 
 while getopts j: name
 do
