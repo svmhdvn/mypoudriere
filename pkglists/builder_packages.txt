@@ -9,8 +9,8 @@ devel/jujutsu
 devel/pkgconf
 devel/universal-ctags
 editors/kakoune
-emulators/qemu@nox11
 emulators/qemu-user-static
+emulators/qemu@nox11
 filesystems/exfat
 ftp/curl
 ftp/wget
@@ -40,7 +40,6 @@ sysutils/tmux
 sysutils/tree
 sysutils/u-boot-qemu-arm64
 sysutils/xxd
-sysutils/zellij
 textproc/bat
 textproc/ripgrep
 
@@ -65,4 +64,4 @@ textproc/ripgrep
 #www/varnish7
 
 # just to use XLST for a while
-devel/apache-ant
+#devel/apache-ant
