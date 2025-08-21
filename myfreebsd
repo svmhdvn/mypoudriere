@@ -49,39 +49,30 @@ _ci() {
 }
 
 _ci_parallel() {
+  _outdir="$(doas mktemp -d /tmp/siva.XXXXXX)"
+  doas chmod 0755 "${_outdir}"
+  doas mkdir -p "${_outdir}/ci1" "${_outdir}/ci2"
+
   doas make -C "${src}/tests/ci" ${_make_args} clean || true
-  doas make -C "${src}/tests/ci" ${_make_args} CITYPE=full ci-buildworld ci-buildkernel ci-buildimage
+  doas make -C "${src}/tests/ci" ${_make_args} CITYPE=full CIDISK="${_outdir}/ci1/disk.raw" ci-buildimage
+  doas cp "${_outdir}/ci1/disk.raw" "${_outdir}/ci2/disk.raw"
 
-  _outdir="$(mktemp -d /tmp/siva.XXXXXX)"
-  _make_runtest="make -C ${src}/tests/ci CITYPE=full PARALLEL_JOBS=2 VM_MEM_SIZE=2g ci-runtest-meta"
   tmux -f /dev/null \
-  	new-session -d -s myfreebsdci "doas ${_make_runtest} KYUA_TEST_FILTERS='bin sbin' 2>&1 | tee ${_outdir}/1.log" \; \
-  	split-window "doas ${_make_runtest} KYUA_TEST_FILTERS='etc share' 2>&1 | tee ${_outdir}/2.log" \; \
-  	split-window -h "doas ${_make_runtest} KYUA_TEST_FILTERS='cddl' 2>&1 | tee ${_outdir}/3.log" \; \
-  	split-window "doas ${_make_runtest} KYUA_TEST_FILTERS='include' 2>&1 | tee ${_outdir}/4.log" \; \
-  	select-layout even-horizontal \; \
-  	select-pane -t 0 \; \
-  	split-window -v "doas ${_make_runtest} KYUA_TEST_FILTERS='lib' 2>&1 | tee ${_outdir}/5.log" \; \
-  	select-pane -t 2 \; \
-  	split-window -v "doas ${_make_runtest} KYUA_TEST_FILTERS='libexec' 2>&1 | tee ${_outdir}/6.log" \; \
-  	select-pane -t 4 \; \
-  	split-window -v "doas ${_make_runtest} KYUA_TEST_FILTERS='sys' 2>&1 | tee ${_outdir}/7.log" \; \
-  	select-pane -t 6 \; \
-  	split-window -v "doas ${_make_runtest} KYUA_TEST_FILTERS='usr.bin usr.sbin' 2>&1 | tee ${_outdir}/8.log"
+  	new-session -d -s myfreebsdci -n runs "doas ./porch-ci.sh ${_outdir}/ci1 'sys' 2>&1 | tee ${_outdir}/ci1/run.log" \; \
+  	split-window -h -t myfreebsdci:runs   "doas ./porch-ci.sh ${_outdir}/ci2 'bin sbin usr.bin usr.sbin etc share cddl include lib libexec' 2>&1 | tee ${_outdir}/ci2/run.log"
   env -u TMUX tmux -f /dev/null attach-session -t myfreebsdci > /dev/null
-
   echo "All output logs are in ${_outdir}"
 }
 
 realpath="$(realpath "$0")"
 top="$(dirname "${realpath}")"
-src="${HOME}/src/freebsd-src"
 _make_args="__MAKE_CONF=${top}/dev/make.conf MAKECONF=${top}/dev/make.conf SRCCONF=${top}/dev/src.conf SRC_ENV_CONF=${top}/dev/src-env.conf"
 
-while getopts j: name
+while getopts j:s: name
 do
   case "${name}" in
     j) parallelism="${OPTARG}" ;;
+    s) src="${OPTARG}" ;;
     ?)
       echo "Usage: $0: [-j numjobs] command" >&2
       exit 64 # EX_USAGE
@@ -91,6 +82,7 @@ do
 done
 shift $((OPTIND - 1))
 : "${parallelism:=$(nproc)}"
+: "${src:=${HOME}/src/freebsd-src}"
 
 cmd="$1"
 shift
