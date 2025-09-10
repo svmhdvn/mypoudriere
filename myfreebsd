@@ -1,6 +1,6 @@
 #!/bin/sh
 
-set -eu
+set -eux
 
 _usage() {
   cat >&2 <<EOF
@@ -55,20 +55,22 @@ _ci_parallel() {
   _machine_arch="$(uname -p)"
   _ci_img_root="$(make -f ${top}/dev/src-env.conf -V MAKEOBJDIRPREFIX)${src}/${_machine}.${_machine_arch}/tests/ci/ci-buildimage"
   _num_vms="$(($(nproc)/2-1))"
+  _cidirs="$(seq 0 $((${_num_vms} - 1)) | sed 's,^,${outdir}/ci,')"
+
+  mkdir -p ${_cidirs}
+
+  #doas make -C "${src}/tests/ci" ${_make_args} clean || true
+  #doas make -C "${src}/tests/ci" ${_make_args} CITYPE=full CIDISK="${_outdir}/disk.raw" ci-buildimage
+  doas tee $(echo "${_cidirs}" | sed 's,$,/disk.raw,') < "${_outdir}/disk.raw" > /dev/null
 
   kyua list -k "${_ci_img_root}/usr/tests/Kyuafile" | sed 's/:.*$//' | sort -Ru > "${_outdir}/all_kyua_tests.txt"
-  split -dl $(($(wc -l "${_outdir}/all_kyua_tests.txt")/${_num_vms} + 1)) test_filters_
-  for _vm in $(seq 0 $((${_num_vms} - 1))); do
-    mkdir -p "${_outdir}/ci${_vm}"
+  split -dl $(($(wc -l "${_outdir}/all_kyua_tests.txt" | cut -wf2)/${_num_vms} + 1)) "${_outdir}/all_kyua_tests.txt" test_filters_
+  for _vm in ${_vmseq}; do
     cp "test_filters_${_vm}" "${_outdir}/ci${_vm}/test_filters.txt"
     cp "${top}/porch_ci_${_machine}.sh" "${_outdir}/ci${_vm}/porch_ci.sh"
   done
 
-  doas make -C "${src}/tests/ci" ${_make_args} clean || true
-  doas make -C "${src}/tests/ci" ${_make_args} CITYPE=full CIDISK="${_outdir}/ci0/disk.raw" ci-buildimage
-  doas tee ${_outdir}/ci{1..$((_num_vms - 1))/disk.raw < "${_outdir}/ci0/disk.raw" > /dev/null
-
-  seq 0 $((${_num_vms} - 1)) | parallel --progress --bar --eta 'cd ci{} && doas porch_ci.sh 2>&1 > run.log'
+  echo "${_vmseq}" | parallel --progress --bar --eta 'cd ci{} && doas porch_ci.sh 2>&1 > run.log'
   cat ci*/test-reports/*.txt > "${_outdir}/latest_${_machine}_report.txt"
 
   echo "All output logs are in ${_outdir}"
