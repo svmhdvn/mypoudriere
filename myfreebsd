@@ -17,7 +17,7 @@ EOF
 buildworld_dev() {
   # NOTE rebuilding world without ccache takes a while, so uncomment this only if you need it.
   #make -C "${src}" ${_make_args} cleanworld
-  make -C "${src}" -j"${parallelism}" ${_make_args} buildworld
+  make -C "${src}" -j"${parallelism}" ${_make_args} buildworld "$@"
 }
 
 buildkernel_parallel() {
@@ -49,19 +49,30 @@ _ci() {
 }
 
 _ci_parallel() {
-  _outdir="$(doas mktemp -d /tmp/siva.XXXXXX)"
-  doas chmod 0755 "${_outdir}"
-  doas mkdir -p "${_outdir}/ci1" "${_outdir}/ci2"
+  _cache="$HOME/.cache/myfreebsd"
+  _outdir="${_cache}/parci"
+  _machine="$(uname -m)"
+  _machine_arch="$(uname -p)"
+  _ci_img_root="$(make -f ${top}/dev/src-env.conf -V MAKEOBJDIRPREFIX)${src}/${_machine}.${_machine_arch}/tests/ci/ci-buildimage"
+  _num_vms="$(($(nproc)/2-1))"
+
+  kyua list -k "${_ci_img_root}/usr/tests/Kyuafile" | sed 's/:.*$//' | sort -Ru > "${_outdir}/all_kyua_tests.txt"
+  split -dl $(($(wc -l "${_outdir}/all_kyua_tests.txt")/${_num_vms} + 1)) test_filters_
+  for _vm in $(seq 0 $((${_num_vms} - 1))); do
+    mkdir -p "${_outdir}/ci${_vm}"
+    cp "test_filters_${_vm}" "${_outdir}/ci${_vm}/test_filters.txt"
+    cp "${top}/porch_ci_${_machine}.sh" "${_outdir}/ci${_vm}/porch_ci.sh"
+  done
 
   doas make -C "${src}/tests/ci" ${_make_args} clean || true
-  doas make -C "${src}/tests/ci" ${_make_args} CITYPE=full CIDISK="${_outdir}/ci1/disk.raw" ci-buildimage
-  doas cp "${_outdir}/ci1/disk.raw" "${_outdir}/ci2/disk.raw"
+  doas make -C "${src}/tests/ci" ${_make_args} CITYPE=full CIDISK="${_outdir}/ci0/disk.raw" ci-buildimage
+  doas tee ${_outdir}/ci{1..$((_num_vms - 1))/disk.raw < "${_outdir}/ci0/disk.raw" > /dev/null
 
-  tmux -f /dev/null \
-  	new-session -d -s myfreebsdci -n runs "doas ./porch-ci.sh ${_outdir}/ci1 'sys' 2>&1 | tee ${_outdir}/ci1/run.log" \; \
-  	split-window -h -t myfreebsdci:runs   "doas ./porch-ci.sh ${_outdir}/ci2 'bin sbin usr.bin usr.sbin etc share cddl include lib libexec' 2>&1 | tee ${_outdir}/ci2/run.log"
-  env -u TMUX tmux -f /dev/null attach-session -t myfreebsdci > /dev/null
+  seq 0 $((${_num_vms} - 1)) | parallel --progress --bar --eta 'cd ci{} && doas porch_ci.sh 2>&1 > run.log'
+  cat ci*/test-reports/*.txt > "${_outdir}/latest_${_machine}_report.txt"
+
   echo "All output logs are in ${_outdir}"
+  ls -alh "${_outdir}"
 }
 
 realpath="$(realpath "$0")"
@@ -88,7 +99,7 @@ cmd="$1"
 shift
 
 case "${cmd}" in
-  bwdev) buildworld_dev ;;
+  bwdev) buildworld_dev "$@" ;;
   bk) buildkernel_parallel ;;
   bkdev) buildkernel_dev_single ;;
   dirdeps) dirdeps_build ;;
