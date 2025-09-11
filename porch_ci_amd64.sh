@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -x
+
 realpath="$(realpath "$0")"
 top="$(dirname "${realpath}")"
 vm_name="$(basename ${top})"
@@ -12,6 +14,7 @@ meta_dirout="${top}/test-reports"
 
 mkdir -p "${meta_dir}" "${meta_dirout}"
 truncate -s 512M "${meta_tar}"
+cp "${top}/kyua_filters.txt" "${meta_dir}"
 tar rvf "${meta_tar}" -C "${meta_dir}" .
 
 truncate -s 128m \
@@ -49,9 +52,6 @@ timeout(60*60)
 
 match "login:"
 write("root\\r")
-
-match("root@.*#")
-write("sysrc freebsdci_test_filters='$(xargs echo < ${top}/test_filters.txt)'\\r")
 
 match("root@.*#")
 write("service freebsdci onestart\\r")

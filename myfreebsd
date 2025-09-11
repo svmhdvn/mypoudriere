@@ -54,24 +54,30 @@ _ci_parallel() {
   _machine="$(uname -m)"
   _machine_arch="$(uname -p)"
   _ci_img_root="$(make -f ${top}/dev/src-env.conf -V MAKEOBJDIRPREFIX)${src}/${_machine}.${_machine_arch}/tests/ci/ci-buildimage"
-  _num_vms="$(($(nproc)/2-1))"
-  _cidirs="$(seq 0 $((${_num_vms} - 1)) | sed 's,^,${outdir}/ci,')"
+  #_num_vms="$(($(nproc)/2-1))"
+  _num_vms=10
+  _vmseq="$(seq 0 $((${_num_vms} - 1)))"
+  _cidirs="$(seq 0 $((${_num_vms} - 1)) | sed "s,^,${_outdir}/ci,")"
 
   mkdir -p ${_cidirs}
 
   #doas make -C "${src}/tests/ci" ${_make_args} clean || true
-  #doas make -C "${src}/tests/ci" ${_make_args} CITYPE=full CIDISK="${_outdir}/disk.raw" ci-buildimage
-  doas tee $(echo "${_cidirs}" | sed 's,$,/disk.raw,') < "${_outdir}/disk.raw" > /dev/null
+  #doas make -C "${src}/tests/ci" ${_make_args} \
+  #  CITYPE=full \
+  #  CIDISK="${_outdir}/disk.raw" \
+  #  SWAPSIZE=256m \
+  #  VMSIZE=4608m \
+  #  ci-buildimage
 
+  doas tee $(echo "${_cidirs}" | sed 's,$,/disk.raw,') < "${_outdir}/disk.raw" > /dev/null
   kyua list -k "${_ci_img_root}/usr/tests/Kyuafile" | sed 's/:.*$//' | sort -Ru > "${_outdir}/all_kyua_tests.txt"
-  split -dl $(($(wc -l "${_outdir}/all_kyua_tests.txt" | cut -wf2)/${_num_vms} + 1)) "${_outdir}/all_kyua_tests.txt" test_filters_
+  split -dl $(($(wc -l "${_outdir}/all_kyua_tests.txt" | cut -wf2)/${_num_vms} + 1)) "${_outdir}/all_kyua_tests.txt" "${_outdir}/kyua_filters_"
   for _vm in ${_vmseq}; do
-    cp "test_filters_${_vm}" "${_outdir}/ci${_vm}/test_filters.txt"
+    cp "${_outdir}/kyua_filters_$(printf '%.2d' ${_vm})" "${_outdir}/ci${_vm}/kyua_filters.txt"
     cp "${top}/porch_ci_${_machine}.sh" "${_outdir}/ci${_vm}/porch_ci.sh"
   done
-
-  echo "${_vmseq}" | parallel --progress --bar --eta 'cd ci{} && doas porch_ci.sh 2>&1 > run.log'
-  cat ci*/test-reports/*.txt > "${_outdir}/latest_${_machine}_report.txt"
+  echo "${_cidirs}" | parallel --progress --bar --eta 'cd {} && doas ./porch_ci.sh 2>&1 > run.log'
+  cat "${_outdir}"/ci*/test-reports/test-report.txt > "${_outdir}/latest_${_machine}_report.txt"
 
   echo "All output logs are in ${_outdir}"
   ls -alh "${_outdir}"
