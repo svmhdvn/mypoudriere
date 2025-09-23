@@ -53,7 +53,7 @@ _ci_parallel() {
   _outdir="${_cache}/parci"
   _ci_img_root="$(make -f ${top}/dev/src-env.conf -V MAKEOBJDIRPREFIX)${src}/${target}.${target_arch}/tests/ci/ci-buildimage"
   #_num_vms="$(($(nproc)/2-1))"
-  _num_vms=10
+  _num_vms=14
   _vmseq="$(seq 0 $((${_num_vms} - 1)))"
   _cidirs="$(seq 0 $((${_num_vms} - 1)) | sed "s,^,${_outdir}/ci,")"
 
@@ -66,15 +66,21 @@ _ci_parallel() {
     SWAPSIZE=256m \
     VMSIZE=5g \
     ci-buildimage
-  doas tee $(echo "${_cidirs}" | sed 's,$,/disk.raw,') < "${_outdir}/disk.raw" > /dev/null
+
+  doas zfs create -p zroot/bhyve
+  doas zfs destroy -Rf zroot/bhyve/freebsdciskel@fresh || true
+  doas zfs create -pV 6g zroot/bhyve/freebsdciskel
+  doas dd if="${_outdir}/disk.raw" of=/dev/zvol/zroot/bhyve/freebsdciskel bs=1M
+  doas zfs snapshot zroot/bhyve/freebsdciskel@fresh
 
   kyua list -k "${_ci_img_root}/usr/tests/Kyuafile" | sed 's/:.*$//' | sort -Ru > "${_outdir}/all_kyua_tests.txt"
-  split -dl $(($(wc -l "${_outdir}/all_kyua_tests.txt" | cut -wf2)/${_num_vms} + 1)) "${_outdir}/all_kyua_tests.txt" "${_outdir}/kyua_filters_"
+  split -dl $(($(wc -l < "${_outdir}/all_kyua_tests.txt")/${_num_vms} + 1)) "${_outdir}/all_kyua_tests.txt" "${_outdir}/kyua_filters_"
   for _vm in ${_vmseq}; do
-    cp "${_outdir}/kyua_filters_$(printf '%.2d' ${_vm})" "${_outdir}/ci${_vm}/kyua_filters.txt"
+    doas zfs clone zroot/bhyve/freebsdciskel@fresh "zroot/bhyve/ci${_vm}"
+    cp "${_outdir}/kyua_filters_$(printf '%.2d' ${_vm})" "${_outdir}/ci${_vm}/kyua_test_filters.txt"
     cp "${top}/porch_ci_${target_arch}.sh" "${_outdir}/ci${_vm}/porch_ci.sh"
   done
-  echo "${_cidirs}" | parallel --progress --bar --eta 'cd {} && doas ./porch_ci.sh 2>&1 > run.log'
+  echo "${_cidirs}" | time -h parallel --progress --bar --eta 'cd {} && doas ./porch_ci.sh'
   cat "${_outdir}"/ci*/test-reports/test-report.txt > "${_outdir}/latest_${target_arch}_report.txt"
 
   echo "All output logs are in ${_outdir}"
