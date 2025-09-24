@@ -52,25 +52,28 @@ _ci_parallel() {
   _cache="$HOME/.cache/myfreebsd"
   _outdir="${_cache}/parci"
   _ci_img_root="$(make -f ${top}/dev/src-env.conf -V MAKEOBJDIRPREFIX)${src}/${target}.${target_arch}/tests/ci/ci-buildimage"
-  #_num_vms="$(($(nproc)/2-1))"
-  _num_vms=14
+  _num_vms="$(($(nproc)/2-1))"
   _vmseq="$(seq 0 $((${_num_vms} - 1)))"
   _cidirs="$(seq 0 $((${_num_vms} - 1)) | sed "s,^,${_outdir}/ci,")"
+  _vmsize_m=5120
+  _swapsize_m=256
 
   mkdir -p ${_cidirs}
+
+  doas zfs create -p zroot/bhyve
+  doas zfs destroy -Rf zroot/bhyve/freebsdciskel@fresh || true
+  doas zfs create -pV "$((_vmsize_m+_swapsize_m+128))m" zroot/bhyve/freebsdciskel
 
   doas make -C "${src}/tests/ci" ${_make_args} TARGET="${target}" TARGET_ARCH="${target_arch}" clean || true
   doas make -C "${src}/tests/ci" ${_make_args} TARGET="${target}" TARGET_ARCH="${target_arch}" \
     CITYPE=full \
-    CIDISK="${_outdir}/disk.raw" \
-    SWAPSIZE=256m \
-    VMSIZE=5g \
+    CIDISK=/dev/zvol/zroot/bhyve/freebsdciskel \
+    SWAPSIZE="${_swapsize_m}m" \
+    VMSIZE="${_vmsize_m}m" \
+    KERNCONF="${kernconf}" \
     ci-buildimage
 
-  doas zfs create -p zroot/bhyve
-  doas zfs destroy -Rf zroot/bhyve/freebsdciskel@fresh || true
-  doas zfs create -pV 6g zroot/bhyve/freebsdciskel
-  doas dd if="${_outdir}/disk.raw" of=/dev/zvol/zroot/bhyve/freebsdciskel bs=1M
+  doas gpart recover /dev/zvol/zroot/bhyve/freebsdciskel
   doas zfs snapshot zroot/bhyve/freebsdciskel@fresh
 
   kyua list -k "${_ci_img_root}/usr/tests/Kyuafile" | sed 's/:.*$//' | sort -Ru > "${_outdir}/all_kyua_tests.txt"
@@ -80,7 +83,7 @@ _ci_parallel() {
     cp "${_outdir}/kyua_filters_$(printf '%.2d' ${_vm})" "${_outdir}/ci${_vm}/kyua_test_filters.txt"
     cp "${top}/porch_ci_${target_arch}.sh" "${_outdir}/ci${_vm}/porch_ci.sh"
   done
-  echo "${_cidirs}" | time -h parallel --progress --bar --eta 'cd {} && doas ./porch_ci.sh'
+  echo "${_cidirs}" | time -h parallel --progress --bar --eta 'cd {} && doas ./porch_ci.sh' || true
   cat "${_outdir}"/ci*/test-reports/test-report.txt > "${_outdir}/latest_${target_arch}_report.txt"
 
   echo "All output logs are in ${_outdir}"
@@ -110,9 +113,9 @@ shift $((OPTIND - 1))
 : "${target_arch:=$(uname -p)}"
 
 case "${target_arch}" in
-  amd64) target=amd64 ;;
-  aarch64) target=arm64 ;;
-  riscv64) target=riscv ;;
+  amd64) target=amd64; kernconf=GENERIC ;;
+  aarch64) target=arm64; kernconf=GENERIC ;;
+  riscv64) target=riscv; kernconf=QEMU ;;
   *)
     echo "Unknown TARGET_ARCH=${target_arch}" >&2
     exit 64 # EX_USAGE

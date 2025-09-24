@@ -5,8 +5,7 @@ set -x
 realpath="$(realpath "$0")"
 top="$(dirname "${realpath}")"
 vm_name="$(basename ${top})"
-
-disk="${top}/disk.raw"
+disk="/dev/zvol/zroot/bhyve/${vm_name}"
 
 meta_tar="${top}/test-reports.tar"
 meta_dir="${top}/test-reports.d"
@@ -36,7 +35,7 @@ timeout -k 1m 1h /usr/local/bin/qemu-system-riscv64 \
   -kernel /usr/local/share/u-boot/u-boot-qemu-riscv64/u-boot.bin \
   -device virtio-blk,drive=hd0 \
   -device virtio-blk,drive=hd1 \
-  -blockdev driver=raw,node-name=hd0,file.driver=file,file.filename=${disk} \
+  -blockdev driver=raw,node-name=hd0,file.driver=host_device,file.filename=${disk} \
   -blockdev driver=raw,node-name=hd1,file.driver=file,file.filename=${meta_tar}
 
 tar xfv ${meta_tar} -C ${meta_dirout}
