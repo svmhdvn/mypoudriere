@@ -49,7 +49,7 @@ _ci() {
 }
 
 _ci_parallel() {
-  _cache="$HOME/.cache/myfreebsd"
+  _cache="$(realpath $HOME)/.cache/myfreebsd"
   _outdir="${_cache}/parci"
   _ci_img_root="$(make -f ${top}/dev/src-env.conf -V MAKEOBJDIRPREFIX)${src}/${target}.${target_arch}/tests/ci/ci-buildimage"
   _num_vms="$(($(nproc)/2-1))"
@@ -60,26 +60,26 @@ _ci_parallel() {
 
   mkdir -p ${_cidirs}
 
-  doas zfs create -p zroot/bhyve
-  doas zfs destroy -Rf zroot/bhyve/freebsdciskel@fresh || true
-  doas zfs create -pV "$((_vmsize_m+_swapsize_m+128))m" zroot/bhyve/freebsdciskel
+  doas zfs create -p zroot/sivabhyve
+  doas zfs destroy -Rf zroot/sivabhyve/freebsdciskel@fresh || true
+  doas zfs create -pV "$((_vmsize_m+_swapsize_m+128))m" zroot/sivabhyve/freebsdciskel
 
   doas make -C "${src}/tests/ci" ${_make_args} TARGET="${target}" TARGET_ARCH="${target_arch}" clean || true
   doas make -C "${src}/tests/ci" ${_make_args} TARGET="${target}" TARGET_ARCH="${target_arch}" \
     CITYPE=full \
-    CIDISK=/dev/zvol/zroot/bhyve/freebsdciskel \
+    CIDISK=/dev/zvol/zroot/sivabhyve/freebsdciskel \
     SWAPSIZE="${_swapsize_m}m" \
     VMSIZE="${_vmsize_m}m" \
     KERNCONF="${kernconf}" \
     ci-buildimage
 
-  doas gpart recover /dev/zvol/zroot/bhyve/freebsdciskel
-  doas zfs snapshot zroot/bhyve/freebsdciskel@fresh
+  doas gpart recover /dev/zvol/zroot/sivabhyve/freebsdciskel
+  doas zfs snapshot zroot/sivabhyve/freebsdciskel@fresh
 
   kyua list -k "${_ci_img_root}/usr/tests/Kyuafile" | sed 's/:.*$//' | sort -Ru > "${_outdir}/all_kyua_tests.txt"
   split -dl $(($(wc -l < "${_outdir}/all_kyua_tests.txt")/${_num_vms} + 1)) "${_outdir}/all_kyua_tests.txt" "${_outdir}/kyua_filters_"
   for _vm in ${_vmseq}; do
-    doas zfs clone zroot/bhyve/freebsdciskel@fresh "zroot/bhyve/ci${_vm}"
+    doas zfs clone zroot/sivabhyve/freebsdciskel@fresh "zroot/sivabhyve/ci${_vm}"
     cp "${_outdir}/kyua_filters_$(printf '%.2d' ${_vm})" "${_outdir}/ci${_vm}/kyua_test_filters.txt"
     cp "${top}/porch_ci_${target_arch}.sh" "${_outdir}/ci${_vm}/porch_ci.sh"
   done
@@ -109,7 +109,7 @@ do
 done
 shift $((OPTIND - 1))
 : "${parallelism:=$(nproc)}"
-: "${src:=${HOME}/src/freebsd-src}"
+: "${src:=$(realpath $HOME)/src/freebsd-src}"
 : "${target_arch:=$(uname -p)}"
 
 case "${target_arch}" in

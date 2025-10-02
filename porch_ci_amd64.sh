@@ -3,7 +3,7 @@
 realpath="$(realpath "$0")"
 top="$(dirname "${realpath}")"
 vm_name="$(basename ${top})"
-disk="/dev/zvol/zroot/bhyve/${vm_name}"
+disk="/dev/zvol/zroot/sivabhyve/${vm_name}"
 meta_dirout="${top}/test-reports"
 
 rm -rf "${meta_dirout}"

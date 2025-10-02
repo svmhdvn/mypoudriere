@@ -5,7 +5,7 @@ set -x
 realpath="$(realpath "$0")"
 top="$(dirname "${realpath}")"
 vm_name="$(basename ${top})"
-disk="/dev/zvol/zroot/bhyve/${vm_name}"
+disk="/dev/zvol/zroot/sivabhyve/${vm_name}"
 
 meta_tar="${top}/test-reports.tar"
 meta_dir="${top}/test-reports.d"
@@ -28,7 +28,7 @@ tar rvf "${meta_tar}" -C "${meta_dir}" .
 timeout -k 1m 1h /usr/local/bin/qemu-system-riscv64 \
   -machine virt \
   -smp 2 \
-  -m 4g \
+  -m 3g \
   -nographic \
   -no-reboot \
   -bios /usr/local/share/opensbi/lp64/generic/firmware/fw_jump.elf \
