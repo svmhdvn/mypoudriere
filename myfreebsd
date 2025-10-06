@@ -55,7 +55,7 @@ _ci_parallel() {
   _num_vms="$(($(nproc)/2-1))"
   _vmseq="$(seq 0 $((${_num_vms} - 1)))"
   _cidirs="$(seq 0 $((${_num_vms} - 1)) | sed "s,^,${_outdir}/ci,")"
-  _vmsize_m=5120
+  _vmsize_m=5632
   _swapsize_m=256
 
   mkdir -p ${_cidirs}
@@ -68,8 +68,8 @@ _ci_parallel() {
   doas make -C "${src}/tests/ci" ${_make_args} TARGET="${target}" TARGET_ARCH="${target_arch}" \
     CITYPE=full \
     CIDISK=/dev/zvol/zroot/sivabhyve/freebsdciskel \
-    SWAPSIZE="${_swapsize_m}m" \
     VMSIZE="${_vmsize_m}m" \
+    SWAPSIZE="${_swapsize_m}m" \
     KERNCONF="${kernconf}" \
     ci-buildimage
 
