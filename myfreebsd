@@ -61,7 +61,7 @@ _ci_parallel() {
   mkdir -p ${_cidirs}
 
   doas zfs create -p zroot/sivabhyve
-  doas zfs destroy -Rf zroot/sivabhyve/freebsdciskel@fresh || true
+  doas zfs destroy -Rf zroot/sivabhyve/freebsdciskel || true
   doas zfs create -pV "$((_vmsize_m+_swapsize_m+128))m" zroot/sivabhyve/freebsdciskel
 
   doas make -C "${src}/tests/ci" ${_make_args} TARGET="${target}" TARGET_ARCH="${target_arch}" clean || true
