@@ -85,6 +85,8 @@ _ci_parallel() {
   done
   echo "${_cidirs}" | time -h parallel --progress --bar --eta 'cd {} && doas ./porch_ci.sh' || true
   cat "${_outdir}"/ci*/test-reports/test-report.txt > "${_outdir}/latest_${target_arch}_report.txt"
+  xsltproc --huge junit_merge.xslt "${_outdir}"/ci*/test-reports/test-report.xml \
+    > "${_outdir}/latest_${target_arch}_junit.xml"
 
   echo "All output logs are in ${_outdir}"
   ls -alh "${_outdir}"
