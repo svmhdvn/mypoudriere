@@ -51,8 +51,9 @@ _ci() {
 _ci_parallel() {
   _cache="$(realpath $HOME)/.cache/myfreebsd"
   _outdir="${_cache}/parci"
-  _ci_img_root="$(make -f ${top}/dev/src-env.conf -V MAKEOBJDIRPREFIX)${src}/${target}.${target_arch}/tests/ci/ci-buildimage"
+  _ci_img_root="/usr/obj${src}/${target}.${target_arch}/tests/ci/ci-buildimage"
   _num_vms="$(($(nproc)/2-1))"
+  #_num_vms=24
   _vmseq="$(seq 0 $((${_num_vms} - 1)))"
   _cidirs="$(seq 0 $((${_num_vms} - 1)) | sed "s,^,${_outdir}/ci,")"
   _vmsize_m=5632
@@ -61,16 +62,17 @@ _ci_parallel() {
   mkdir -p ${_cidirs}
 
   doas zfs create -p zroot/sivabhyve
-  doas zfs destroy -Rf zroot/sivabhyve/freebsdciskel || true
   doas zfs create -pV "$((_vmsize_m+_swapsize_m+128))m" zroot/sivabhyve/freebsdciskel
+  doas zfs snapshot zroot/sivabhyve/freebsdciskel@empty || true
+  doas zfs destroy -Rf zroot/sivabhyve/freebsdciskel@fresh || true
 
-  doas make -C "${src}/tests/ci" ${_make_args} TARGET="${target}" TARGET_ARCH="${target_arch}" clean || true
-  doas make -C "${src}/tests/ci" ${_make_args} TARGET="${target}" TARGET_ARCH="${target_arch}" \
+  _ci_make_args="__MAKE_CONF=/dev/null MAKECONF=/dev/null SRCCONF=/dev/null SRC_ENV_CONF=/dev/null KERNCONF=${kernconf} TARGET=${target} TARGET_ARCH=${target_arch} -DWITHOUT_CLEAN -DWITH_CCACHE_BUILD METAMODE="
+  doas make -C "${src}/tests/ci" ${_ci_make_args} clean || true
+  doas make -C "${src}/tests/ci" ${_ci_make_args} \
     CITYPE=full \
     CIDISK=/dev/zvol/zroot/sivabhyve/freebsdciskel \
     VMSIZE="${_vmsize_m}m" \
     SWAPSIZE="${_swapsize_m}m" \
-    KERNCONF="${kernconf}" \
     ci-buildimage
 
   doas gpart recover /dev/zvol/zroot/sivabhyve/freebsdciskel
