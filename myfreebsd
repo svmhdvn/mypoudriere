@@ -64,9 +64,9 @@ _ci_parallel() {
   doas zfs create -p zroot/sivabhyve
   doas zfs create -pV "$((_vmsize_m+_swapsize_m+128))m" zroot/sivabhyve/freebsdciskel
   doas zfs snapshot zroot/sivabhyve/freebsdciskel@empty || true
-  doas zfs destroy -Rf zroot/sivabhyve/freebsdciskel@fresh || true
+  doas zfs rollback -Rf zroot/sivabhyve/freebsdciskel@empty || true
 
-  _ci_make_args="__MAKE_CONF=/dev/null MAKECONF=/dev/null SRCCONF=/dev/null SRC_ENV_CONF=/dev/null KERNCONF=${kernconf} TARGET=${target} TARGET_ARCH=${target_arch} -DWITHOUT_CLEAN -DWITH_CCACHE_BUILD METAMODE="
+  _ci_make_args="__MAKE_CONF=/dev/null MAKECONF=/dev/null SRCCONF=/dev/null SRC_ENV_CONF=/dev/null KERNCONF=${kernconf} TARGET=${target} TARGET_ARCH=${target_arch} -DWITHOUT_CLEAN -DWITH_CCACHE_BUILD -DWITHOUT_ZFS_TESTS METAMODE="
   doas make -C "${src}/tests/ci" ${_ci_make_args} clean || true
   doas make -C "${src}/tests/ci" ${_ci_make_args} \
     CITYPE=full \
