@@ -164,6 +164,10 @@ EOF
   ls -alh "${_artifacts}"
 }
 
+upgrade_local_step1() {
+
+}
+
 build_host_pkgbase() {
     pull_freebsd_src
     grep '^[a-z]' "${target_confdir}/${target_kernconf}_LINT" \
@@ -356,7 +360,7 @@ target_kernconf="$(echo "${target_hostname}" | to_kernconf)"
 # NOTE to avoid this, we build all packages using the default upstream RELEASE
 # jail instead of the custom host
 #ports_builder="pb"
-ports_builder="pb${target_hostname}"
+ports_builder="pb_${target_hostname}"
 
 repodir_prefix="${cache}/pkgbase_repos/${target_hostname}"
 host_pkgbase_repo="${repodir_prefix}-host/${target_abi}/latest"
@@ -370,7 +374,7 @@ tarballs="${cache}/tarballs"
 ports_pkglist="${top}/hosts/${target_hostname}/pkglist.txt"
 
 nproc="$(nproc)"
-freebsd_major_version=15
+freebsd_major_version=16
 pkgbase_version="${freebsd_major_version}.snap$(date -u +%Y%m%d%H%M%S)"
 
 case "$1" in
@@ -381,14 +385,19 @@ case "$1" in
     bootstrap_step2
     ;;
   upgrade1)
-    build_host_pkgbase
-    local_pkgbase_upgrade
+    #build_host_pkgbase
+    #local_pkgbase_upgrade
+    upgrade_local_step1
     ;;
   upgrade2)
+    upgrade_local_step2
+    ;;
+  upgrade3)
     poudriere_options
     poudriere_bulk
     doas pkg upgrade -y -r sivaports
     ;;
+
   host_pkgbase)
     build_host_pkgbase
     #mkdir -p "${tarballs}"
