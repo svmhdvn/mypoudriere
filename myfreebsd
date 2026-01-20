@@ -8,8 +8,8 @@ usage:
   myfreebsd bwdev
   myfreebsd bk
   myfreebsd bkdev
-  myfreebsd ci
-  myfreebsd dirdeps
+  myfreebsd parci (parallel CI)
+  myfreebsd cb (clean isolated build)
 EOF
   exit 64 # EX_USAGE
 }
@@ -29,23 +29,17 @@ buildkernel_dev_single() {
   make -C "${src}" -j1 ${_make_args} KERNCONF=SIVAKERN buildkernel
 }
 
-dirdeps_build() {
-  make -C "${src}" -j"${parallelism}" \
-    __MAKE_CONF=${top}/dev/make.conf \
-    SRCCONF=${top}/dev/src.conf \
-    SRC_ENV_CONF=${top}/dev/dirdeps_src-env.conf \
-    WITH_DIRDEPS_BUILD= \
-    the-lot
-}
-
-_ci() {
-  doas make -C "${src}/tests/ci" ${_make_args} "$@" clean || true
-  doas make -C "${src}/tests/ci" ${_make_args} "$@" ci
-  #make -C "${src}/tests/ci" ${_make_args} \
-  #  -DNO_ROOT \
-  #  TIMEOUT_MS="16200000" \
-  #  "$@" \
-  #  ci
+clean_build() {
+  _objprefix="$(realpath $HOME)/.cache/myfreebsd/clean_build"
+  time env MAKEOBJDIRPREFIX="${_objprefix}" \
+    make -C "${src}" -j"${parallelism}" \
+      __MAKE_CONF=/dev/null \
+      SRCCONF=/dev/null \
+      SRC_ENV_CONF=/dev/null \
+      CROSS_TOOLCHAIN=llvm19 \
+      -DWITHOUT_CROSS_COMPILER \
+      -DWITHOUT_TOOLCHAIN \
+      buildworld buildkernel
 }
 
 _ci_parallel() {
@@ -112,6 +106,7 @@ do
   esac
 done
 shift $((OPTIND - 1))
+
 : "${parallelism:=$(nproc)}"
 : "${src:=$(realpath $HOME)/src/freebsd-src}"
 : "${target_arch:=$(uname -p)}"
@@ -133,8 +128,7 @@ case "${cmd}" in
   bwdev) buildworld_dev "$@" ;;
   bk) buildkernel_parallel ;;
   bkdev) buildkernel_dev_single ;;
-  dirdeps) dirdeps_build ;;
-  ci) _ci "$@" ;;
+  cb) clean_build ;;
   parci) _ci_parallel "$@" ;;
   *)
       echo "ERROR: unrecognized command '${cmd}'" >&2

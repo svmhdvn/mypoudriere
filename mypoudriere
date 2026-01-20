@@ -2,6 +2,23 @@
 
 set -eux
 
+# TODO add these back when moving to custom kernel
+#KERNCONFDIR="${target_confdir}" \
+#KERNCONF="${target_kernconf}" \
+
+SRC_MAKE() {
+  time env MAKEOBJDIRPREFIX="${cache}/obj/${target_hostname}-host" \
+    make -C "${freebsd_src}" -j"${nproc}" \
+      __MAKE_CONF="${target_confdir}/${target_hostname}-common-make.conf" \
+      SRCCONF="${target_confdir}/${target_hostname}-host-src.conf" \
+      SRC_ENV_CONF="${target_confdir}/${target_hostname}-host-src-env.conf" \
+      KERNCONF=GENERIC-NODEBUG \
+      REPODIR="${repodir_prefix}-host" \
+      CROSS_COMPILER="llvm${src_llvm_version}" \
+      -DWITH_META_MODE -DWITHOUT_CROSS_COMPILER \
+      "$@"
+}
+
 to_kernconf() {
     awk '{printf("MY%s\n", toupper($1))}'
 }
@@ -24,13 +41,6 @@ FreeBSD: {
 EOF
 }
 
-pull_freebsd_src() {
-    if test ! -d "${freebsd_src}/.jj"; then
-        myjj clone_fork 'https://github.com/freebsd/freebsd-src.git'
-    fi
-    (cd "${freebsd_src}" && myjj sync_fork)
-}
-
 pull_freebsd_ports() {
     # TODO setup a downstream EMPT ports repo and rebase from upstream here
     if test ! -d "${freebsd_ports}/.jj"; then
@@ -41,27 +51,6 @@ pull_freebsd_ports() {
     (cd "${freebsd_ports}" && myjj sync_fork)
 }
 
-# TODO find a cleaner way to do this
-# Instructions from https://wiki.freebsd.org/PkgBase
-local_pkgbase_upgrade() {
-    # NOTE needs to maintain root for the entirety of this command to avoid
-    # obliterating the /etc/passwd file
-    doas sh -c "
-env ABI=${target_abi} IGNORE_OSVERSION=yes pkg-static install -y -r sivapkgbase -g 'FreeBSD-*'
-if test -r /etc/master.passwd.pkgsave || test -r /etc/group.pkgsave; then
-    cp /etc/master.passwd.pkgsave /etc/master.passwd || true
-    cp /etc/group.pkgsave /etc/group || true
-    pwd_mkdb -p /etc/master.passwd
-fi
-test -r /etc/sysctl.conf.pkgsave && cp /etc/sysctl.conf.pkgsave /etc/sysctl.conf
-"
-
-    doas rm -f /boot/kernel/linker.hints
-    #doas find / -name '*.pkgsave' | \
-    #    sort | \
-    #	awk 'BEGIN {print "Leftover .pkgsave files (delete after double checking):"} {print}' | \
-    #	less
-}
 
 # Sets up the MFS world
 _mfs_pre() {
@@ -164,75 +153,57 @@ EOF
   ls -alh "${_artifacts}"
 }
 
-upgrade_local_step1() {
-
-}
-
 build_host_pkgbase() {
-    pull_freebsd_src
-    grep '^[a-z]' "${target_confdir}/${target_kernconf}_LINT" \
-    	| sort -u > "${target_confdir}/${target_kernconf}"
-
-    make -C "${freebsd_src}" -j"${nproc}" \
-        __MAKE_CONF="${target_confdir}/${target_hostname}-common-make.conf" \
-        SRCCONF="${target_confdir}/${target_hostname}-host-src.conf" \
-        SRC_ENV_CONF="${target_confdir}/${target_hostname}-host-src-env.conf" \
-        KERNCONFDIR="${target_confdir}" \
-        KERNCONF="${target_kernconf}" \
-        buildworld buildkernel
-
-    # TODO file upstream bug for PKG_VERSION issues
-    make -C "${freebsd_src}" \
-        __MAKE_CONF="${target_confdir}/${target_hostname}-common-make.conf" \
-        SRCCONF="${target_confdir}/${target_hostname}-host-src.conf" \
-        SRC_ENV_CONF="${target_confdir}/${target_hostname}-host-src-env.conf" \
-        KERNCONFDIR="${target_confdir}" \
-        KERNCONF="${target_kernconf}" \
-        REPODIR="${repodir_prefix}-host" \
-        PKG_VERSION="${pkgbase_version}" \
-        update-packages
+  git -C "${freebsd_src}" pull
+  #grep '^[a-z]' "${target_confdir}/${target_kernconf}_LINT" \
+  #  | sort -u > "${target_confdir}/${target_kernconf}"
+  SRC_MAKE buildworld buildkernel update-packages
+  git -C "${drm_kmod}" pull
+  make -C "${drm_kmod}" -j"${nproc}" SYSDIR="${freebsd_src}/sys"
 }
 
-build_jail_pkgbase() {
-    pull_freebsd_src
+# TODO find a cleaner way to do this
+# Instructions from https://wiki.freebsd.org/PkgBase
+local_pkgbase_upgrade() {
+  # NOTE needs to maintain root for the entirety of this command to avoid
+  # obliterating the /etc/passwd file
+  doas sh -c "
+env ABI=${target_abi} IGNORE_OSVERSION=yes pkg-static install -y -r siva-base -g '*'
+if test -r /etc/master.passwd.pkgsave || test -r /etc/group.pkgsave; then
+  cp /etc/ssh/sshd_config.pkgsave /etc/ssh/sshd_config || true
+  cp /etc/master.passwd.pkgsave /etc/master.passwd || true
+  cp /etc/group.pkgsave /etc/group || true
+  pwd_mkdb -p /etc/master.passwd
+  service sshd restart
+  cp /etc/sysctl.conf.pkgsave /etc/sysctl.conf || true
+fi
+test -r /etc/sysctl.conf.pkgsave && cp /etc/sysctl.conf.pkgsave /etc/sysctl.conf
+"
 
-    # TODO file upstream bug to figure out the order of target dependencies
-    # between 'buildworld' and the stage/create/sign targets
-    # For now, use two make invocations
-    make -C "${freebsd_src}" -j"${nproc}" \
-        __MAKE_CONF="${target_confdir}/${target_hostname}-common-make.conf" \
-        SRCCONF="${target_confdir}/${target_hostname}-jail-src.conf" \
-        SRC_ENV_CONF="${target_confdir}/${target_hostname}-jail-src-env.conf" \
-        buildworld
-
-    # TODO file upstream bug for PKG_VERSION issues
-    make -C "${freebsd_src}" \
-        __MAKE_CONF="${target_confdir}/${target_hostname}-common-make.conf" \
-        SRCCONF="${target_confdir}/${target_hostname}-jail-src.conf" \
-        SRC_ENV_CONF="${target_confdir}/${target_hostname}-jail-src-env.conf" \
-        REPODIR="${repodir_prefix}-jail" \
-        PKG_VERSION="${pkgbase_version}" \
-        stage-packages-world create-packages-world real-update-packages
+  doas rm -f /boot/kernel/linker.hints
+  doas make -C "${drm_kmod}" install SYSDIR="${freebsd_src}/sys" KMODDIR=/boot/modules
+  reboot
 }
 
 poudriere_options() {
   # upgrade jail to latest release if needed
-  doas poudriere jail -u -j "${ports_builder}"
-  pull_freebsd_ports
+  # TODO figure out this part properly, almost there with the -m null -M /j/b16 approach
+  #doas poudriere jail -u -j "${ports_builder}"
+  doas poudriere ports -u
   doas cp \
-      "${target_confdir}/${target_hostname}-common-make.conf" \
-      "${poudriere_d}/${target_hostname}-make.conf"
+    "${target_confdir}/${target_hostname}-common-make.conf" \
+    "${poudriere_d}/${target_hostname}-make.conf"
 
   if test ! -d "${poudriere_portoptions}" && test -d "${my_portoptions}"; then
-      doas cp -R "${my_portoptions}" "${poudriere_portoptions}"
+    doas cp -R "${my_portoptions}" "${poudriere_portoptions}"
   fi
 
   # Only use our portoptions make.conf for options directory creation. This
   # prevents the defaults from overriding the options directory during a
   # poudriere bulk run.
   doas cp \
-      "${target_confdir}/${target_hostname}-portoptions-make.conf" \
-      "${poudriere_d}/${ports_tree}-${target_hostname}-make.conf"
+    "${target_confdir}/${target_hostname}-portoptions-make.conf" \
+    "${poudriere_d}/${ports_tree}-${target_hostname}-make.conf"
   doas poudriere options -j "${ports_builder}" -p "${ports_tree}" -z "${target_hostname}" -f "${ports_pkglist}"
   doas rm -f "${poudriere_d}/${ports_tree}-${target_hostname}-make.conf"
 
@@ -331,36 +302,36 @@ shift $((OPTIND - 1))
 
 realpath="$(realpath "$0")"
 top="$(dirname "${realpath}")"
-cache="${XDG_CACHE_HOME:-${HOME}/.cache}/mypoudriere"
-
-# NOTE support other architectures when the need arises
+nproc="$(nproc)"
 target_arch="$(uname -p)"
-freebsd_version="$(freebsd-version)"
-target_abi="FreeBSD:${freebsd_version%%.*}:${target_arch}"
 
-freebsd_src="${HOME}/src/freebsd-src"
+# TODO figure out if there's a better place to put this
+# this should work for now.
+freebsd_src="${HOME}/src/srcFBSDCOMMIT"
 freebsd_ports="${HOME}/src/freebsd-ports"
-
-# NOTE use this to determine a system's CPUTYPE, then add it to a make.conf
-# inside the hosts/ directory
-#cputype="$(cc -v -x c -E -march=native /dev/null 2>&1 | sed -n 's/.*-target-cpu *\([^ ]*\).*/\1/p')"
-
+drm_kmod="${HOME}/src/drm-kmod"
+cache="${XDG_CACHE_HOME:-${HOME}/.cache}/mypoudriere"
 poudriere_d="/usr/local/etc/poudriere.d"
+
+# TODO switch back to custom kernels when it becomes worth it
+#target_kernconf="$(echo "${target_hostname}" | to_kernconf)"
+target_kernconf="GENERIC-NODEBUG"
 
 # TODO change to a more descriptive name, like "empt_ports" or something
 ports_tree=default
 target_confdir="${top}/hosts/${target_hostname}"
-target_kernconf="$(echo "${target_hostname}" | to_kernconf)"
+
+# NOTE support other architectures when the need arises
+freebsd_version="$(sh ${freebsd_src}/sys/conf/newvers.sh -V REVISION | grep -o '[1-9][0-9]*')"
+target_abi="FreeBSD:${freebsd_version%%.*}:${target_arch}"
 
 # TODO pkg-static is unfortunately built as part of ports-mgmt/pkg. This means
 # that the builder jail's base system libraries get statically linked into
 # the binary. The builder jail uses a different CPUTYPE than the target, so we
 # run into SIGILL illegal instruction crashes. We need to figure this out
 # properly.
-# NOTE to avoid this, we build all packages using the default upstream RELEASE
-# jail instead of the custom host
 #ports_builder="pb"
-ports_builder="pb_${target_hostname}"
+ports_builder="b${freebsd_version}"
 
 repodir_prefix="${cache}/pkgbase_repos/${target_hostname}"
 host_pkgbase_repo="${repodir_prefix}-host/${target_abi}/latest"
@@ -373,9 +344,13 @@ my_portoptions="${target_confdir}/portoptions"
 tarballs="${cache}/tarballs"
 ports_pkglist="${top}/hosts/${target_hostname}/pkglist.txt"
 
-nproc="$(nproc)"
-freebsd_major_version=16
-pkgbase_version="${freebsd_major_version}.snap$(date -u +%Y%m%d%H%M%S)"
+# NOTE this is really a cleaner way of doing it, but the grep works even without a TOOLCHAIN.
+src_llvm_version="$(make -C "${freebsd_src}" -f lib/clang/libllvm/Makefile -V SHLIB_MAJOR)"
+#src_llvm_version="$(grep 'SHLIB_MAJOR=' "${freebsd_src}/lib/clang/libllvm/Makefile" | grep -o '[0-9]*')"
+
+# NOTE use this to determine a system's CPUTYPE, then add it to a make.conf
+# inside the hosts/ directory
+#cputype="$(cc -v -x c -E -march=native /dev/null 2>&1 | sed -n 's/.*-target-cpu *\([^ ]*\).*/\1/p')"
 
 case "$1" in
   bootstrap1)
@@ -385,9 +360,8 @@ case "$1" in
     bootstrap_step2
     ;;
   upgrade1)
-    #build_host_pkgbase
-    #local_pkgbase_upgrade
-    upgrade_local_step1
+    build_host_pkgbase
+    local_pkgbase_upgrade
     ;;
   upgrade2)
     upgrade_local_step2
@@ -461,3 +435,25 @@ case "$1" in
     exit 64 # EX_USAGE
     ;;
 esac
+
+# TODO THIS DOESN'T WORK ANYMORE, DO WE NEED IT?
+#build_jail_pkgbase() {
+#    git -C "${freebsd_src}" pull
+#
+#    # TODO file upstream bug to figure out the order of target dependencies
+#    # between 'buildworld' and the stage/create/sign targets
+#    # For now, use two make invocations
+#    make -C "${freebsd_src}" -j"${nproc}" \
+#        __MAKE_CONF="${target_confdir}/${target_hostname}-common-make.conf" \
+#        SRCCONF="${target_confdir}/${target_hostname}-jail-src.conf" \
+#        SRC_ENV_CONF="${target_confdir}/${target_hostname}-jail-src-env.conf" \
+#        buildworld
+#
+#    # TODO file upstream bug for PKG_VERSION issues
+#    make -C "${freebsd_src}" \
+#        __MAKE_CONF="${target_confdir}/${target_hostname}-common-make.conf" \
+#        SRCCONF="${target_confdir}/${target_hostname}-jail-src.conf" \
+#        SRC_ENV_CONF="${target_confdir}/${target_hostname}-jail-src-env.conf" \
+#        REPODIR="${repodir_prefix}-jail" \
+#        stage-packages-world create-packages-world real-update-packages
+#}
